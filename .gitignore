@@ -1,0 +1,12 @@
+target/
+node_modules/
+dist/
+.env
+*.log
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+.claude/
+.temp/

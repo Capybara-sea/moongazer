@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Capybara_sea
+
+# Plain "stable" on purpose: a pinned version such as "1.100.0" names a
+# separate toolchain that rustup would try to install. CI pins the exact
+# version through RUSTUP_TOOLCHAIN instead.
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]

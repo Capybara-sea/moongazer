@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Capybara_sea
+
+# Fast checks only. `cargo xtask check` runs everything before a release or a
+# branch merge.
+
+pre-commit:
+  commands:
+    guard:
+      run: cargo xtask guard --staged
+      env:
+        RUSTUP_TOOLCHAIN: stable
+        RUSTUP_AUTO_INSTALL: "0"
+    rustfmt:
+      glob: "*.rs"
+      run: cargo fmt --all --check
+      env:
+        RUSTUP_TOOLCHAIN: stable
+        RUSTUP_AUTO_INSTALL: "0"
+    biome:
+      glob: "*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,css}"
+      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+
+commit-msg:
+  commands:
+    english:
+      run: cargo xtask commit-msg {1}
+      env:
+        RUSTUP_TOOLCHAIN: stable
+        RUSTUP_AUTO_INSTALL: "0"

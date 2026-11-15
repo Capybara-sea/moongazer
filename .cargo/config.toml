@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Capybara_sea
+
+[alias]
+xtask = "run --locked --package xtask --"
+
+# Applies to processes Cargo spawns (build scripts, rustc, xtask), so a
+# dependency's rust-toolchain.toml cannot make rustup install a toolchain.
+# Cargo refuses RUSTUP_TOOLCHAIN here; xtask sets it on its own children, and
+# shell commands still need both variables.
+[env]
+RUSTUP_AUTO_INSTALL = "0"

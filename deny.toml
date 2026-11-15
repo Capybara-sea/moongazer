@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Capybara_sea
+
+[graph]
+targets = ["x86_64-pc-windows-msvc"]
+all-features = true
+
+[advisories]
+ignore = []
+
+[licenses]
+# Grows with the dependency tree. Check a new license against MIT before
+# adding it here.
+allow = ["MIT", "Apache-2.0"]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+required-git-spec = "tag"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# The only git source will be https://github.com/tawan475/teyvat.me-capture,
+# added to allow-git in the same change that adds the dependency.
+allow-git = []

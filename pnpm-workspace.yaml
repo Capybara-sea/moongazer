@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - tools/*
+  - packages/*
+
+minimumReleaseAge: 1440
+
+allowBuilds:
+  lefthook: false

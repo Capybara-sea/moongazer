@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Capybara_sea
+
+# Runs on version tags. Building and publishing arrive together with
+# `xtask dist`; for now this checks the tag and extracts the release notes.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTUP_TOOLCHAIN: "1.100.0"
+  RUSTUP_AUTO_INSTALL: "0"
+
+# Explicit bash adds pipefail; the default Linux shell does not.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Rust
+        run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
+      - name: Check the tag against the workspace version
+        run: cargo xtask verify-tag "$GITHUB_REF_NAME"
+      - name: Extract the release notes
+        run: |
+          cargo xtask changelog "$GITHUB_REF_NAME" > release-notes.md
+          cat release-notes.md >> "$GITHUB_STEP_SUMMARY"
+      - run: cargo xtask ci no-nightly

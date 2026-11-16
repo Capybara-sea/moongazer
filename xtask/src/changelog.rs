@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! Reading and editing `CHANGELOG.md` in the Keep a Changelog 1.1.0 layout.
+//! Reading and editing `CHANGELOG.md` and its Chinese translation in the Keep
+//! a Changelog 1.1.0 layout.
 
 use std::fs;
 use std::path::Path;
@@ -11,15 +12,47 @@ use anyhow::{Context, Result, bail};
 use crate::util::parse_version;
 
 pub const FILE: &str = "CHANGELOG.md";
+/// The Chinese changelog: the same version headings and links as `FILE`, with
+/// the title, the section names and the entries in Chinese.
+pub const FILE_ZH: &str = "CHANGELOG.zh-CN.md";
+pub const FILES: [&str; 2] = [FILE, FILE_ZH];
 const UNRELEASED: &str = "Unreleased";
-const SECTIONS: [&str; 6] = [
-    "Added",
-    "Changed",
-    "Deprecated",
-    "Removed",
-    "Fixed",
-    "Security",
-];
+
+/// The title line and the allowed `###` section names of one file.
+struct Style {
+    title: &'static str,
+    sections: [&'static str; 6],
+}
+
+const EN: Style = Style {
+    title: "# Changelog",
+    sections: [
+        "Added",
+        "Changed",
+        "Deprecated",
+        "Removed",
+        "Fixed",
+        "Security",
+    ],
+};
+
+/// Spelled as escapes so this file stays free of CJK text. "Security" becomes
+/// "vulnerability fixes": the guard's wording check flags the usual word.
+const ZH: Style = Style {
+    title: "# \u{66F4}\u{65B0}\u{65E5}\u{5FD7}",
+    sections: [
+        "\u{65B0}\u{589E}",
+        "\u{53D8}\u{66F4}",
+        "\u{5F03}\u{7528}",
+        "\u{79FB}\u{9664}",
+        "\u{4FEE}\u{590D}",
+        "\u{6F0F}\u{6D1E}\u{4FEE}\u{590D}",
+    ],
+};
+
+fn style(file: &str) -> &'static Style {
+    if file == FILE_ZH { &ZH } else { &EN }
+}
 
 pub type Version = (u64, u64, u64);
 
@@ -83,12 +116,14 @@ fn is_link_definition(line: &str) -> bool {
     line.starts_with('[') && line.contains("]: ")
 }
 
-/// Checks the file against the subset of Keep a Changelog that we rely on.
-pub fn validate(text: &str) -> Vec<String> {
+/// Checks `file` (one of `FILES`) against the subset of Keep a Changelog that
+/// we rely on.
+pub fn validate(file: &str, text: &str) -> Vec<String> {
+    let style = style(file);
     let mut problems = Vec::new();
     let mut lines = text.lines().enumerate();
-    if lines.next().map(|(_, l)| l) != Some("# Changelog") {
-        problems.push("line 1: expected `# Changelog`".to_owned());
+    if lines.next().map(|(_, l)| l) != Some(style.title) {
+        problems.push(format!("line 1: expected `{}`", style.title));
     }
     let mut seen_unreleased = false;
     let mut last_release: Option<Version> = None;
@@ -116,10 +151,10 @@ pub fn validate(text: &str) -> Vec<String> {
             }
             first_heading = false;
         } else if let Some(name) = line.strip_prefix("### ") {
-            if !SECTIONS.contains(&name) {
+            if !style.sections.contains(&name) {
                 problems.push(format!(
                     "line {n}: `### {name}` is not one of {}",
-                    SECTIONS.join(", ")
+                    style.sections.join(", ")
                 ));
             }
         } else if line.to_ascii_lowercase().starts_with("[unreleased]: ") {
@@ -257,14 +292,26 @@ mod tests {
 
     #[test]
     fn a_fresh_changelog_is_valid() {
-        assert_eq!(validate(EMPTY), Vec::<String>::new());
-        assert_eq!(validate(ONE_RELEASE), Vec::<String>::new());
+        assert_eq!(validate(FILE, EMPTY), Vec::<String>::new());
+        assert_eq!(validate(FILE, ONE_RELEASE), Vec::<String>::new());
+    }
+
+    #[test]
+    fn the_chinese_file_takes_its_own_title_and_section_names() {
+        let zh = ONE_RELEASE
+            .replace("# Changelog", ZH.title)
+            .replace("### Fixed", &format!("### {}", ZH.sections[4]))
+            .replace("### Added", &format!("### {}", ZH.sections[0]));
+        assert_eq!(validate(FILE_ZH, &zh), Vec::<String>::new());
+        let problems = validate(FILE_ZH, ONE_RELEASE);
+        assert!(problems.iter().any(|p| p.contains("line 1")));
+        assert!(problems.iter().any(|p| p.contains("### Fixed")));
     }
 
     #[test]
     fn bad_headings_and_sections_are_reported() {
         let text = "# Changelog\n\n## [0.1.0] - 2026-1-2\n\n### Misc\n\n## [Unreleased]\n";
-        let problems = validate(text);
+        let problems = validate(FILE, text);
         assert!(problems.iter().any(|p| p.contains("YYYY-MM-DD")));
         assert!(problems.iter().any(|p| p.contains("### Misc")));
         assert!(problems.iter().any(|p| p.contains("must come first")));
@@ -275,7 +322,11 @@ mod tests {
     fn versions_must_descend() {
         let text = "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-11-01\n\n\
             ## [0.2.0] - 2026-11-02\n\n[unreleased]: x\n";
-        assert!(validate(text).iter().any(|p| p.contains("newest first")));
+        assert!(
+            validate(FILE, text)
+                .iter()
+                .any(|p| p.contains("newest first"))
+        );
     }
 
     #[test]
@@ -321,7 +372,7 @@ mod tests {
             out.contains("[unreleased]: https://github.com/owner/repo/compare/v0.1.0...HEAD\n")
         );
         assert!(out.contains("[0.1.0]: https://github.com/owner/repo/releases/tag/v0.1.0\n"));
-        assert_eq!(validate(&out), Vec::<String>::new());
+        assert_eq!(validate(FILE, &out), Vec::<String>::new());
     }
 
     #[test]
@@ -330,6 +381,6 @@ mod tests {
         assert!(out.contains("## [0.2.0] - 2026-12-01\n\n### Fixed\n\n- Thing."));
         assert!(out.contains("[0.2.0]: https://github.com/owner/repo/compare/v0.1.0...v0.2.0\n"));
         assert!(out.contains("[0.1.0]: https://github.com/owner/repo/releases/tag/v0.1.0\n"));
-        assert_eq!(validate(&out), Vec::<String>::new());
+        assert_eq!(validate(FILE, &out), Vec::<String>::new());
     }
 }

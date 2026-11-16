@@ -10,8 +10,10 @@ ignore = []
 
 [licenses]
 # Grows with the dependency tree. Check a new license against MIT before
-# adding it here.
-allow = ["MIT", "Apache-2.0"]
+# adding it here. MPL-2.0 (cssparser, selectors and friends, through Tauri) is
+# file-level copyleft: fine unmodified, but the notices must say where their
+# source is available.
+allow = ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC", "MPL-2.0", "Unicode-3.0", "Zlib"]
 confidence-threshold = 0.9
 
 [bans]

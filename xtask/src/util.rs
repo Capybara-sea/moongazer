@@ -117,7 +117,8 @@ pub fn is_cjk(c: char) -> bool {
 /// Today's date in the committer's local time zone, as `YYYY-MM-DD`.
 ///
 /// `git var GIT_COMMITTER_IDENT` ends with `<unix seconds> <+hhmm>`, which gives
-/// the local date without a time zone library.
+/// the local date without a time zone library. Only `release` needs this, and
+/// it runs where git has an identity to commit with anyway.
 pub fn today(root: &Path) -> Result<String> {
     let ident = output(command("git", root).args(["var", "GIT_COMMITTER_IDENT"]))?;
     let mut fields = ident.split_whitespace().rev();
@@ -126,9 +127,25 @@ pub fn today(root: &Path) -> Result<String> {
     };
     let seconds: i64 = seconds.parse().context("bad timestamp from git")?;
     let offset = parse_utc_offset(offset).context("bad time zone offset from git")?;
-    let days = (seconds + offset).div_euclid(86_400);
-    let (y, m, d) = civil_from_days(days);
+    let (y, m, d) = civil_from_days((seconds + offset).div_euclid(86_400));
     Ok(format!("{y:04}-{m:02}-{d:02}"))
+}
+
+/// The current time in UTC as RFC 3339, e.g. `2026-11-15T01:02:03Z`. Needs no
+/// git identity, which CI runners do not have.
+pub fn now_rfc3339() -> Result<String> {
+    let seconds = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .context("the system clock is before 1970")?
+        .as_secs();
+    Ok(rfc3339_utc(i64::try_from(seconds)?))
+}
+
+fn rfc3339_utc(seconds: i64) -> String {
+    let (y, m, d) = civil_from_days(seconds.div_euclid(86_400));
+    let of_day = seconds.rem_euclid(86_400);
+    let (h, min, s) = (of_day / 3600, of_day % 3600 / 60, of_day % 60);
+    format!("{y:04}-{m:02}-{d:02}T{h:02}:{min:02}:{s:02}Z")
 }
 
 /// Parses `+hhmm` / `-hhmm` into seconds.
@@ -187,6 +204,12 @@ mod tests {
         assert_eq!(civil_from_days(20_407), (2025, 11, 15));
         assert_eq!(civil_from_days(-1), (1969, 12, 31));
         assert_eq!(civil_from_days(11_016), (2000, 2, 29));
+    }
+
+    #[test]
+    fn timestamps_format_as_rfc3339_utc() {
+        assert_eq!(rfc3339_utc(0), "1970-01-01T00:00:00Z");
+        assert_eq!(rfc3339_utc(1_763_168_523), "2025-11-15T01:02:03Z");
     }
 
     #[test]

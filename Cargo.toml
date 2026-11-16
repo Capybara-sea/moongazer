@@ -3,7 +3,7 @@
 
 [workspace]
 resolver = "3"
-members = ["xtask"]
+members = ["apps/desktop/src-tauri", "xtask"]
 exclude = [".temp"]
 
 [workspace.package]
@@ -16,8 +16,26 @@ publish = false
 
 [workspace.dependencies]
 anyhow = "1.0"
+log = { version = "0.4.35", features = ["max_level_info", "release_max_level_info"] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+sha2 = "0.11"
+# Keep the Rust and JS halves of Tauri on the same minor version.
+tauri = "~2.12"
+tauri-build = "~2.7"
+tauri-plugin-decorum = "~1.1"
+tauri-plugin-opener = "~2.7"
+tauri-plugin-updater = "~2.14"
 toml_edit = "0.25"
+# Account data reaches trace and debug logs in upstream crates, so nothing
+# above info is compiled in. Every crate that links them must also depend on
+# tracing and log directly, so these features apply in every build.
+tracing = { version = "0.1.44", features = ["max_level_info", "release_max_level_info"] }
+tracing-appender = "0.2.5"
+# No `env-filter`: the log level must not be raised from the environment.
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "std", "tracing-log"] }
+windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging"] }
+zip = { version = "9.5", default-features = false, features = ["deflate"] }
 
 [workspace.lints.rust]
 unsafe_code = "deny"

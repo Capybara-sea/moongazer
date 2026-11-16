@@ -10,3 +10,5 @@ desktop.ini
 
 .claude/
 .temp/
+
+apps/desktop/src-tauri/gen/

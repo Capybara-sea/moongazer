@@ -35,17 +35,28 @@ impl Mode {
 
 const MAX_BYTES: usize = 512 * 1024;
 const LARGE_FILE_ALLOWLIST: &[&str] = &["Cargo.lock", "pnpm-lock.yaml"];
-/// Our own app icons: the only place for images, and for binary files at all.
-const ASSET_DIRS: &[&str] = &["apps/desktop/src-tauri/icons/"];
-/// Files allowed to contain CJK text: the bilingual README. The files that
-/// hold the Chinese UI strings join this list once they exist.
-const CJK_ALLOWLIST: &[&str] = &["README.md"];
+/// Our own logo sources and the app icons generated from them: the only places
+/// for images, and for binary files at all.
+const ASSET_DIRS: &[&str] = &["assets/logo/", "apps/desktop/src-tauri/icons/"];
+/// Where CJK text may appear: the bilingual README, the Chinese changelog and
+/// the Chinese UI strings. Entries ending in `/` cover a whole directory.
+const CJK_ALLOWLIST: &[&str] = &[
+    "README.md",
+    changelog::FILE_ZH,
+    "apps/desktop/src/text/",
+    "apps/desktop/src-tauri/src/text.rs",
+];
 /// Public wording that must not claim safety or ban avoidance (warnings only).
-const WORDING_FILES: &[&str] = &["README.md"];
+const WORDING_FILES: &[&str] = CJK_ALLOWLIST;
 /// Synthetic test data may use account-shaped JSON inside these directories.
 const FIXTURE_DIR: &str = "fixtures";
+/// Update endpoints stay empty until the repository is public: a private
+/// repository's release assets cannot be downloaded anonymously.
+const UPDATES_PUBLIC: bool = false;
 
-const SPDX_EXTENSIONS: &[&str] = &["rs", "ts", "tsx", "js", "mjs", "cjs", "toml", "yml", "yaml"];
+const SPDX_EXTENSIONS: &[&str] = &[
+    "rs", "ts", "tsx", "js", "mjs", "cjs", "css", "toml", "yml", "yaml",
+];
 const SPDX_EXEMPT: &[&str] = &["pnpm-lock.yaml", "pnpm-workspace.yaml"];
 /// Our files are MIT; copied upstream files keep MIT or the usual Rust dual
 /// license. Anything else (GPL in particular) must not come in unnoticed.
@@ -90,8 +101,10 @@ pub fn run(root: &Path, mode: Mode) -> Result<()> {
         check_entry(entry, &mut report);
     }
     if let Mode::All = mode {
-        if !entries.iter().any(|e| e.path == changelog::FILE) {
-            report.problem(changelog::FILE, "missing");
+        for file in changelog::FILES {
+            if !entries.iter().any(|e| e.path == file) {
+                report.problem(file, "missing");
+            }
         }
         check_versions(root, &mut report)?;
     }
@@ -287,11 +300,24 @@ fn check_text(path: &str, lower: &str, in_asset_dir: bool, text: &str, report: &
     if matches!(name, "package.json" | "tauri.conf.json") {
         match serde_json::from_str::<Value>(json) {
             Err(_) => report.problem(path, "not valid JSON"),
-            Ok(value) if value.get("version").is_some() => report.problem(
-                path,
-                "must not set `version`; the only version is in the root Cargo.toml",
-            ),
-            Ok(_) => {}
+            Ok(value) => {
+                if value.get("version").is_some() {
+                    report.problem(
+                        path,
+                        "must not set `version`; the only version is in the root Cargo.toml",
+                    );
+                }
+                let endpoints = value
+                    .pointer("/plugins/updater/endpoints")
+                    .and_then(Value::as_array)
+                    .is_some_and(|e| !e.is_empty());
+                if endpoints && !UPDATES_PUBLIC {
+                    report.problem(
+                        path,
+                        "update endpoints stay empty until the repository is public",
+                    );
+                }
+            }
         }
     }
     if SPDX_EXTENSIONS.contains(&ext)
@@ -300,12 +326,12 @@ fn check_text(path: &str, lower: &str, in_asset_dir: bool, text: &str, report: &
     {
         report.problem(path, reason);
     }
-    if path == changelog::FILE {
-        for problem in changelog::validate(text) {
+    if changelog::FILES.contains(&path) {
+        for problem in changelog::validate(path, text) {
             report.problem(path, problem);
         }
     }
-    if !CJK_ALLOWLIST.contains(&path) {
+    if !listed(CJK_ALLOWLIST, path) {
         let lines = cjk_lines(text);
         if let Some(first) = lines.first() {
             let more = match lines.len() {
@@ -314,11 +340,11 @@ fn check_text(path: &str, lower: &str, in_asset_dir: bool, text: &str, report: &
             };
             report.problem(
                 path,
-                format!("CJK text on line {first}{more}; only the README and UI string files may contain it"),
+                format!("CJK text on line {first}{more}; only the README, the Chinese changelog and UI string files may contain it"),
             );
         }
     }
-    if WORDING_FILES.contains(&path) {
+    if listed(WORDING_FILES, path) {
         for (line, term) in wording_hits(text) {
             report.warning(
                 path,
@@ -326,6 +352,17 @@ fn check_text(path: &str, lower: &str, in_asset_dir: bool, text: &str, report: &
             );
         }
     }
+}
+
+/// Exact paths, or whole directories for entries ending in `/`.
+fn listed(list: &[&str], path: &str) -> bool {
+    list.iter().any(|entry| {
+        if entry.ends_with('/') {
+            path.starts_with(entry)
+        } else {
+            path == *entry
+        }
+    })
 }
 
 fn file_name(path: &str) -> &str {
@@ -387,7 +424,9 @@ fn forbidden_path(path: &str) -> Option<&'static str> {
     if ASSET_EXTENSIONS.contains(&extension(&lower))
         && !ASSET_DIRS.iter().any(|dir| lower.starts_with(dir))
     {
-        return Some("image or font outside the allowed icon directories (possible game art)");
+        return Some(
+            "image or font outside the allowed logo and icon directories (possible game art)",
+        );
     }
     None
 }
@@ -629,6 +668,7 @@ mod tests {
             ".editorconfig",
             ".gitignore",
             "apps/desktop/src-tauri/icons/icon.ico",
+            "assets/logo/logo.svg",
             "apps/desktop/src/game-database.ts",
             "keyboard.rs",
             "monkey.rs",
@@ -712,6 +752,26 @@ mod tests {
         assert!(problems_for("apps/x/package.json", bom.as_bytes())[0].contains("version"));
         assert!(problems_for("package.json", b"{broken")[0].contains("not valid JSON"));
         assert!(problems_for("package.json", br#"{"engines":{"version":"1"}}"#).is_empty());
+    }
+
+    #[test]
+    fn ui_strings_may_be_chinese_but_code_may_not() {
+        assert!(listed(CJK_ALLOWLIST, "apps/desktop/src/text/zh.ts"));
+        assert!(listed(CJK_ALLOWLIST, "CHANGELOG.zh-CN.md"));
+        assert!(!listed(CJK_ALLOWLIST, "CHANGELOG.md"));
+        assert!(!listed(CJK_ALLOWLIST, "apps/desktop/src/app/App.tsx"));
+        let code = "// SPDX-License-Identifier: MIT\n// Copyright (c) 2026 X\n\"\u{4E2D}\"\n";
+        let problems = problems_for("apps/desktop/src/app/App.tsx", code.as_bytes());
+        assert!(problems.iter().any(|p| p.contains("CJK")));
+    }
+
+    #[test]
+    fn update_endpoints_stay_empty_while_the_repository_is_private() {
+        let conf = br#"{"plugins":{"updater":{"pubkey":"","endpoints":["https://example.invalid/latest.json"]}}}"#;
+        let problems = problems_for("apps/desktop/src-tauri/tauri.conf.json", conf);
+        assert!(problems.iter().any(|p| p.contains("endpoints")));
+        let empty = br#"{"plugins":{"updater":{"pubkey":"","endpoints":[]}}}"#;
+        assert!(problems_for("apps/desktop/src-tauri/tauri.conf.json", empty).is_empty());
     }
 
     #[test]

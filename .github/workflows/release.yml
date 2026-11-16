@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Capybara_sea
 
-# Runs on version tags. Building and publishing arrive together with
-# `xtask dist`; for now this checks the tag and extracts the release notes.
+# Runs on version tags: checks the tag, builds and signs everything with
+# `cargo xtask dist`, and uploads it to a draft release for a manual look
+# before publishing.
 
 name: Release
 
@@ -29,12 +30,53 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No later step needs git credentials; build scripts should not see them.
+          persist-credentials: false
       - name: Install Rust
         run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
       - name: Check the tag against the workspace version
         run: cargo xtask verify-tag "$GITHUB_REF_NAME"
-      - name: Extract the release notes
+      - name: Check that the release notes exist
+        run: cargo xtask changelog "$GITHUB_REF_NAME" > /dev/null
+      - run: cargo xtask ci no-nightly
+
+  build:
+    needs: prepare
+    runs-on: windows-2025
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      # Set explicitly so the upload step knows where `xtask dist` writes.
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No later step needs git credentials; build scripts should not see them.
+          persist-credentials: false
+      - name: Install Rust
+        run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Built before the signing secrets are in the environment, so the build
+      # scripts of xtask's dependencies never see them.
+      - run: cargo build --locked --package xtask
+      - name: Build, sign and package
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: cargo xtask dist
+      - name: Upload to a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           cargo xtask changelog "$GITHUB_REF_NAME" > release-notes.md
-          cat release-notes.md >> "$GITHUB_STEP_SUMMARY"
+          gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
+            --title "$GITHUB_REF_NAME" --notes-file release-notes.md \
+            "$CARGO_TARGET_DIR/dist/$GITHUB_REF_NAME"/*
       - run: cargo xtask ci no-nightly

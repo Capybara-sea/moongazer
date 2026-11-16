@@ -51,20 +51,31 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
         .context("missing [workspace.package] repository")?
         .trim_end_matches('/')
         .to_owned();
-    let changelog_path = root.join(changelog::FILE);
-    let text = fs::read_to_string(&changelog_path).context("reading CHANGELOG.md")?;
     let date = util::today(root)?;
-    let new_text = changelog::release(&text, version, &date, &repo)?;
+    let mut changelogs = Vec::new();
+    for file in changelog::FILES {
+        let text =
+            fs::read_to_string(root.join(file)).with_context(|| format!("reading {file}"))?;
+        let new_text = changelog::release(&text, version, &date, &repo)
+            .with_context(|| format!("updating {file}"))?;
+        changelogs.push(Changelog {
+            file,
+            text,
+            new_text,
+        });
+    }
 
-    let blockers = blockers(root, version, &current, &text, &new_text)?;
+    let blockers = blockers(root, version, &current, &changelogs)?;
 
     if dry_run {
         println!("release {v} (dry run, nothing is written)");
         println!("  Cargo.toml: [workspace.package] version {current} -> {v}");
         println!("  Cargo.lock: cargo update --workspace");
-        println!("  {}:", changelog::FILE);
-        for line in diff_lines(&text, &new_text) {
-            println!("    {line}");
+        for c in &changelogs {
+            println!("  {}:", c.file);
+            for line in diff_lines(&c.text, &c.new_text) {
+                println!("    {line}");
+            }
         }
         println!("  before writing: cargo xtask check");
         println!("  commit: Release {v}");
@@ -96,7 +107,7 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
         let bytes = fs::read(root.join(file)).with_context(|| format!("reading {file}"))?;
         originals.push((file, bytes));
     }
-    if let Err(err) = write_and_commit(root, &mut manifest, &v, &new_text) {
+    if let Err(err) = write_and_commit(root, &mut manifest, &v, &changelogs) {
         if let Err(restore_err) = restore(root, &originals) {
             bail!(
                 "{err:#}\nrestoring the release files also failed: {restore_err:#}\n\
@@ -115,13 +126,25 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
     Ok(())
 }
 
-const RELEASE_FILES: [&str; 3] = ["Cargo.toml", "Cargo.lock", changelog::FILE];
+const RELEASE_FILES: [&str; 4] = [
+    "Cargo.toml",
+    "Cargo.lock",
+    changelog::FILE,
+    changelog::FILE_ZH,
+];
+
+/// One changelog file before and after moving its Unreleased notes.
+struct Changelog {
+    file: &'static str,
+    text: String,
+    new_text: String,
+}
 
 fn write_and_commit(
     root: &Path,
     manifest: &mut toml_edit::DocumentMut,
     v: &str,
-    new_changelog: &str,
+    changelogs: &[Changelog],
 ) -> Result<()> {
     let slot = manifest
         .get_mut("workspace")
@@ -135,7 +158,9 @@ fn write_and_commit(
     }
     fs::write(root.join("Cargo.toml"), manifest.to_string()).context("writing Cargo.toml")?;
     util::run(util::cargo(root).args(["update", "--workspace"]))?;
-    fs::write(root.join(changelog::FILE), new_changelog).context("writing CHANGELOG.md")?;
+    for c in changelogs {
+        fs::write(root.join(c.file), &c.new_text).with_context(|| format!("writing {}", c.file))?;
+    }
     util::run(util::command("git", root).arg("add").args(RELEASE_FILES))?;
     // The commit runs the pre-commit and commit-msg hooks.
     util::run(util::command("git", root).args(["commit", "-m", &format!("Release {v}")]))
@@ -163,8 +188,7 @@ fn blockers(
     root: &Path,
     version: changelog::Version,
     current: &str,
-    text: &str,
-    new_text: &str,
+    changelogs: &[Changelog],
 ) -> Result<Vec<String>> {
     let v = changelog::fmt_version(version);
     let mut out = Vec::new();
@@ -175,18 +199,31 @@ fn blockers(
         Some(_) => {}
         None => out.push(format!("the current version `{current}` is not X.Y.Z")),
     }
-    if let Some(latest) = changelog::latest_release(text)
-        && version <= latest
+    for Changelog {
+        file,
+        text,
+        new_text,
+    } in changelogs
     {
-        out.push(format!(
-            "{v} is not newer than {} in CHANGELOG.md",
-            changelog::fmt_version(latest)
-        ));
-    }
-    for problem in changelog::validate(new_text) {
-        out.push(format!(
-            "the updated CHANGELOG.md would be invalid: {problem}"
-        ));
+        if let Some(latest) = changelog::latest_release(text)
+            && version <= latest
+        {
+            out.push(format!(
+                "{v} is not newer than {} in {file}",
+                changelog::fmt_version(latest)
+            ));
+        }
+        for problem in changelog::validate(file, new_text) {
+            out.push(format!("the updated {file} would be invalid: {problem}"));
+        }
+        // Both files must describe the release, so neither may be forgotten.
+        match changelog::section(text, &Heading::Unreleased) {
+            None => out.push(format!("{file} has no Unreleased section")),
+            Some(body) if !changelog::has_entries(&body) => {
+                out.push(format!("the Unreleased section of {file} has no entries"))
+            }
+            Some(_) => {}
+        }
     }
     let tag_exists = util::command("git", root)
         .args(["rev-parse", "-q", "--verify", &format!("refs/tags/v{v}")])
@@ -196,13 +233,6 @@ fn blockers(
         .success();
     if tag_exists {
         out.push(format!("tag v{v} already exists"));
-    }
-    match changelog::section(text, &Heading::Unreleased) {
-        None => out.push("CHANGELOG.md has no Unreleased section".to_owned()),
-        Some(body) if !changelog::has_entries(&body) => {
-            out.push("the Unreleased section has no entries".to_owned())
-        }
-        Some(_) => {}
     }
     let status = util::output(util::command("git", root).args(["status", "--porcelain"]))?;
     if !status.trim().is_empty() {

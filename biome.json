@@ -6,7 +6,8 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": ["**", "!assets/logo"]
   },
   "formatter": {
     "enabled": true,
@@ -14,6 +15,11 @@
     "indentWidth": 2,
     "lineWidth": 100,
     "lineEnding": "lf"
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   },
   "javascript": {
     "formatter": {

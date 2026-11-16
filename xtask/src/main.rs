@@ -11,7 +11,9 @@
 mod changelog;
 mod ci;
 mod commit_msg;
+mod dist;
 mod guard;
+mod icons;
 mod release;
 mod util;
 
@@ -30,6 +32,9 @@ commands:
   changelog <X.Y.Z|Unreleased>    print one CHANGELOG section
   verify-tag <tag>                check that a tag matches the workspace version
   release <X.Y.Z> [--dry-run]     bump the version, date the changelog, commit and tag
+  dist [--config <file>] [--base-url <url>]
+                                  build the signed installer, portable zip, latest.json and checksums
+  icons <source>                  regenerate the app icons from the logo (SVG or square PNG)
 ";
 
 fn main() -> ExitCode {
@@ -56,6 +61,8 @@ fn run(args: &[String]) -> Result<()> {
         }
         Some("verify-tag") => release::verify_tag(&root, one_arg(&rest, "verify-tag <tag>")?),
         Some("release") => release::run(&root, &rest),
+        Some("dist") => dist::run(&root, &rest),
+        Some("icons") => icons::run(&root, one_arg(&rest, "icons <source>")?),
         Some("help" | "-h" | "--help") | None => {
             print!("{USAGE}");
             Ok(())

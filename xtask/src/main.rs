@@ -12,6 +12,7 @@ mod changelog;
 mod ci;
 mod commit_msg;
 mod dist;
+mod gen_data;
 mod guard;
 mod icons;
 mod release;
@@ -35,6 +36,8 @@ commands:
   dist [--config <file>] [--base-url <url>]
                                   build the signed installer, portable zip, latest.json and checksums
   icons <source>                  regenerate the app icons from the logo (SVG or square PNG)
+  gen-data [--update]             generate the game name table (--update: move the source pins
+                                  to the latest upstream commits first)
 ";
 
 fn main() -> ExitCode {
@@ -63,6 +66,11 @@ fn run(args: &[String]) -> Result<()> {
         Some("release") => release::run(&root, &rest),
         Some("dist") => dist::run(&root, &rest),
         Some("icons") => icons::run(&root, one_arg(&rest, "icons <source>")?),
+        Some("gen-data") => match rest.as_slice() {
+            [] => gen_data::run(&root, false),
+            ["--update"] => gen_data::run(&root, true),
+            _ => bail!("usage: cargo xtask gen-data [--update]"),
+        },
         Some("help" | "-h" | "--help") | None => {
             print!("{USAGE}");
             Ok(())

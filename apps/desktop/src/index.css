@@ -269,6 +269,21 @@ button#decorum-tb-close:hover {
   }
 }
 
+/* Rows that appear inside a card (a list growing, a new snapshot) fade up. */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduce-motion="true"]) [data-rise] {
+    transition-property: opacity, transform;
+    transition-duration: 240ms;
+    transition-timing-function: var(--ease-out-soft);
+  }
+  @starting-style {
+    :root:not([data-reduce-motion="true"]) [data-rise] {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+}
+
 /*
  * Theme switch (revealFrom in lib/motion.ts): the new theme spreads from the
  * toggle as a circle with a soft 120px edge over a still image of the old

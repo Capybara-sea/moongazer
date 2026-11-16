@@ -7,6 +7,7 @@
 
 mod logging;
 mod portable;
+mod snapshots;
 mod text;
 mod update;
 mod webview2;
@@ -40,18 +41,24 @@ fn main() {
     let mut context = tauri::generate_context!();
     if let Some(dir) = &portable_dir {
         portable::apply(&mut context, dir);
+        portable::remove_old_exe();
     }
     let is_portable = portable_dir.is_some();
+    let mode = portable::Mode {
+        portable: is_portable,
+        replaceable: portable_dir.as_deref().is_some_and(portable::writable),
+    };
 
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_decorum::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .manage(portable::Mode(is_portable))
+        .manage(mode)
         .manage(update::Pending::default())
         .setup(move |app| {
             let guard = logging::init(&app.path().app_log_dir()?)?;
             app.manage(guard);
+            app.manage(snapshots::Storage::open(app.path().app_local_data_dir()?));
             let window = app
                 .get_webview_window("main")
                 .context("the main window is missing")?;
@@ -73,6 +80,10 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            snapshots::import_snapshot,
+            snapshots::list_snapshots,
+            snapshots::data_dir,
+            snapshots::open_data_dir,
             update::app_info,
             update::check_update,
             update::download_update,

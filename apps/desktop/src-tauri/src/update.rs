@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! Update checks. The installed build downloads a new version in the
-//! background and installs it through the NSIS installer when the user
-//! restarts; the portable build only checks and opens the download page.
+//! Update checks. A new version is downloaded in the background and put in
+//! place when the user restarts: by the NSIS installer for the installed
+//! build, by swapping the executable for the portable one. A portable build
+//! in a read-only folder only opens the download page.
 //!
 //! Updates stay off while `plugins.updater.endpoints` is empty, which is the
 //! case until the repository is public.
 
+use std::process::Command;
 use std::sync::{Mutex, MutexGuard};
 
+use anyhow::Context;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, State};
 use tauri_plugin_opener::OpenerExt;
@@ -21,11 +24,12 @@ use crate::portable;
 const PORTABLE_TARGET: &str = "windows-x86_64-portable";
 const PROGRESS_EVENT: &str = "update-progress";
 
-/// The update found by the last check and, once downloaded, its installer.
+/// The update found by the last check and, once downloaded, its package:
+/// the installer, or the portable zip.
 #[derive(Default)]
 pub struct Pending {
     update: Mutex<Option<Update>>,
-    installer: Mutex<Option<Vec<u8>>>,
+    package: Mutex<Option<Vec<u8>>>,
 }
 
 /// A poisoned lock still holds a usable value: nothing here is left half done.
@@ -39,6 +43,9 @@ pub struct AppInfo {
     version: String,
     portable: bool,
     updates_enabled: bool,
+    /// Whether an update is downloaded and put in place on restart, rather
+    /// than only pointing to the download page.
+    updates_in_place: bool,
 }
 
 #[derive(Serialize)]
@@ -68,8 +75,9 @@ pub enum UpdateError {
 pub fn app_info(app: AppHandle, mode: State<'_, portable::Mode>) -> AppInfo {
     AppInfo {
         version: app.package_info().version.to_string(),
-        portable: mode.0,
+        portable: mode.portable,
         updates_enabled: updates_enabled(&app),
+        updates_in_place: !mode.portable || mode.replaceable,
     }
 }
 
@@ -90,7 +98,7 @@ pub async fn check_update(
     pending: State<'_, Pending>,
 ) -> Result<Option<UpdateInfo>, UpdateError> {
     let mut builder = app.updater_builder();
-    if mode.0 {
+    if mode.portable {
         builder = builder.target(PORTABLE_TARGET);
     }
     let updater = builder
@@ -105,7 +113,7 @@ pub async fn check_update(
         notes: u.body.clone(),
     });
     *lock(&pending.update) = update;
-    *lock(&pending.installer) = None;
+    *lock(&pending.package) = None;
     tracing::info!(available = info.is_some(), "update check finished");
     Ok(info)
 }
@@ -119,8 +127,8 @@ fn download_page(update: &Update) -> String {
         .map_or_else(|| update.download_url.to_string(), str::to_owned)
 }
 
-/// Downloads the installer of the pending update and keeps it in memory; the
-/// installed build only.
+/// Downloads the pending update's package and keeps it in memory. The updater
+/// checks its signature before returning it.
 #[tauri::command]
 pub async fn download_update(
     app: AppHandle,
@@ -131,7 +139,7 @@ pub async fn download_update(
         .ok_or(UpdateError::NothingPending)?;
     tracing::info!(version = %update.version, "downloading update");
     let mut downloaded = 0u64;
-    let installer = update
+    let package = update
         .download(
             move |chunk, total| {
                 downloaded += chunk as u64;
@@ -142,20 +150,21 @@ pub async fn download_update(
         )
         .await
         .map_err(|err| UpdateError::Download(err.to_string()))?;
-    *lock(&pending.installer) = Some(installer);
+    *lock(&pending.package) = Some(package);
     tracing::info!("update downloaded");
     Ok(())
 }
 
 /// Installed build: runs the downloaded installer, which closes the app and
-/// opens it again when done. Portable build: opens the download page.
+/// opens it again when done. Portable build: swaps in the new executable and
+/// restarts, or, in a read-only folder, opens the download page.
 #[tauri::command]
 pub async fn install_update(
     app: AppHandle,
     mode: State<'_, portable::Mode>,
     pending: State<'_, Pending>,
 ) -> Result<(), UpdateError> {
-    if mode.0 {
+    if mode.portable && !mode.replaceable {
         // Opening the page keeps the update pending, so the button works again.
         let page = {
             let guard = lock(&pending.update);
@@ -175,18 +184,41 @@ pub async fn install_update(
             .map_err(|err| UpdateError::Install(err.to_string()));
     }
 
-    let installer = lock(&pending.installer)
+    let package = lock(&pending.package)
         .take()
         .ok_or(UpdateError::NothingPending)?;
     let update = lock(&pending.update)
         .clone()
         .ok_or(UpdateError::NothingPending)?;
     tracing::info!(version = %update.version, "installing update");
-    // On success this exits the app; the installer starts it again.
-    if let Err(err) = update.install(&installer) {
+    let installed = if mode.portable {
+        install_portable(&app, &package)
+    } else {
+        // On success this exits the app; the installer starts it again.
+        update
+            .install(&package)
+            .map_err(|err| UpdateError::Install(err.to_string()))
+    };
+    if installed.is_err() {
         // Kept, so the user can try again without downloading it again.
-        *lock(&pending.installer) = Some(installer);
-        return Err(UpdateError::Install(err.to_string()));
+        *lock(&pending.package) = Some(package);
     }
+    installed
+}
+
+/// Swaps in the new executable and starts it; this one then exits.
+fn install_portable(app: &AppHandle, package: &[u8]) -> Result<(), UpdateError> {
+    let failed = |err: anyhow::Error| UpdateError::Install(format!("{err:#}"));
+    let exe = std::env::current_exe()
+        .context("finding the program")
+        .map_err(failed)?;
+    portable::replace_exe(&exe, package).map_err(failed)?;
+    // The new program is in place, so this one exits even if starting it
+    // fails; it then starts the next time the user opens the app, and staying
+    // open would only offer an update that can no longer be applied.
+    if let Err(err) = Command::new(&exe).spawn() {
+        tracing::error!(error = %err, "starting the new version failed");
+    }
+    app.exit(0);
     Ok(())
 }

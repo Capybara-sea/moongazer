@@ -38,13 +38,15 @@ const LARGE_FILE_ALLOWLIST: &[&str] = &["Cargo.lock", "pnpm-lock.yaml"];
 /// Our own logo sources and the app icons generated from them: the only places
 /// for images, and for binary files at all.
 const ASSET_DIRS: &[&str] = &["assets/logo/", "apps/desktop/src-tauri/icons/"];
-/// Where CJK text may appear: the bilingual README, the Chinese changelog and
-/// the Chinese UI strings. Entries ending in `/` cover a whole directory.
+/// Where CJK text may appear: the bilingual README, the Chinese changelog, the
+/// Chinese UI strings and the game names the data generator adds by hand.
+/// Entries ending in `/` cover a whole directory.
 const CJK_ALLOWLIST: &[&str] = &[
     "README.md",
     changelog::FILE_ZH,
     "apps/desktop/src/text/",
     "apps/desktop/src-tauri/src/text.rs",
+    "tools/datagen/src/manual.ts",
 ];
 /// Public wording that must not claim safety or ban avoidance (warnings only).
 const WORDING_FILES: &[&str] = CJK_ALLOWLIST;
@@ -340,7 +342,7 @@ fn check_text(path: &str, lower: &str, in_asset_dir: bool, text: &str, report: &
             };
             report.problem(
                 path,
-                format!("CJK text on line {first}{more}; only the README, the Chinese changelog and UI string files may contain it"),
+                format!("CJK text on line {first}{more}; only the files in CJK_ALLOWLIST (xtask/src/guard.rs) may contain it"),
             );
         }
     }
@@ -760,6 +762,8 @@ mod tests {
         assert!(listed(CJK_ALLOWLIST, "CHANGELOG.zh-CN.md"));
         assert!(!listed(CJK_ALLOWLIST, "CHANGELOG.md"));
         assert!(!listed(CJK_ALLOWLIST, "apps/desktop/src/app/App.tsx"));
+        assert!(listed(CJK_ALLOWLIST, "tools/datagen/src/manual.ts"));
+        assert!(!listed(CJK_ALLOWLIST, "tools/datagen/src/main.ts"));
         let code = "// SPDX-License-Identifier: MIT\n// Copyright (c) 2026 X\n\"\u{4E2D}\"\n";
         let problems = problems_for("apps/desktop/src/app/App.tsx", code.as_bytes());
         assert!(problems.iter().any(|p| p.contains("CJK")));

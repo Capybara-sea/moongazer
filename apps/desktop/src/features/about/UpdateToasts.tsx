@@ -55,9 +55,9 @@ function notice(
 }
 
 /**
- * Bottom-right toasts for updates: the installed build's download is ready or
- * failed, or the portable build found a new version. Each shows once per
- * version and event; the About page keeps the same buttons.
+ * Bottom-right toasts for updates: a download is ready or failed, or a
+ * portable build in a read-only folder found a new version. Each shows once
+ * per version and event; the About page keeps the same buttons.
  */
 export function UpdateToasts() {
   const status = useUpdateStore(s => s.status)

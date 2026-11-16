@@ -4,11 +4,17 @@
 import { useSyncExternalStore } from "react"
 import { text } from "@/text/zh"
 
-/** The page lives in the URL hash: #/home, #/about. */
-export type PageKey = "home" | "about"
+/** The page lives in the URL hash: #/home, #/overview. */
+export type PageKey = "home" | "overview" | "settings" | "about"
 
-export const PAGES: { key: PageKey; label: string }[] = [
+/**
+ * The side menu, in order. `group` starts a labelled group; `divider` puts a
+ * line above the item.
+ */
+export const PAGES: { key: PageKey; label: string; group?: string; divider?: true }[] = [
   { key: "home", label: text.nav.home },
+  { key: "overview", label: text.nav.overview, group: text.nav.accountGroup },
+  { key: "settings", label: text.nav.settings, divider: true },
   { key: "about", label: text.nav.about },
 ]
 

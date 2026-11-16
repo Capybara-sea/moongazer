@@ -1,10 +1,10 @@
 # 望月（moongazer）
 
-本地、离线的原神账号工具，Windows 桌面应用。计划中的功能：导入账号文件并保存快照历史、账号数据页面、练度统计，以及登录时自动读取账号数据。
+本地、离线的原神账号工具，Windows 桌面应用。已经能导入 GOOD / Leyline 文件并保存快照历史；计划中的功能：账号数据页面、练度统计，以及登录时自动读取账号数据。
 
 目前处于开发早期，还没有可用的版本。
 
-A local, offline Genshin Impact account viewer for Windows. Planned: importing account files with snapshot history, account pages, build progress statistics, and reading account data at login. It is in early development and has no usable release yet.
+A local, offline Genshin Impact account viewer for Windows. It imports GOOD and Leyline files and keeps a snapshot history; planned are account pages, build progress statistics, and reading account data at login. It is in early development and has no usable release yet.
 
 ## 开发 / Development
 
@@ -12,6 +12,7 @@ Requirements: Windows 10/11 x64, Rust stable (1.100+), Node.js 24, pnpm (the ver
 
 ```sh
 pnpm install --frozen-lockfile   # also installs the Git hooks
+cargo xtask gen-data             # game name table the frontend imports (not in git)
 cargo xtask check                # everything CI runs
 pnpm --filter @moongazer/desktop tauri dev
 ```

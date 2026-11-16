@@ -5,6 +5,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { App } from "@/app/App"
 import { setWindowTitle } from "@/lib/backend"
+import { useSnapshotStore } from "@/stores/snapshotStore"
 import { useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
 import "./index.css"
@@ -22,3 +23,4 @@ createRoot(root).render(
 document.title = text.appName
 void setWindowTitle(text.appName)
 void useUpdateStore.getState().load()
+void useSnapshotStore.getState().load()

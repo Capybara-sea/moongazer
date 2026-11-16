@@ -4,6 +4,7 @@
 import { Button } from "@heroui/react"
 import { RotateCw } from "lucide-react"
 import { Panel } from "@/components/Panel"
+import { Switch } from "@/components/Switch"
 import { cn } from "@/lib/cn"
 import { type UpdateStatus, useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
@@ -90,26 +91,12 @@ export function UpdateCard() {
           <span className="font-medium text-sm">{text.update.autoCheck}</span>
           <span className="text-[12px] text-muted">{text.update.autoCheckHint}</span>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={autoCheck}
-          aria-label={text.update.autoCheck}
+        <Switch
+          checked={autoCheck}
+          label={text.update.autoCheck}
           disabled={disabled}
-          onClick={() => useUpdateStore.getState().setAutoCheck(!autoCheck)}
-          className={cn(
-            "flex h-6 w-11 flex-none cursor-pointer items-center rounded-full border p-0.5 disabled:cursor-default disabled:opacity-50",
-            autoCheck ? "border-accent bg-accent" : "border-(--field-border) bg-transparent",
-          )}
-        >
-          <span
-            aria-hidden
-            className={cn(
-              "size-[18px] rounded-full transition-transform duration-150 motion-reduce:transition-none",
-              autoCheck ? "translate-x-5 bg-white" : "bg-(--knob-off)",
-            )}
-          />
-        </button>
+          onChange={on => useUpdateStore.getState().setAutoCheck(on)}
+        />
       </div>
     </Panel>
   )

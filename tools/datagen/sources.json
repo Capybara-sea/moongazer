@@ -1,0 +1,12 @@
+{
+  "snapMetadata": {
+    "repo": "SnapHutaoRemasteringProject/Snap.Metadata",
+    "branch": "main",
+    "commit": "7728ff9638974b49db5ecb7a67b6a46972a2d8b5"
+  },
+  "genshinOptimizer": {
+    "repo": "frzyc/genshin-optimizer",
+    "branch": "master",
+    "commit": "f52264cbbf7248ab4e055adc1e96af879ea93036"
+  }
+}

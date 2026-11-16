@@ -4,13 +4,17 @@
 /**
  * Every user-facing string of the web UI. Besides this directory, the
  * repository guard allows Chinese text only in src-tauri/src/text.rs, the
- * README and CHANGELOG.zh-CN.md.
+ * data generator's hand-written names, the README and CHANGELOG.zh-CN.md.
  */
 export const text = {
   appName: "望月",
   appNameLatin: "Moongazer",
   nav: {
+    label: "主菜单",
     home: "首页",
+    accountGroup: "账号数据",
+    overview: "总览",
+    settings: "设置",
     about: "关于",
   },
   theme: {
@@ -21,14 +25,101 @@ export const text = {
   },
   home: {
     title: "欢迎使用望月",
-    body: "本地、离线查看自己的原神账号数据。目前是第一个版本，只有程序外壳和更新检查。",
+    body: "本地、离线查看自己的原神账号数据。现在可以在“总览”导入 GOOD 或 Leyline 文件，保存快照历史。",
     nextTitle: "接下来",
-    next: [
-      "导入 GOOD / Leyline 文件，保存快照历史",
-      "账号数据页面",
-      "练度统计",
-      "登录时自动读取账号数据",
-    ],
+    next: ["账号数据页面", "练度统计", "登录时自动读取账号数据"],
+  },
+  overview: {
+    title: "账号总览",
+    source: (label: string, count: number) => `来源：${label} · 已存 ${count} 份快照`,
+    leyline: (source: string) => `${source} 导出`,
+    leylineLong: (source: string) => `${source} 导出（Leyline）`,
+    good: "GOOD 文件",
+    goodLong: (source: string) => (source ? `GOOD 文件（${source}）` : "GOOD 文件"),
+    importFile: "导入文件",
+    importing: (done: number, total: number) => `正在导入 ${done}/${total}…`,
+    emptyTitle: "还没有快照",
+    emptyBody:
+      "导入 Teyvat.me 导出的 Leyline 文件，或者其他工具导出的 GOOD 文件，就能在这里看到账号数据。可以一次选多个文件。",
+    loadFailed: "读取快照失败",
+    recent: "最近快照",
+    showAll: "全部",
+    showLess: "收起",
+    unchanged: "总数未变",
+    first: "第一份快照",
+    change: {
+      mora: "摩拉",
+      primogems: "原石",
+      characters: "角色",
+      weapons: "武器",
+      artifacts: "圣遗物",
+    },
+  },
+  importResult: {
+    title: "导入结果",
+    close: "关闭",
+    saved: "已保存",
+    duplicate: (when: string) => `已导入过（${when} 的快照）`,
+    skipped: "已跳过",
+    unknownTitle: "数据未更新",
+    unknownHint:
+      "望月自带的游戏数据里还没有这些条目，界面上会先显示英文键名。更新望月后就会有中文名。",
+    kinds: {
+      characters: "角色",
+      weapons: "武器",
+      artifactSets: "圣遗物套装",
+      materials: "材料",
+    },
+    errors: {
+      invalid: "文件内容有误",
+      notGood: "不是 GOOD 或 Leyline 文件",
+      unsupportedVersion: (version: string) => `不支持这个 GOOD 版本（${version}）`,
+      storage: "保存失败",
+      read: "读取文件失败",
+      unknown: "导入失败",
+    },
+  },
+  confirm: {
+    title: "这份数据和上一份差别很大",
+    body: (file: string) => `${file} 和它之前的那份快照相比：`,
+    fewer: {
+      characters: (before: number, after: number) => `角色从 ${before} 个变成 ${after} 个`,
+      weapons: (before: number, after: number) => `武器从 ${before} 件变成 ${after} 件`,
+      artifacts: (before: number, after: number) => `圣遗物从 ${before} 件变成 ${after} 件`,
+    },
+    otherAccount: "来自另一个账号（UID 和上一份不同）",
+    hint: "读取出错时常会这样。确定数据没问题再保存。",
+    save: "仍然保存",
+    skip: "跳过这个文件",
+  },
+  settings: {
+    title: "设置",
+    data: "数据",
+    dataDir: "数据位置",
+    dataDirHint:
+      "快照和日志都在这里。安装版在本机用户的 AppData 里，便携版在程序旁边的 app-data 文件夹。",
+    openDir: "打开文件夹",
+    openFailed: "打开文件夹失败",
+    snapshots: "快照",
+    snapshotsHint:
+      "每次导入保存一份快照。最近 100 份保留完整数据；更早的只留时间、数量、摩拉和原石，不会自动删除。",
+    ui: "界面",
+    theme: "主题",
+    glass: "玻璃效果",
+    glassHint: "卡片、侧边栏和面板半透明，带背景模糊。关闭可优化性能。",
+    motion: "动效",
+    motionHint:
+      "页面切换、卡片浮现、主题切换时的过渡动画。关闭可优化性能；Windows 关闭“动画效果”时也会自动停用。",
+  },
+  time: {
+    justNow: "刚刚",
+    minutesAgo: (n: number) => `${n} 分钟前`,
+    hoursAgo: (n: number) => `${n} 小时前`,
+    yesterday: "昨天",
+    dayBefore: "前天",
+  },
+  number: {
+    tenThousand: (n: string) => `${n}万`,
   },
   about: {
     tagline: "本地、离线查看自己的原神账号数据。",
@@ -41,7 +132,7 @@ export const text = {
   },
   update: {
     title: "更新",
-    hint: "安装版发现新版本会在后台下载好，重启就能用上；便携版只提示新版本，并打开下载页面。",
+    hint: "发现新版本会在后台下载好，重启就能用上。便携版放在不能写入的文件夹里时，只提示新版本并打开下载页面。",
     check: "检查更新",
     checking: "正在检查…",
     upToDate: "已是最新版本",

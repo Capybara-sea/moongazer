@@ -2,15 +2,20 @@
 // Copyright (c) 2026 Capybara_sea
 
 import iconUrl from "@logo/icon.svg?url"
-import { House, Info } from "lucide-react"
-import { type ReactNode, useEffect, useState } from "react"
+import { House, Info, LayoutDashboard, Settings } from "lucide-react"
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { text } from "@/text/zh"
 import { navigate, PAGES, type PageKey, usePage } from "./route"
 import { ThemeToggle } from "./ThemeToggle"
 
-const NAV_ICONS = { home: House, about: Info } as const
+const NAV_ICONS = {
+  home: House,
+  overview: LayoutDashboard,
+  settings: Settings,
+  about: Info,
+} as const
 
 /** How long the outgoing page stays on screen: its transition in index.css. */
 const LEAVE_MS = 420
@@ -57,40 +62,12 @@ export function AppShell({ pages }: Props) {
     <div className="flex h-full min-h-0 flex-col">
       <TitleBar />
       <div className="flex min-h-0 flex-1">
-        <nav className="glass flex w-44 flex-none flex-col gap-0.5 border-border border-r bg-surface px-2 py-3 [--glass-shadow:none]">
-          <div className="relative flex flex-col gap-0.5">
-            {/* One highlight for all items so it can slide; items are equally tall. */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-0 rounded-[6px] bg-(--accent-soft) transition-transform duration-200 ease-(--ease-out-soft) before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent motion-reduce:transition-none"
-              style={{
-                height: `calc((100% - ${PAGES.length - 1} * 0.125rem) / ${PAGES.length})`,
-                transform: `translateY(calc(${index} * (100% + 0.125rem)))`,
-              }}
-            />
-            {PAGES.map(p => {
-              const active = p.key === page
-              const Icon = NAV_ICONS[p.key]
-              return (
-                <button
-                  key={p.key}
-                  type="button"
-                  onClick={() => navigate(p.key)}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "relative flex cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-[6px] px-3 py-2 text-left text-sm transition-colors",
-                    active
-                      ? "font-medium text-foreground"
-                      : "text-muted hover:bg-default/60 hover:text-foreground",
-                  )}
-                >
-                  <Icon size={17} aria-hidden />
-                  {p.label}
-                </button>
-              )
-            })}
-          </div>
-          <span className="flex-1" />
+        <nav
+          aria-label={text.nav.label}
+          className="glass flex w-44 flex-none flex-col border-border border-r bg-surface px-2 py-3 [--glass-shadow:none]"
+        >
+          <SideMenu page={page} />
+          <span className="min-h-4 flex-1" />
           <ThemeToggle />
         </nav>
         {/* Each page scrolls on its own and main clips, so a page sliding in
@@ -121,6 +98,62 @@ export function AppShell({ pages }: Props) {
           )}
         </main>
       </div>
+    </div>
+  )
+}
+
+/** The menu items, with one highlight that slides to the current page. */
+function SideMenu({ page }: { page: PageKey }) {
+  const items = useRef(new Map<PageKey, HTMLButtonElement>())
+  // Measured, since group labels and dividers make the rows uneven. Before
+  // paint, so the highlight never shows at the old place.
+  const [highlight, setHighlight] = useState<{ top: number; height: number } | null>(null)
+  useLayoutEffect(() => {
+    const item = items.current.get(page)
+    if (item) setHighlight({ top: item.offsetTop, height: item.offsetHeight })
+  }, [page])
+
+  return (
+    <div className="relative flex flex-col gap-0.5">
+      {highlight && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 rounded-[6px] bg-(--accent-soft) transition-transform duration-200 ease-(--ease-out-soft) before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent motion-reduce:transition-none"
+          style={{ height: highlight.height, transform: `translateY(${highlight.top}px)` }}
+        />
+      )}
+      {PAGES.map((p, i) => {
+        const active = p.key === page
+        const Icon = NAV_ICONS[p.key]
+        return (
+          <div key={p.key} className="contents">
+            {p.group && p.group !== PAGES[i - 1]?.group && (
+              <span className="px-3 pt-3 pb-1 text-[11px] text-muted tracking-[0.08em]">
+                {p.group}
+              </span>
+            )}
+            {p.divider && <span aria-hidden className="mx-3 my-2 h-px bg-(--separator)" />}
+            <button
+              ref={element => {
+                if (element) items.current.set(p.key, element)
+                else items.current.delete(p.key)
+              }}
+              type="button"
+              onClick={() => navigate(p.key)}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative flex h-9 cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-[6px] px-3 text-left text-sm transition-colors",
+                active
+                  ? "font-medium text-foreground"
+                  : "text-muted hover:bg-default/60 hover:text-foreground",
+              )}
+            >
+              <Icon size={17} aria-hidden />
+              {p.label}
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }

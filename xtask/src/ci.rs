@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, bail};
 use serde_json::Value;
 
-use crate::{guard, util};
+use crate::{gen_data, guard, util};
 
 pub const JOBS: [&str; 7] = [
     "guard",
@@ -108,6 +108,8 @@ fn frontend(root: &Path) -> Result<()> {
         println!("(no pnpm workspace packages yet; skipped typecheck, test and build)");
         return Ok(());
     }
+    // The frontend imports the generated name table, which is not in git.
+    gen_data::run(root, false)?;
     for script in ["typecheck", "test", "build"] {
         util::run(util::node_tool("pnpm", root).args(["-r", "run", "--if-present", script]))?;
     }

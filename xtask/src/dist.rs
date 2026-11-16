@@ -27,7 +27,7 @@ use zip::CompressionMethod;
 use zip::write::{SimpleFileOptions, ZipWriter};
 
 use crate::changelog::{self, Heading};
-use crate::{guard, util};
+use crate::{gen_data, guard, util};
 
 const PACKAGE: &str = "@moongazer/desktop";
 const TAURI_CONF: &str = "apps/desktop/src-tauri/tauri.conf.json";
@@ -121,16 +121,21 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
     }
     fs::create_dir_all(&out)?;
 
-    // The Tauri bundler builds the frontend, the app and the installer.
-    // tauri.conf.json turns off its own signing (createUpdaterArtifacts).
+    // The data generator downloads files and the Tauri bundler builds the
+    // frontend, the app and the installer; neither sees the signing key.
+    // tauri.conf.json turns off the bundler's own signing
+    // (createUpdaterArtifacts).
+    let mut data = gen_data::command(root, false);
     let mut build = util::node_tool("pnpm", root);
     build.args(["--filter", PACKAGE, "tauri", "build"]);
     for var in KEY_VARS {
+        data.env_remove(var);
         build.env_remove(var);
     }
     if let Some(path) = &options.config {
         build.arg("--config").arg(path);
     }
+    util::run(&mut data)?;
     util::run(&mut build)?;
 
     let release = target.join("release");

@@ -13,10 +13,12 @@ import {
   type UpdateInfo,
   type UpdateProgress,
 } from "@/lib/backend"
+import { readStored, writeStored } from "@/lib/storage"
 
 /**
- * available: the portable build found a new version, to download by hand.
- * ready: the installed build has downloaded it and installs it on restart.
+ * available: a portable build in a read-only folder found a new version, to
+ * download by hand.
+ * ready: the new version is downloaded and goes in place on restart.
  */
 export type UpdateStatus =
   | "idle"
@@ -51,15 +53,6 @@ const AUTO_CHECK_KEY = "moongazer:update:autoCheck"
 const FIRST_CHECK_MS = 5_000
 const CHECK_EVERY_MS = 60 * 60 * 1000
 
-function readAutoCheck() {
-  try {
-    return localStorage.getItem(AUTO_CHECK_KEY) !== "off"
-  } catch {
-    // Storage unavailable: keep the default, on.
-    return true
-  }
-}
-
 let timer: ReturnType<typeof setTimeout> | undefined
 
 /** Checks after `delay` and then every hour, while automatic checks are on. */
@@ -81,7 +74,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   progress: null,
   failed: null,
   error: null,
-  autoCheck: readAutoCheck(),
+  autoCheck: readStored(AUTO_CHECK_KEY) !== "off",
 
   async load() {
     try {
@@ -105,8 +98,8 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         return
       }
       set({ update })
-      if (get().info?.portable) set({ status: "available" })
-      else await get().download()
+      if (get().info?.updatesInPlace) await get().download()
+      else set({ status: "available" })
     } catch (error) {
       if (manual) set({ status: "error", failed: "check", error: toBackendError(error).message })
       else set({ status: before })
@@ -126,10 +119,9 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     }
   },
 
-  /** Installed build: the app closes, installs and opens again. Portable: the download page. */
+  /** The app closes, puts the update in place and opens again; or the download page opens. */
   async install() {
-    const portable = get().info?.portable ?? false
-    if (!portable) set({ status: "restarting" })
+    if (get().info?.updatesInPlace) set({ status: "restarting" })
     try {
       await installUpdate()
     } catch (error) {
@@ -138,11 +130,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   },
 
   setAutoCheck(on) {
-    try {
-      localStorage.setItem(AUTO_CHECK_KEY, on ? "on" : "off")
-    } catch {
-      // Storage unavailable: the choice lasts until the app closes.
-    }
+    writeStored(AUTO_CHECK_KEY, on ? "on" : "off")
     set({ autoCheck: on })
     if (on) scheduleChecks(CHECK_EVERY_MS)
     else clearTimeout(timer)

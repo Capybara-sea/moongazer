@@ -6,6 +6,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod background;
+#[cfg(feature = "capture")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "nothing feeds the decoder before the capture helper exists"
+    )
+)]
+mod capture;
 mod icons;
 mod logging;
 mod portable;

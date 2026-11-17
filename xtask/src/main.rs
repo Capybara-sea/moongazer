@@ -15,6 +15,8 @@ mod dist;
 mod gen_data;
 mod guard;
 mod icons;
+#[cfg(feature = "capture")]
+mod pack;
 mod release;
 mod util;
 
@@ -38,6 +40,8 @@ commands:
   icons <source>                  regenerate the app icons from the logo (SVG or square PNG)
   gen-data [--update]             generate the game data tables (--update: move the source pins
                                   to the latest upstream commits first)
+  pack                            build the capture pack: upstream's keys and a game database
+                                  from the pinned AnimeGameData tables
 ";
 
 fn main() -> ExitCode {
@@ -71,6 +75,8 @@ fn run(args: &[String]) -> Result<()> {
             ["--update"] => gen_data::run(&root, true),
             _ => bail!("usage: cargo xtask gen-data [--update]"),
         },
+        #[cfg(feature = "capture")]
+        Some("pack") => pack::run(&root),
         Some("help" | "-h" | "--help") | None => {
             print!("{USAGE}");
             Ok(())

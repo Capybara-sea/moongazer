@@ -7,7 +7,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
-use serde_json::Value;
 
 use crate::{gen_data, guard, util};
 
@@ -38,7 +37,7 @@ pub fn run_job(root: &Path, job: &str) -> Result<()> {
     match job {
         "guard" => guard::run(root, guard::Mode::All),
         "fmt" => util::run(util::cargo(root).args(["fmt", "--all", "--check"])),
-        "clippy" => for_feature_sets(root, |features| {
+        "clippy" => for_feature_sets(|features| {
             util::run(
                 util::cargo(root)
                     .args(["clippy", "--locked", "--workspace", "--all-targets"])
@@ -46,7 +45,7 @@ pub fn run_job(root: &Path, job: &str) -> Result<()> {
                     .args(["--", "-D", "warnings"]),
             )
         }),
-        "test" => for_feature_sets(root, |features| {
+        "test" => for_feature_sets(|features| {
             util::run(
                 util::cargo(root)
                     .args(["test", "--locked", "--workspace"])
@@ -70,33 +69,12 @@ pub fn run_job(root: &Path, job: &str) -> Result<()> {
     }
 }
 
-/// Runs once with default features and, when a member defines `capture`, once
-/// more with it. `capture` stays out of every `default` feature list, so the
-/// first run is always the build without capture, which must keep working.
-fn for_feature_sets(root: &Path, mut run: impl FnMut(&[&str]) -> Result<()>) -> Result<()> {
+/// Runs once with default features and once more with `capture`. `capture`
+/// stays out of every `default` feature list, so the first run is always the
+/// build without capture, which must keep working.
+fn for_feature_sets(mut run: impl FnMut(&[&str]) -> Result<()>) -> Result<()> {
     run(&[])?;
-    if has_capture_feature(root)? {
-        run(&["--features", "capture"])?;
-    } else {
-        println!("(no member defines `capture` yet; skipped the capture build)");
-    }
-    Ok(())
-}
-
-fn has_capture_feature(root: &Path) -> Result<bool> {
-    let metadata = util::output(util::cargo(root).args([
-        "metadata",
-        "--locked",
-        "--no-deps",
-        "--format-version",
-        "1",
-    ]))?;
-    let metadata: Value = serde_json::from_str(&metadata).context("parsing cargo metadata")?;
-    Ok(metadata["packages"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .any(|package| package["features"].get("capture").is_some()))
+    run(&["--features", "capture"])
 }
 
 fn frontend(root: &Path) -> Result<()> {

@@ -2,7 +2,8 @@
 # Copyright (c) 2026 Capybara_sea
 
 [alias]
-xtask = "run --locked --package xtask --"
+# `capture` adds `cargo xtask pack`; nothing else in xtask needs it.
+xtask = "run --locked --package xtask --features capture --"
 
 # Applies to processes Cargo spawns (build scripts, rustc, xtask), so a
 # dependency's rust-toolchain.toml cannot make rustup install a toolchain.

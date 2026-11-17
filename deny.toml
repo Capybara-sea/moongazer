@@ -6,7 +6,16 @@ targets = ["x86_64-pc-windows-msvc"]
 all-features = true
 
 [advisories]
-ignore = []
+ignore = [
+    # The Marvin attack on rsa 0.9, which teyvatme-protocol decrypts the login
+    # exchange with. The keys are the game client's own, published upstream,
+    # and decryption runs offline on packets already captured, so there is no
+    # secret to time. Remove once upstream moves to rsa 0.10.
+    "RUSTSEC-2023-0071",
+    # chrono is unmaintained, not vulnerable. teyvatme-core depends on it and
+    # there is no maintained release to move to.
+    "RUSTSEC-2026-0543",
+]
 
 [licenses]
 # Grows with the dependency tree. Check a new license against MIT before
@@ -26,6 +35,4 @@ unknown-registry = "deny"
 unknown-git = "deny"
 required-git-spec = "tag"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-# The only git source will be https://github.com/tawan475/teyvat.me-capture,
-# added to allow-git in the same change that adds the dependency.
-allow-git = []
+allow-git = ["https://github.com/tawan475/teyvat.me-capture"]

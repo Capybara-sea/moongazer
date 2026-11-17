@@ -17,6 +17,7 @@ publish = false
 [workspace.dependencies]
 account = { path = "crates/account" }
 anyhow = "1.0"
+base64 = "0.22"
 flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
 log = { version = "0.4.35", features = ["max_level_info", "release_max_level_info"] }
 # No default features: they add a statement cache and a WebAssembly VFS.
@@ -39,6 +40,16 @@ tauri-plugin-notification = "~2.8"
 tauri-plugin-opener = "~2.7"
 tauri-plugin-single-instance = "~2.5"
 tauri-plugin-updater = "~2.14"
+# Teyvat.me Capture's decoding crates, behind the `capture` feature. Each is
+# named once, with one URL and one tag: spelled any other way, Cargo would
+# take the crates they share for a second source and the types would not
+# match. Without default features game-data has no downloader (and no second
+# reqwest).
+teyvatme-core = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.17.28", default-features = false }
+teyvatme-game-data = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.17.28", default-features = false }
+teyvatme-protocol = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.17.28", default-features = false }
+# Only for the channel type teyvatme-core's decoder sends its events on.
+tokio = { version = "1.47", default-features = false, features = ["sync"] }
 toml_edit = "0.25"
 # Account data reaches trace and debug logs in upstream crates, so nothing
 # above info is compiled in. Every crate that links them must also depend on
@@ -62,3 +73,11 @@ dbg_macro = "warn"
 todo = "warn"
 print_stdout = "warn"
 print_stderr = "warn"
+
+# As upstream's own workspace does: the session key search in the protocol
+# crate tries up to 3000 x 1000 seeds and crawls unoptimized.
+[profile.dev.package.teyvatme-protocol]
+opt-level = 2
+
+[profile.dev.package.teyvatme-game-data]
+opt-level = 2

@@ -64,8 +64,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Built before the signing secrets are in the environment, so the build
-      # scripts of xtask's dependencies never see them.
-      - run: cargo build --locked --package xtask
+      # scripts of xtask's dependencies never see them. Through the alias, so
+      # this is the same build the next step runs.
+      - run: cargo xtask help
       - name: Build, sign and package
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

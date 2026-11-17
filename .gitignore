@@ -12,5 +12,6 @@ desktop.ini
 .temp/
 
 apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/capture-pack/
 apps/desktop/src/generated/
 tools/datagen/.cache/

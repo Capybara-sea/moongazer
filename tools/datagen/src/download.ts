@@ -18,9 +18,21 @@ const waiting: (() => void)[] = []
 
 /** A file at a commit. Content at a commit never changes, so the cached copy is reused as is. */
 export async function download(repo: string, commit: string, path: string): Promise<string> {
+  const text = await downloadIfPresent(repo, commit, path)
+  if (text === undefined) throw new Error(`${repo} has no ${path} at ${commit}`)
+  return text
+}
+
+/** As `download`, for a file the repository may not have: `undefined` when it has none. */
+export async function downloadIfPresent(
+  repo: string,
+  commit: string,
+  path: string,
+): Promise<string | undefined> {
   const file = join(CACHE, repo.replace("/", "-"), commit, path)
   if (existsSync(file)) return readFile(file, "utf8")
   const text = await fetchText(`https://raw.githubusercontent.com/${repo}/${commit}/${path}`)
+  if (text === undefined) return undefined
   await mkdir(dirname(file), { recursive: true })
   // An interrupted run must not leave a partial file that later runs would trust.
   await writeFile(`${file}.part`, text)
@@ -30,12 +42,16 @@ export async function download(repo: string, commit: string, path: string): Prom
 
 export async function latestCommit(repo: string, branch: string): Promise<string> {
   const url = `https://api.github.com/repos/${repo}/commits/${branch}`
-  const sha = (await fetchText(url, { accept: "application/vnd.github.sha" })).trim()
+  const sha = (await fetchText(url, { accept: "application/vnd.github.sha" }))?.trim() ?? ""
   if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error(`unexpected commit id from ${url}`)
   return sha
 }
 
-async function fetchText(url: string, headers?: Record<string, string>): Promise<string> {
+/** The body, or `undefined` for a 404: that is an answer, not an outage, so it is not retried. */
+async function fetchText(
+  url: string,
+  headers?: Record<string, string>,
+): Promise<string | undefined> {
   if (active < MAX_REQUESTS) active++
   else await new Promise<void>(resolve => waiting.push(resolve))
   try {
@@ -45,6 +61,7 @@ async function fetchText(url: string, headers?: Record<string, string>): Promise
       try {
         const response = await fetch(url, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) })
         if (response.ok) return await response.text()
+        if (response.status === 404) return undefined
         // A rate limit or an outage may say when to come back.
         const retryAfter = Number(response.headers.get("retry-after"))
         if (retryAfter > 0) delay = Math.min(retryAfter, MAX_RETRY_AFTER_S) * 1000

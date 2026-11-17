@@ -6,7 +6,7 @@ import { text } from "@/text/zh"
 
 export function HomePage() {
   return (
-    <div className="mx-auto flex max-w-[848px] flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-[1240px] flex-col gap-4 p-6">
       <Panel aria-label={text.home.title} className="gap-0.5">
         <h2 className="font-semibold text-[15px]">{text.home.title}</h2>
         <p className="text-[13px] text-muted">{text.home.body}</p>

@@ -17,11 +17,21 @@ fn export_text(n: i64, characters: usize, uid: u64) -> String {
             )
         })
         .collect();
+    let artifacts: Vec<String> = [4, 4, 3]
+        .map(|rarity| {
+            format!(
+                r#"{{"setKey": "FakeSet", "slotKey": "flower", "level": 0, "rarity": {rarity},
+                    "mainStatKey": "hp"}}"#
+            )
+        })
+        .into();
     format!(
         r#"{{"format": "GOOD", "version": 3, "source": "Teyvat.me", "leyline": 1,
-            "timestamp": {n}, "characters": [{}], "weapons": [], "artifacts": [],
-            "materials": {{"Mora": {n}, "Primogem": 1}}, "gi_player": {{"uid": {uid}}}}}"#,
-        characters.join(",")
+            "timestamp": {n}, "characters": [{}], "weapons": [], "artifacts": [{}],
+            "materials": {{"Mora": {n}, "Primogem": 1, "SanctifyingEssence": 7}},
+            "gi_player": {{"uid": {uid}}}}}"#,
+        characters.join(","),
+        artifacts.join(",")
     )
 }
 
@@ -99,7 +109,82 @@ fn an_import_is_saved_with_its_summary_and_export() {
     assert_eq!(snapshot.summary.mora, Some(1000));
     assert!(snapshot.has_raw);
     assert_eq!(db.raw(snapshot.id).unwrap().unwrap(), text.as_bytes());
-    assert_eq!(db.list().unwrap().len(), 1);
+    let list = db.list().unwrap();
+    assert_eq!(list.len(), 1);
+    let summary = &list[0].summary;
+    assert_eq!((summary.artifacts4, summary.artifacts3), (Some(2), Some(1)));
+    assert_eq!(summary.essence, Some(7));
+}
+
+/// A database as the first version of the schema left it.
+fn v1_database(path: &Path) -> Connection {
+    let mut conn = Connection::open(path).unwrap();
+    let tx = conn.transaction().unwrap();
+    MIGRATIONS[0](&tx).unwrap();
+    tx.pragma_update(None, "user_version", 1).unwrap();
+    tx.commit().unwrap();
+    conn
+}
+
+fn insert_v1(conn: &Connection, taken_at: i64, raw: Option<&[u8]>) {
+    conn.execute(
+        "INSERT INTO snapshots (taken_at, imported_at, format, source, uid, content_hash,
+             characters, weapons, artifacts, materials, mora, primogems, raw)
+         VALUES (?1, 0, 'leyline', 'Teyvat.me', 1, ?2, 1, 0, 3, 3, ?1, 1, ?3)",
+        params![
+            taken_at,
+            taken_at.to_le_bytes(),
+            raw.map(|raw| compress(raw).unwrap())
+        ],
+    )
+    .unwrap();
+}
+
+#[test]
+fn an_empty_v1_database_upgrades() {
+    let dir = TempDir::new("v1-empty");
+    let path = dir.0.join("moongazer.db");
+    drop(v1_database(&path));
+    let mut db = Db::open(&path).unwrap();
+    let version: usize = db
+        .conn
+        .pragma_query_value(None, "user_version", |row| row.get(0))
+        .unwrap();
+    assert_eq!(version, MIGRATIONS.len());
+    assert!(db.list().unwrap().is_empty());
+    saved(import(&mut db, &export_text(1000, 1, 1), false));
+}
+
+#[test]
+fn a_v1_database_gets_the_new_counts_from_the_exports_it_kept() {
+    let dir = TempDir::new("v1-rows");
+    let path = dir.0.join("moongazer.db");
+    let conn = v1_database(&path);
+    insert_v1(&conn, 1000, None);
+    insert_v1(&conn, 2000, Some(export_text(2000, 1, 1).as_bytes()));
+    insert_v1(&conn, 3000, Some(b"not json"));
+    drop(conn);
+
+    let db = Db::open(&path).unwrap();
+    let list = db.list().unwrap();
+    let times: Vec<i64> = list.iter().map(|s| s.taken_at).collect();
+    assert_eq!(times, [3000, 2000, 1000]);
+    let [unreadable, kept, dropped] = &list[..] else {
+        panic!("expected three snapshots");
+    };
+    let summary = &kept.summary;
+    assert_eq!((summary.artifacts4, summary.artifacts3), (Some(2), Some(1)));
+    assert_eq!(summary.essence, Some(7));
+    assert_eq!(summary.mora, Some(2000));
+    for old in [unreadable, dropped] {
+        let summary = &old.summary;
+        assert_eq!(
+            (summary.artifacts4, summary.artifacts3, summary.essence),
+            (None, None, None)
+        );
+        assert_eq!(summary.artifacts, 3);
+    }
+    assert!(unreadable.has_raw && kept.has_raw && !dropped.has_raw);
 }
 
 #[test]

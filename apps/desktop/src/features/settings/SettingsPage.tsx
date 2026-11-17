@@ -19,7 +19,7 @@ const THEMES: { theme: ThemeMode; label: string }[] = [
 
 export function SettingsPage() {
   return (
-    <div className="mx-auto flex max-w-[880px] flex-col gap-4.5 p-6">
+    <div className="mx-auto flex max-w-[1240px] flex-col gap-4.5 p-6">
       <h1 className="font-semibold text-[20px] leading-[1.3]">{text.settings.title}</h1>
       <DataPanel />
       <AppearancePanel />

@@ -8,5 +8,10 @@
     "repo": "frzyc/genshin-optimizer",
     "branch": "master",
     "commit": "f52264cbbf7248ab4e055adc1e96af879ea93036"
+  },
+  "animeGameData": {
+    "repo": "DimbreathBot/AnimeGameData",
+    "branch": "main",
+    "commit": "a311cd77d7dafbd2bedc7d3cac4e986c6125b586"
   }
 }

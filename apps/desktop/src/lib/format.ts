@@ -38,12 +38,41 @@ export function formatWhen(ms: number, now = Date.now()) {
 /** "2026-11-13 21:04" in local time. */
 export function formatDateTime(ms: number) {
   const d = new Date(ms)
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()}-${formatMonthDay(ms)} ${formatTime(ms)}`
+}
+
+/** "11-13" in local time. */
+export function formatMonthDay(ms: number) {
+  const d = new Date(ms)
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+/** "21:04" in local time. */
+export function formatTime(ms: number) {
+  const d = new Date(ms)
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const grouped = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 })
+const groupedTenths = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+})
+
+/** "3,280". */
+export function formatNumber(n: number) {
+  return grouped.format(n)
+}
+
+/** As formatNumber, but from 10,000 on in units of 10,000 with one decimal, e.g. 1,248.0 of them. */
+export function formatAmount(n: number) {
+  return Math.abs(n) >= 10_000
+    ? text.number.tenThousand(groupedTenths.format(n / 10_000))
+    : formatNumber(n)
 }
 
 /** "+160" or "-3"; from 10,000 on, in units of 10,000 with one decimal. */
 export function formatDelta(n: number) {
   const sign = n > 0 ? "+" : n < 0 ? "-" : ""
-  const abs = Math.abs(n)
-  return sign + (abs >= 10_000 ? text.number.tenThousand((abs / 10_000).toFixed(1)) : String(abs))
+  return sign + formatAmount(Math.abs(n))
 }

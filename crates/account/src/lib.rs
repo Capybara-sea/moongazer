@@ -93,12 +93,19 @@ pub struct Summary {
     pub characters: u32,
     pub weapons: u32,
     pub artifacts: u32,
+    /// Artifacts of 4 and 3 stars. These and `essence` are `None` for a
+    /// snapshot whose export was already dropped when the app began counting
+    /// them.
+    pub artifacts4: Option<u32>,
+    pub artifacts3: Option<u32>,
     /// Material kinds with a non-zero count.
     pub materials: u32,
     /// `None` when the file does not say, as GO's own exports without
     /// materials.
     pub mora: Option<u64>,
     pub primogems: Option<u64>,
+    /// Sanctifying Essence, under the same rule as Mora.
+    pub essence: Option<u64>,
 }
 
 /// The distinct keys of an export, sorted, for checking against the names
@@ -131,13 +138,17 @@ impl Export {
             Some(&n) => Some(n),
             None => zero_if_missing.then_some(0),
         };
+        let rarity = |stars| count(data.artifacts.iter().filter(|a| a.rarity == stars).count());
         Summary {
             characters: count(data.characters.len()),
             weapons: count(data.weapons.len()),
             artifacts: count(data.artifacts.len()),
+            artifacts4: Some(rarity(4)),
+            artifacts3: Some(rarity(3)),
             materials: count(data.materials.values().filter(|&&n| n > 0).count()),
             mora: currency("Mora"),
             primogems: currency("Primogem"),
+            essence: currency("SanctifyingEssence"),
         }
     }
 

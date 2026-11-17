@@ -5,6 +5,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod icons;
 mod logging;
 mod portable;
 mod snapshots;
@@ -55,6 +56,8 @@ fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(mode)
         .manage(update::Pending::default())
+        .manage(icons::Icons::new().unwrap_or_else(|err| fatal(&err.to_string())))
+        .register_asynchronous_uri_scheme_protocol(icons::SCHEME, icons::protocol)
         .setup(move |app| {
             let guard = logging::init(&app.path().app_log_dir()?)?;
             app.manage(guard);
@@ -82,6 +85,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             snapshots::import_snapshot,
             snapshots::list_snapshots,
+            snapshots::snapshot_export,
             snapshots::data_dir,
             snapshots::open_data_dir,
             update::app_info,

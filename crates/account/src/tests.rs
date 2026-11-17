@@ -59,9 +59,12 @@ fn a_good_file_parses_without_v3_fields() {
             characters: 2,
             weapons: 2,
             artifacts: 1,
+            artifacts4: Some(0),
+            artifacts3: Some(0),
             materials: 0,
             mora: None,
             primogems: None,
+            essence: None,
         }
     );
     let keys = export.keys();
@@ -82,6 +85,8 @@ fn a_leyline_file_has_its_time_account_and_currencies() {
     assert_eq!(summary.materials, 2);
     assert_eq!(summary.mora, Some(0));
     assert_eq!(summary.primogems, Some(160));
+    assert_eq!(summary.essence, Some(0));
+    assert_eq!((summary.artifacts4, summary.artifacts3), (Some(1), Some(0)));
     assert_eq!(export.keys().materials, ["FakeHerb", "Primogem"]);
 }
 
@@ -89,8 +94,31 @@ fn a_leyline_file_has_its_time_account_and_currencies() {
 fn a_good_file_without_currencies_does_not_claim_zero() {
     let text = r#"{"format": "GOOD", "version": 2, "materials": {"FakeHerb": 7}}"#;
     let summary = parse_str(text).unwrap().summary();
-    assert_eq!((summary.mora, summary.primogems), (None, None));
+    assert_eq!(
+        (summary.mora, summary.primogems, summary.essence),
+        (None, None, None)
+    );
     assert_eq!(summary.materials, 1);
+}
+
+#[test]
+fn artifacts_are_counted_by_rarity_and_essence_is_read() {
+    let artifact = |rarity: u32| {
+        format!(
+            r#"{{"setKey": "FakeSet", "slotKey": "flower", "level": 0, "rarity": {rarity},
+                "mainStatKey": "hp"}}"#
+        )
+    };
+    let artifacts: Vec<String> = [5, 4, 4, 3, 3, 3, 1].map(artifact).into();
+    let text = format!(
+        r#"{{"format": "GOOD", "version": 2, "artifacts": [{}],
+            "materials": {{"SanctifyingEssence": 42}}}}"#,
+        artifacts.join(",")
+    );
+    let summary = parse_str(&text).unwrap().summary();
+    assert_eq!(summary.artifacts, 7);
+    assert_eq!((summary.artifacts4, summary.artifacts3), (Some(2), Some(3)));
+    assert_eq!(summary.essence, Some(42));
 }
 
 #[test]

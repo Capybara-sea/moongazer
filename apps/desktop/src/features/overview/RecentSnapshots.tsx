@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Panel } from "@/components/Panel"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatDelta, formatWhen } from "@/lib/format"
+import { useNow } from "@/lib/useNow"
 import { text } from "@/text/zh"
 
 /** Rows shown before "all" is pressed. */
@@ -51,11 +52,7 @@ export function describeChange(snapshot: Snapshot, older: Snapshot[]) {
 export function RecentSnapshots({ snapshots }: { snapshots: Snapshot[] }) {
   const [all, setAll] = useState(false)
   // Relative times ("5 minutes ago" and so on) move on while the page stays open.
-  const [now, setNow] = useState(Date.now)
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60_000)
-    return () => clearInterval(timer)
-  }, [])
+  const now = useNow()
   const shown = all ? snapshots : snapshots.slice(0, FIRST_ROWS)
   return (
     <Panel aria-label={text.overview.recent} className="gap-0 px-4 pt-3.5 pb-1.5">
@@ -65,7 +62,7 @@ export function RecentSnapshots({ snapshots }: { snapshots: Snapshot[] }) {
           <button
             type="button"
             onClick={() => setAll(!all)}
-            className="h-[30px] cursor-pointer rounded-[8px] px-2 text-[13px] text-accent hover:bg-default/60"
+            className="h-[30px] cursor-pointer rounded-[8px] px-2 text-(--accent-text) text-[13px] hover:bg-default/60"
           >
             {all ? text.overview.showLess : text.overview.showAll}
           </button>

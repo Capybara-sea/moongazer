@@ -78,6 +78,84 @@
     --pop-shadow: 0 0 0 1px rgb(0 0 0 / 0.05), 0 12px 32px rgb(0 0 0 / 0.45);
   }
 
+  /* Account pages: links and gains, the 5-star gold, and the Mora and Primogem series. */
+  :root,
+  .light,
+  [data-theme="light"] {
+    --accent-text: #1459bd;
+    --gold-fg: #7d5a0f;
+    --gold-bg: rgb(200 155 60 / 0.16);
+    --c-mora: #9a6f12;
+    --c-primo: #1f72b8;
+    --shadow: 0 1px 2px rgb(20 28 48 / 0.08);
+  }
+  .dark,
+  [data-theme="dark"] {
+    --accent-text: #7fb2ff;
+    --gold-fg: #e5c07b;
+    --gold-bg: rgb(200 155 60 / 0.18);
+    --c-mora: #b88a2e;
+    --c-primo: #3b8fd9;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  }
+
+  /*
+   * The 4-star purple, and the elements: text colours per theme, and tinted
+   * backgrounds and borders (the same in both) for avatars and filters.
+   */
+  :root,
+  .light,
+  [data-theme="light"] {
+    --purple-fg: #6941b3;
+    --purple-bg: rgb(150 110 230 / 0.14);
+    --el-pyro: #c8402a;
+    --el-hydro: #1f72b8;
+    --el-anemo: #148a74;
+    --el-electro: #7a48c4;
+    --el-dendro: #3f7f1c;
+    --el-cryo: #2a8aa8;
+    --el-geo: #9a6f12;
+  }
+  .dark,
+  [data-theme="dark"] {
+    --purple-fg: #c9b0f7;
+    --purple-bg: rgb(150 110 230 / 0.2);
+    --el-pyro: #f0745c;
+    --el-hydro: #4ea6f0;
+    --el-anemo: #45c9ae;
+    --el-electro: #b48cf0;
+    --el-dendro: #7cc24a;
+    --el-cryo: #8fd3ea;
+    --el-geo: #e0b450;
+  }
+  :root {
+    --el-pyro-bg: rgb(226 83 58 / 0.22);
+    --el-pyro-line: rgb(226 83 58 / 0.55);
+    --el-hydro-bg: rgb(47 143 224 / 0.22);
+    --el-hydro-line: rgb(47 143 224 / 0.55);
+    --el-anemo-bg: rgb(47 179 154 / 0.22);
+    --el-anemo-line: rgb(47 179 154 / 0.55);
+    --el-electro-bg: rgb(155 106 224 / 0.24);
+    --el-electro-line: rgb(155 106 224 / 0.55);
+    --el-dendro-bg: rgb(95 168 52 / 0.22);
+    --el-dendro-line: rgb(95 168 52 / 0.55);
+    --el-cryo-bg: rgb(108 192 220 / 0.24);
+    --el-cryo-line: rgb(108 192 220 / 0.55);
+    --el-geo-bg: rgb(212 162 58 / 0.22);
+    --el-geo-line: rgb(212 162 58 / 0.55);
+  }
+
+  /* Name card art behind the account card's white text; the same in both themes. */
+  :root {
+    --name-card-shade: linear-gradient(
+      90deg,
+      rgb(10 15 30 / 0.62) 0%,
+      rgb(10 15 30 / 0.35) 55%,
+      rgb(10 15 30 / 0.1) 100%
+    );
+    --name-card-text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  }
+
   /*
    * Glass, the design's default look: more see-through surfaces and borders
    * and stronger glows, with the blur and highlights of the .glass classes.
@@ -234,24 +312,35 @@ button#decorum-tb-close:hover {
  * glass panels have nothing behind them to blur, and change colour when it
  * starts and ends. Transitions, not animations, so a page that is switched
  * back before it is done turns around from where it is.
+ *
+ * A block that holds glass panels (a row or grid of cards) stays put and its
+ * panels and other parts move instead: blur and opacity on an ancestor would
+ * cut the panels off from the glow behind them. They share their block's
+ * delay through --rise-delay.
  */
 @media (prefers-reduced-motion: no-preference) {
   :root:not([data-reduce-motion="true"]) {
-    [data-page] > * > * {
-      transition-property: opacity, transform, filter;
-      transition-duration: 480ms;
+    [data-page] > * > :not(:has(.glass)),
+    [data-page] > * > :has(.glass) > :not(:has(.glass)),
+    [data-page] > * > :has(.glass) .glass {
+      /* The border too, quick and at once: this replaces a card's own hover transition. */
+      transition-property: opacity, transform, filter, border-color;
+      transition-duration: 480ms, 480ms, 480ms, 150ms;
       transition-timing-function: var(--ease-out-soft);
+      transition-delay: var(--rise-delay, 0ms), var(--rise-delay, 0ms), var(--rise-delay, 0ms), 0ms;
     }
     [data-page] > * > :nth-child(2) {
-      transition-delay: 70ms;
+      --rise-delay: 70ms;
     }
     [data-page] > * > :nth-child(3) {
-      transition-delay: 140ms;
+      --rise-delay: 140ms;
     }
     [data-page] > * > :nth-child(n + 4) {
-      transition-delay: 210ms;
+      --rise-delay: 210ms;
     }
-    [data-page][data-leaving] > * > * {
+    [data-page][data-leaving] > * > :not(:has(.glass)),
+    [data-page][data-leaving] > * > :has(.glass) > :not(:has(.glass)),
+    [data-page][data-leaving] > * > :has(.glass) .glass {
       opacity: 0;
       transform: scale(0.96);
       filter: blur(10px);
@@ -261,10 +350,14 @@ button#decorum-tb-close:hover {
     }
   }
   @starting-style {
-    :root:not([data-reduce-motion="true"]) [data-page] > * > * {
-      opacity: 0;
-      transform: translateY(var(--page-shift, 12px)) scale(0.985);
-      filter: blur(6px);
+    :root:not([data-reduce-motion="true"]) {
+      [data-page] > * > :not(:has(.glass)),
+      [data-page] > * > :has(.glass) > :not(:has(.glass)),
+      [data-page] > * > :has(.glass) .glass {
+        opacity: 0;
+        transform: translateY(var(--page-shift, 12px)) scale(0.985);
+        filter: blur(6px);
+      }
     }
   }
 }

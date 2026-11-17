@@ -28,6 +28,11 @@ export type Summary = {
   /** null when the file had no materials at all. */
   mora: number | null
   primogems: number | null
+  /** 4★ and 3★ artifacts; null for snapshots imported before these were counted. */
+  artifacts4: number | null
+  artifacts3: number | null
+  /** Sanctifying Essence, null as for Mora. */
+  essence: number | null
 }
 export type Snapshot = {
   id: number
@@ -128,7 +133,10 @@ function parseSummary(value: unknown): Summary {
     isNumber(value.artifacts) &&
     isNumber(value.materials) &&
     isNullableNumber(value.mora) &&
-    isNullableNumber(value.primogems)
+    isNullableNumber(value.primogems) &&
+    isNullableNumber(value.artifacts4) &&
+    isNullableNumber(value.artifacts3) &&
+    isNullableNumber(value.essence)
   ) {
     return {
       characters: value.characters,
@@ -137,6 +145,9 @@ function parseSummary(value: unknown): Summary {
       materials: value.materials,
       mora: value.mora,
       primogems: value.primogems,
+      artifacts4: value.artifacts4,
+      artifacts3: value.artifacts3,
+      essence: value.essence,
     }
   }
   throw protocolError("snapshot summary")
@@ -274,6 +285,21 @@ export async function listSnapshots() {
   const value = await call("list_snapshots")
   if (!Array.isArray(value)) throw protocolError("snapshot list")
   return value.map(parseSnapshot)
+}
+
+/**
+ * The original export of a snapshot as JSON, or null once only its summary
+ * is kept. Checked field by field in domain/account.
+ */
+export async function getSnapshotExport(id: number): Promise<unknown> {
+  const value = await call("snapshot_export", { id })
+  if (value === null) return null
+  if (typeof value !== "string") throw protocolError("snapshot export")
+  try {
+    return JSON.parse(value)
+  } catch {
+    throw protocolError("snapshot export")
+  }
 }
 
 export async function getDataDir() {

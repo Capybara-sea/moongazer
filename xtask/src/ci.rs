@@ -108,7 +108,7 @@ fn frontend(root: &Path) -> Result<()> {
         println!("(no pnpm workspace packages yet; skipped typecheck, test and build)");
         return Ok(());
     }
-    // The frontend imports the generated name table, which is not in git.
+    // The frontend imports the generated game data tables, which are not in git.
     gen_data::run(root, false)?;
     for script in ["typecheck", "test", "build"] {
         util::run(util::node_tool("pnpm", root).args(["-r", "run", "--if-present", script]))?;

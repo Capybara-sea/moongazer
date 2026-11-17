@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { download } from "./download.ts"
-import type { Tables } from "./snap.ts"
+import type { Tables } from "./tables.ts"
 
 const DIR = "libs/gi/consts/src"
 const WEAPON_LISTS = [

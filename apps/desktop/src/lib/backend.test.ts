@@ -18,7 +18,17 @@ const snapshot = {
   importedAt: 1_700_000_100_000,
   format: "leyline",
   source: "Teyvat.me",
-  summary: { characters: 2, weapons: 3, artifacts: 4, materials: 5, mora: 6, primogems: null },
+  summary: {
+    characters: 2,
+    weapons: 3,
+    artifacts: 4,
+    materials: 5,
+    mora: 6,
+    primogems: null,
+    artifacts4: 1,
+    artifacts3: null,
+    essence: 7,
+  },
   hasRaw: true,
 }
 

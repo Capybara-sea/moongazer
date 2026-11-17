@@ -19,36 +19,84 @@ use flate2::Compression;
 use flate2::read::DeflateDecoder;
 use flate2::write::DeflateEncoder;
 use rusqlite::types::Type;
-use rusqlite::{Connection, OptionalExtension, Row, params};
+use rusqlite::{Connection, OptionalExtension, Row, Transaction, params};
 use serde::Serialize;
 
 pub const FULL_SNAPSHOTS: u32 = 100;
 
+type Migration = fn(&Transaction<'_>) -> Result<()>;
+
 /// Schema changes, in order. `user_version` counts how many have run.
-const MIGRATIONS: &[&str] = &["
-    CREATE TABLE snapshots (
-        id INTEGER PRIMARY KEY,
-        -- Unix milliseconds: when the data was read, and when it was imported.
-        taken_at INTEGER NOT NULL,
-        imported_at INTEGER NOT NULL,
-        format TEXT NOT NULL,
-        source TEXT NOT NULL,
-        uid INTEGER,
-        content_hash BLOB NOT NULL UNIQUE,
-        characters INTEGER NOT NULL,
-        weapons INTEGER NOT NULL,
-        artifacts INTEGER NOT NULL,
-        materials INTEGER NOT NULL,
-        mora INTEGER,
-        primogems INTEGER,
-        -- The export, deflated; NULL once it falls out of the newest ones.
-        raw BLOB
-    );
-    CREATE INDEX snapshots_taken_at ON snapshots (taken_at);
-"];
+const MIGRATIONS: &[Migration] = &[create_snapshots, add_rarities_and_essence];
+
+fn create_snapshots(tx: &Transaction<'_>) -> Result<()> {
+    tx.execute_batch(
+        "
+        CREATE TABLE snapshots (
+            id INTEGER PRIMARY KEY,
+            -- Unix milliseconds: when the data was read, and when it was imported.
+            taken_at INTEGER NOT NULL,
+            imported_at INTEGER NOT NULL,
+            format TEXT NOT NULL,
+            source TEXT NOT NULL,
+            uid INTEGER,
+            content_hash BLOB NOT NULL UNIQUE,
+            characters INTEGER NOT NULL,
+            weapons INTEGER NOT NULL,
+            artifacts INTEGER NOT NULL,
+            materials INTEGER NOT NULL,
+            mora INTEGER,
+            primogems INTEGER,
+            -- The export, deflated; NULL once it falls out of the newest ones.
+            raw BLOB
+        );
+        CREATE INDEX snapshots_taken_at ON snapshots (taken_at);
+        ",
+    )?;
+    Ok(())
+}
+
+/// Older rows get the new counts from their kept export; rows without one
+/// keep NULL.
+fn add_rarities_and_essence(tx: &Transaction<'_>) -> Result<()> {
+    tx.execute_batch(
+        "
+        ALTER TABLE snapshots ADD COLUMN artifacts_4 INTEGER;
+        ALTER TABLE snapshots ADD COLUMN artifacts_3 INTEGER;
+        ALTER TABLE snapshots ADD COLUMN essence INTEGER;
+        ",
+    )?;
+    let mut summaries = Vec::new();
+    let mut select = tx.prepare("SELECT id, raw FROM snapshots WHERE raw IS NOT NULL")?;
+    let mut rows = select.query([])?;
+    while let Some(row) = rows.next()? {
+        let raw: Vec<u8> = row.get(1)?;
+        // Every kept export parsed when it was imported. Should one stop
+        // parsing, its row keeps NULL rather than the app failing to start.
+        if let Some(export) = decompress(&raw)
+            .ok()
+            .and_then(|bytes| account::parse(&bytes).ok())
+        {
+            summaries.push((row.get::<_, i64>(0)?, export.summary()));
+        }
+    }
+    let mut update = tx.prepare(
+        "UPDATE snapshots SET artifacts_4 = ?2, artifacts_3 = ?3, essence = ?4 WHERE id = ?1",
+    )?;
+    for (id, summary) in summaries {
+        update.execute(params![
+            id,
+            summary.artifacts4,
+            summary.artifacts3,
+            summary.essence
+        ])?;
+    }
+    Ok(())
+}
 
 const COLUMNS: &str = "id, taken_at, imported_at, format, source, uid, characters, weapons, \
-                       artifacts, materials, mora, primogems, raw IS NOT NULL";
+                       artifacts, artifacts_4, artifacts_3, materials, mora, primogems, essence, \
+                       raw IS NOT NULL";
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -146,8 +194,9 @@ impl Db {
         let tx = self.conn.transaction()?;
         tx.execute(
             "INSERT INTO snapshots (taken_at, imported_at, format, source, uid, content_hash,
-                 characters, weapons, artifacts, materials, mora, primogems, raw)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                 characters, weapons, artifacts, artifacts_4, artifacts_3, materials, mora,
+                 primogems, essence, raw)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
             params![
                 taken_at,
                 now,
@@ -158,9 +207,12 @@ impl Db {
                 summary.characters,
                 summary.weapons,
                 summary.artifacts,
+                summary.artifacts4,
+                summary.artifacts3,
                 summary.materials,
                 summary.mora,
                 summary.primogems,
+                summary.essence,
                 compressed,
             ],
         )?;
@@ -222,9 +274,9 @@ fn migrate(conn: &mut Connection) -> Result<()> {
     if version > MIGRATIONS.len() {
         bail!("the database is from a newer version of the app (schema {version})");
     }
-    for (done, sql) in MIGRATIONS.iter().enumerate().skip(version) {
+    for (done, migration) in MIGRATIONS.iter().enumerate().skip(version) {
         let tx = conn.transaction()?;
-        tx.execute_batch(sql)?;
+        migration(&tx)?;
         tx.pragma_update(None, "user_version", done + 1)?;
         tx.commit()?;
     }
@@ -247,11 +299,14 @@ fn snapshot(row: &Row<'_>) -> rusqlite::Result<Snapshot> {
             characters: row.get(6)?,
             weapons: row.get(7)?,
             artifacts: row.get(8)?,
-            materials: row.get(9)?,
-            mora: row.get(10)?,
-            primogems: row.get(11)?,
+            artifacts4: row.get(9)?,
+            artifacts3: row.get(10)?,
+            materials: row.get(11)?,
+            mora: row.get(12)?,
+            primogems: row.get(13)?,
+            essence: row.get(14)?,
         },
-        has_raw: row.get(12)?,
+        has_raw: row.get(15)?,
     })
 }
 

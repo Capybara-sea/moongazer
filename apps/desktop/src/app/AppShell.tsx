@@ -2,17 +2,22 @@
 // Copyright (c) 2026 Capybara_sea
 
 import iconUrl from "@logo/icon.svg?url"
-import { House, Info, LayoutDashboard, Settings } from "lucide-react"
+import { Gem, House, Info, LayoutDashboard, Package, Settings, Sword, Users } from "lucide-react"
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
+import { navigate, type PageKey, usePage } from "@/lib/route"
 import { text } from "@/text/zh"
-import { navigate, PAGES, type PageKey, usePage } from "./route"
+import { PAGES } from "./route"
 import { ThemeToggle } from "./ThemeToggle"
 
 const NAV_ICONS = {
   home: House,
   overview: LayoutDashboard,
+  characters: Users,
+  weapons: Sword,
+  artifacts: Gem,
+  materials: Package,
   settings: Settings,
   about: Info,
 } as const
@@ -87,7 +92,7 @@ export function AppShell({ pages }: Props) {
                 hidden={p.key !== page && p.key !== leaving}
                 inert={p.key === leaving}
                 className={cn(
-                  "h-full min-h-0 overflow-auto",
+                  "h-full min-h-0 overflow-auto [scrollbar-gutter:stable]",
                   p.key === leaving ? "absolute inset-0" : "relative",
                   p.key === front ? "z-2" : "z-1",
                 )}
@@ -185,6 +190,12 @@ function TitleBar() {
         <span className="pointer-events-none font-semibold text-xs tracking-[0.04em]">
           {text.appName}
         </span>
+        {/* Only under the dev server, so a dev window is never taken for a release. */}
+        {import.meta.env.DEV && (
+          <span className="pointer-events-none rounded-[5px] border border-(--warn) px-1.5 text-(--warn) text-[11px] leading-4">
+            {text.devBuild}
+          </span>
+        )}
       </div>
     </header>
   )

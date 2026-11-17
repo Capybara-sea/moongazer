@@ -36,7 +36,7 @@ commands:
   dist [--config <file>] [--base-url <url>]
                                   build the signed installer, portable zip, latest.json and checksums
   icons <source>                  regenerate the app icons from the logo (SVG or square PNG)
-  gen-data [--update]             generate the game name table (--update: move the source pins
+  gen-data [--update]             generate the game data tables (--update: move the source pins
                                   to the latest upstream commits first)
 ";
 

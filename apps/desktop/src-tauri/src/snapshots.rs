@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! Snapshot commands: importing GOOD and Leyline files and listing the
-//! history. The database lives in the app's local data directory, which the
-//! portable build keeps in `app-data`.
+//! Snapshot commands: importing GOOD and Leyline files, listing the history
+//! and reading back kept exports. The database lives in the app's local data
+//! directory, which the portable build keeps in `app-data`.
 
 use std::path::PathBuf;
 use std::sync::{Mutex, MutexGuard};
@@ -116,6 +116,27 @@ pub async fn list_snapshots(storage: State<'_, Storage>) -> Result<Vec<Snapshot>
         .as_ref()
         .map_err(|err| SnapshotError::Storage(err.clone()))?;
     db.list().map_err(storage_error)
+}
+
+/// The original export of a snapshot, or `None` once it is no longer kept.
+#[tauri::command]
+pub async fn snapshot_export(
+    storage: State<'_, Storage>,
+    id: i64,
+) -> Result<Option<String>, SnapshotError> {
+    let raw = {
+        let guard = storage.lock();
+        let db = guard
+            .as_ref()
+            .map_err(|err| SnapshotError::Storage(err.clone()))?;
+        db.raw(id).map_err(storage_error)?
+    };
+    let text = raw
+        .map(String::from_utf8)
+        .transpose()
+        .map_err(|err| SnapshotError::Storage(err.to_string()))?;
+    tracing::info!(bytes = text.as_ref().map(String::len), "export read");
+    Ok(text)
 }
 
 /// Where the database, logs and caches are.

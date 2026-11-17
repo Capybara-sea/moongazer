@@ -3,7 +3,15 @@
 
 import { describe, expect, it } from "vitest"
 import { text } from "@/text/zh"
-import { formatDateTime, formatDelta, formatWhen } from "./format"
+import {
+  formatAmount,
+  formatDateTime,
+  formatDelta,
+  formatMonthDay,
+  formatNumber,
+  formatTime,
+  formatWhen,
+} from "./format"
 
 const now = new Date(2026, 10, 17, 12, 0).getTime()
 const at = (month: number, day: number, hour: number, minute = 0, year = 2026) =>
@@ -34,6 +42,40 @@ describe("formatDateTime", () => {
   })
 })
 
+describe("formatMonthDay and formatTime", () => {
+  it("pad the month, day, hour and minute to two digits", () => {
+    expect(formatMonthDay(at(3, 5, 7, 9))).toBe("03-05")
+    expect(formatMonthDay(at(12, 31, 23, 59))).toBe("12-31")
+    expect(formatTime(at(3, 5, 7, 9))).toBe("07:09")
+    expect(formatTime(at(11, 17, 0, 0))).toBe("00:00")
+    expect(formatTime(at(12, 31, 23, 59))).toBe("23:59")
+  })
+})
+
+describe("formatNumber", () => {
+  it("groups thousands and rounds to a whole number", () => {
+    expect(formatNumber(0)).toBe("0")
+    expect(formatNumber(3_280)).toBe("3,280")
+    expect(formatNumber(1_234_567)).toBe("1,234,567")
+    expect(formatNumber(-3_280)).toBe("-3,280")
+    expect(formatNumber(1_234.6)).toBe("1,235")
+  })
+})
+
+describe("formatAmount", () => {
+  it("counts in units of ten thousand from 10,000 on", () => {
+    expect(formatAmount(9_999)).toBe("9,999")
+    expect(formatAmount(10_000)).toBe(text.number.tenThousand("1.0"))
+    expect(formatAmount(12_345)).toBe(text.number.tenThousand("1.2"))
+    expect(formatAmount(12_480_000)).toBe(text.number.tenThousand("1,248.0"))
+  })
+
+  it("keeps the minus sign of negative amounts", () => {
+    expect(formatAmount(-9_999)).toBe("-9,999")
+    expect(formatAmount(-12_480_000)).toBe(text.number.tenThousand("-1,248.0"))
+  })
+})
+
 describe("formatDelta", () => {
   it("signs small numbers and shortens large ones", () => {
     expect(formatDelta(160)).toBe("+160")
@@ -41,5 +83,12 @@ describe("formatDelta", () => {
     expect(formatDelta(0)).toBe("0")
     expect(formatDelta(126_000)).toBe(`+${text.number.tenThousand("12.6")}`)
     expect(formatDelta(-140_000)).toBe(`-${text.number.tenThousand("14.0")}`)
+  })
+
+  it("groups thousands on both sides of ten thousand", () => {
+    expect(formatDelta(9_999)).toBe("+9,999")
+    expect(formatDelta(-1_234)).toBe("-1,234")
+    expect(formatDelta(12_480_000)).toBe(`+${text.number.tenThousand("1,248.0")}`)
+    expect(formatDelta(-12_480_000)).toBe(`-${text.number.tenThousand("1,248.0")}`)
   })
 })

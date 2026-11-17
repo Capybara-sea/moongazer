@@ -84,6 +84,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the GOOD file itself counts only in the snapshot history.
 - Game icons, downloaded when first shown from Enka.Network or Project Amber
   and kept in the data folder.
+- Message center, behind a bell in the title bar: reminders worked out from
+  the newest Leyline snapshot (Original Resin full, expeditions done,
+  Parametric Transformer ready, three days of Welkin Moon left, unclaimed
+  commission rewards in the evening, Realm Currency nearly full, Spiral Abyss
+  and Imaginarium Theater resetting in two days) and found updates. A red dot
+  shows until the list is opened, and the bell swings once when a message
+  arrives. Messages are grouped by day, open their page when clicked, keep
+  the newest 100 and can be cleared.
+- Windows notifications for reminders while the app is in the background
+  (minimized, in the tray or behind the game); clicking one while it is on
+  screen brings the window back on the reminder's page. They can be turned
+  off on the settings page.
+- Tray icon. Closing the window keeps the app running in the tray, which
+  says so once; click the icon to bring the window back, or use its menu to
+  open or quit. Starting the app again brings back the running one.
 - Light, dark and system themes.
 - App logo and icons.
 - Interface motion: a new theme spreads out from the theme button as a soft

@@ -19,7 +19,7 @@ export type PageKey = (typeof PAGE_KEYS)[number]
 /** A page and what it shows inside, such as the character a detail page is about. */
 export type Route = { page: PageKey; param?: string }
 
-function isPageKey(value: string): value is PageKey {
+export function isPageKey(value: string): value is PageKey {
   return PAGE_KEYS.some(key => key === value)
 }
 

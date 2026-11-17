@@ -6,6 +6,9 @@
 
 pub const APP_NAME: &str = "望月";
 
+pub const TRAY_OPEN: &str = "打开望月";
+pub const TRAY_QUIT: &str = "退出望月";
+
 pub const FATAL_ERROR: &str = "程序出错，需要关闭。\n\n\
     可以试试重新打开；如果反复出现，请重新安装或下载最新版本。\n\n错误信息：";
 

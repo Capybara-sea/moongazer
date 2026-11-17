@@ -324,6 +324,23 @@ export async function setWindowTitle(title: string) {
   }
 }
 
+/** Shows a Windows notification; a click on it opens the app at `page`. */
+export async function showNotification(title: string, body: string, page: string) {
+  await call("notify", { title, body, page })
+}
+
+/** A notification was clicked: the page it is about. */
+export function onOpenPage(handler: (page: string) => void): Promise<UnlistenFn> {
+  return listen<unknown>("open-page", event => {
+    if (typeof event.payload === "string") handler(event.payload)
+  })
+}
+
+/** The window was closed, which only hides it: the app stays in the tray. */
+export function onHiddenToTray(handler: () => void): Promise<UnlistenFn> {
+  return listen("hidden-to-tray", () => handler())
+}
+
 export function onUpdateProgress(handler: (progress: UpdateProgress) => void): Promise<UnlistenFn> {
   return listen<unknown>("update-progress", event => {
     const progress = parseProgress(event.payload)

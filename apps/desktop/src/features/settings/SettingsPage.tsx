@@ -9,6 +9,7 @@ import { Switch } from "@/components/Switch"
 import { getDataDir, openDataDir, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { type ThemeMode, useAppearanceStore } from "@/stores/appearanceStore"
+import { useMessageStore } from "@/stores/messageStore"
 import { text } from "@/text/zh"
 
 const THEMES: { theme: ThemeMode; label: string }[] = [
@@ -21,6 +22,7 @@ export function SettingsPage() {
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-4.5 p-6">
       <h1 className="font-semibold text-[20px] leading-[1.3]">{text.settings.title}</h1>
+      <NotificationsPanel />
       <DataPanel />
       <AppearancePanel />
     </div>
@@ -47,6 +49,21 @@ function Row({ title, hint, children }: RowProps) {
       </div>
       {children}
     </div>
+  )
+}
+
+function NotificationsPanel() {
+  const notify = useMessageStore(s => s.notify)
+  return (
+    <Section title={text.settings.notifications}>
+      <Row title={text.settings.notify} hint={text.settings.notifyHint}>
+        <Switch
+          checked={notify}
+          label={text.settings.notify}
+          onChange={on => useMessageStore.getState().setNotify(on)}
+        />
+      </Row>
+    </Section>
   )
 }
 

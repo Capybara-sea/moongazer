@@ -9,6 +9,8 @@ import { ArtifactsPage } from "@/features/artifacts/ArtifactsPage"
 import { CharactersPage } from "@/features/characters/CharactersPage"
 import { HomePage } from "@/features/home/HomePage"
 import { MaterialsPage } from "@/features/materials/MaterialsPage"
+import { BackgroundEvents } from "@/features/messages/BackgroundEvents"
+import { ReminderTimer } from "@/features/messages/ReminderTimer"
 import { OverviewPage } from "@/features/overview/OverviewPage"
 import { SettingsPage } from "@/features/settings/SettingsPage"
 import { WeaponsPage } from "@/features/weapons/WeaponsPage"
@@ -31,6 +33,8 @@ export function App() {
       />
       <ToastProvider placement="bottom end" width={360} />
       <UpdateToasts />
+      <ReminderTimer />
+      <BackgroundEvents />
       <LogoWarmUp />
     </>
   )

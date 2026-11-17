@@ -501,6 +501,10 @@ export const text = {
   },
   settings: {
     title: "设置",
+    notifications: "通知",
+    notify: "在后台时发系统通知",
+    notifyHint:
+      "望月开着、但窗口最小化、收在托盘或被游戏挡住时，到点的提醒也发一条 Windows 通知；点通知回到望月。",
     data: "数据",
     dataDir: "数据位置",
     dataDirHint:
@@ -563,5 +567,37 @@ export const text = {
     failedToast: "可能是网络问题，之后检查更新时会再试。",
     retry: "重试",
     later: "稍后",
+  },
+  messages: {
+    title: "消息",
+    bell: "消息中心",
+    bellUnread: "消息中心，有新消息",
+    clear: "清空",
+    empty: "没有消息",
+    fresh: "新",
+    today: "今天",
+    yesterday: "昨天",
+    earlier: "更早",
+    resinFull: "原粹树脂已回满",
+    resinFullBody: (cap: number) => `${cap}/${cap}，满了以后不再恢复。`,
+    expeditionsDone: "探索派遣都完成了",
+    expeditionsDoneBody: (n: number) => `${n} 个派遣可以领奖励了。`,
+    transformerReady: "参量质变仪可以用了",
+    transformerReadyBody: "冷却已经结束。",
+    welkinEnding: (days: number) => `空月祝福还剩 ${days} 天`,
+    welkinEndingBody: "到期后就领不到每天的 90 原石了。",
+    commissionsUnclaimed: "今天的委托奖励还没领",
+    commissionsUnclaimedBody: (finished: number, total: number) =>
+      `${finished}/${total} 已完成，凌晨 4 点重置。`,
+    realmNearlyFull: "洞天宝钱快满了",
+    realmNearlyFullBody: (value: string, limit: string) => `${value}/${limit}，满了以后不再增加。`,
+    abyssEnding: "深境螺旋快重置了",
+    abyssEndingBody: (stars: number, max: number, at: string) =>
+      `本期 ${stars}/${max} 星，${at} 重置。`,
+    theaterEnding: "幻想真境剧诗快重置了",
+    theaterEndingBody: (stars: number, max: number, at: string) =>
+      `本期 ${stars}/${max} 星，${at} 重置。`,
+    stillRunning: "望月还在后台运行",
+    stillRunningBody: "关掉窗口后会继续提醒。要退出，右键托盘图标选“退出望月”。",
   },
 } as const

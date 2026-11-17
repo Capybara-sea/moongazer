@@ -5,6 +5,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod background;
 mod icons;
 mod logging;
 mod portable;
@@ -51,7 +52,12 @@ fn main() {
     };
 
     let result = tauri::Builder::default()
+        // First, so a second launch only shows the running app and goes away.
+        .plugin(tauri_plugin_single_instance::init(|app, _, _| {
+            background::show_main(app);
+        }))
         .plugin(tauri_plugin_decorum::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(mode)
@@ -75,6 +81,8 @@ fn main() {
                 window.set_background_color(Some(DARK_BACKGROUND))?;
             }
             window.show()?;
+            background::tray(app.handle())?;
+            background::on_notification_click(app.handle())?;
             tracing::info!(
                 version = %app.package_info().version,
                 portable = is_portable,
@@ -82,7 +90,9 @@ fn main() {
             );
             Ok(())
         })
+        .on_window_event(background::on_window_event)
         .invoke_handler(tauri::generate_handler![
+            background::notify,
             snapshots::import_snapshot,
             snapshots::list_snapshots,
             snapshots::snapshot_export,

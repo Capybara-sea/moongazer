@@ -4,6 +4,7 @@
 import iconUrl from "@logo/icon.svg?url"
 import { Gem, House, Info, LayoutDashboard, Package, Settings, Sword, Users } from "lucide-react"
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { MessageCenter } from "@/features/messages/MessageCenter"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { navigate, type PageKey, usePage } from "@/lib/route"
@@ -197,6 +198,8 @@ function TitleBar() {
           </span>
         )}
       </div>
+      {/* The window controls are added after it, at the end of the bar. */}
+      <MessageCenter />
     </header>
   )
 }

@@ -1,5 +1,8 @@
 {
   "name": "@moongazer/datagen",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.19.2"
+  }
 }

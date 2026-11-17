@@ -51,15 +51,13 @@ export async function buildOverview(
     await Promise.all([
       load("Genshin/CHS/RoleCombatSchedule.json"),
       load("Genshin/CHS/HardChallengeSchedule.json"),
-      ...[
-        "ProfilePictureExcelConfigData.json",
-        "TowerScheduleExcelConfigData.json",
-        "DungeonLevelEntityConfigData.json",
-        "ExploreAreaTotalExpExcelConfigData.json",
-        "CityConfigData.json",
-        "AnecdoteExcelConfigData.json",
-        "MaterialExcelConfigData.json",
-      ].map(g.table),
+      g.table("ProfilePictureExcelConfigData.json"),
+      g.table("TowerScheduleExcelConfigData.json"),
+      g.table("DungeonLevelEntityConfigData.json"),
+      g.table("ExploreAreaTotalExpExcelConfigData.json"),
+      g.table("CityConfigData.json"),
+      g.table("AnecdoteExcelConfigData.json"),
+      g.table("MaterialExcelConfigData.json"),
     ])
   return {
     profilePictures: Object.fromEntries(

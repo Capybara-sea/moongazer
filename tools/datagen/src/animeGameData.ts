@@ -83,7 +83,8 @@ export async function buildProfiles(
 /** The profile of a Traveler or a Manekin. Exports do not say which twin the Traveler is, so the
  * twins' must agree. */
 export function manualProfile(key: string, profiles: Map<number, Profile>): Profile {
-  const ids = key.startsWith("Traveler") ? TWINS : [MANEKINS[key]]
+  const manekin = MANEKINS[key]
+  const ids = key.startsWith("Traveler") ? TWINS : manekin === undefined ? [] : [manekin]
   const [profile, ...others] = ids.map(id => profiles.get(id))
   if (!profile) throw new Error(`no profile for ${key}`)
   for (const other of others) {

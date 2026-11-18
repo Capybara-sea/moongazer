@@ -239,6 +239,24 @@ impl Storage {
         db.set_setting(key, value).map_err(storage_error)
     }
 
+    /// The kept exports of `uid`'s snapshots, newest first, each read when
+    /// asked for, so a caller that stops early reads no more.
+    pub fn kept_exports(&self, uid: u64) -> impl Iterator<Item = Vec<u8>> + '_ {
+        let ids: Vec<i64> = {
+            let guard = self.lock();
+            let list = guard.as_ref().ok().and_then(|db| db.list().ok());
+            list.unwrap_or_default()
+                .into_iter()
+                .filter(|s| s.id > 0 && s.has_raw && s.uid == Some(uid))
+                .map(|s| s.id)
+                .collect()
+        };
+        ids.into_iter().filter_map(|id| {
+            let guard = self.lock();
+            guard.as_ref().ok()?.raw(id).ok()?
+        })
+    }
+
     /// Stores a batch of `session`'s changes, which lead to `export`, read
     /// at `at`. Its id; `None` when the session's login snapshot is gone.
     pub fn append_batch(

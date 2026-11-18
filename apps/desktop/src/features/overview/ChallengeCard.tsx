@@ -28,6 +28,7 @@ import {
   type ActState,
   currentAbyssPeriod,
   currentStygian,
+  fightTime,
   stygianSummary,
   theaterActs,
   timeLeft,
@@ -152,7 +153,7 @@ function stygian(account: Account, takenAt: number, now: number): Challenge {
         : t.stygianMissing
     return { name: t.stygian, ...period, facts: [{ value: note }], teams: [] }
   }
-  const { done, total, fastest } = stygianSummary(record)
+  const { done, total, fastest, totalTime } = stygianSummary(record)
   const facts: Fact[] = [
     {
       label: t.best,
@@ -161,6 +162,7 @@ function stygian(account: Account, takenAt: number, now: number): Challenge {
     },
   ]
   if (fastest !== undefined) facts.push({ label: t.fastest, value: t.seconds(fastest) })
+  if (totalTime !== undefined) facts.push({ label: t.totalTime, value: fightTime(totalTime) })
   if (done < total) facts.push({ value: t.stygianNote(done, total) })
   return {
     name: t.stygian,

@@ -74,12 +74,22 @@ export function currentStygian(
 }
 
 /** Fights won, the fastest won fight in seconds, and everyone who fought, in order. */
+/** A fight time in seconds: seconds under a minute, else minutes and seconds. */
+export function fightTime(seconds: number) {
+  const s = Math.round(seconds)
+  return s < 60
+    ? text.challenges.seconds(s)
+    : text.challenges.minutesSeconds(Math.floor(s / 60), s % 60)
+}
+
 export function stygianSummary(record: StygianRecord) {
   const won = record.fights.filter(fight => fight.done)
   return {
     done: won.length,
     total: record.fights.length,
     fastest: won.length > 0 ? Math.min(...won.map(fight => fight.time)) : undefined,
+    /** The fights won, added up. */
+    totalTime: won.length > 0 ? won.reduce((sum, fight) => sum + fight.time, 0) : undefined,
     team: [...new Set(record.fights.flatMap(fight => fight.team))],
   }
 }

@@ -95,6 +95,13 @@ export const text = {
     list: "列表",
     table: "表格",
   },
+  pager: {
+    label: "分页",
+    previous: "上一页",
+    next: "下一页",
+    page: (n: number) => `第 ${n} 页`,
+    position: (page: number, pages: number) => `第 ${page} / ${pages} 页`,
+  },
   setEffects: {
     title: "套装效果",
     equipped: (n: number) => `已装备 ${n} 件`,
@@ -213,8 +220,10 @@ export const text = {
     best: "最佳记录",
     deepest: "最深抵达",
     fastest: "最快",
+    totalTime: "总耗时",
     floorChamber: (floor: number, chamber: number) => `${floor}-${chamber}`,
     seconds: (n: number) => `${n} 秒`,
+    minutesSeconds: (minutes: number, seconds: number) => `${minutes} 分 ${seconds} 秒`,
     endsAt: (date: string) => `${date} 结束`,
     actStates: {
       starred: (n: number) => `第 ${n} 幕，拿到星章`,

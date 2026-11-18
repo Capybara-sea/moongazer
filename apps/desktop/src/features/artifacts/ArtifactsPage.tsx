@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { memo, useMemo } from "react"
+import { memo, useMemo, useRef } from "react"
 import { CheckboxField } from "@/components/CheckboxField"
 import { EmptyState } from "@/components/EmptyState"
 import { FilterChip } from "@/components/FilterChip"
 import { GameIcon } from "@/components/GameIcon"
 import { LabeledSelect } from "@/components/LabeledSelect"
 import { Notice } from "@/components/Notice"
+import { Pager } from "@/components/Pager"
 import { ShownCount } from "@/components/ShownCount"
 import { SLOTS } from "@/domain/good"
 import { lookup } from "@/domain/names"
 import { formatDateTime, formatNumber } from "@/lib/format"
-import { useBatches } from "@/lib/useBatches"
+import { usePages } from "@/lib/usePages"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { useArtifactListStore } from "@/stores/artifactListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
@@ -27,7 +28,9 @@ import {
 } from "./order"
 
 const t = text.artifacts
-/** Cards already drawn are skipped when the next batch is added: their rows stay the same. */
+/** Cards a page; 60 fills the last row at three to six cards a row. */
+const PAGE = 60
+/** Cards a page shows again (the same row after a new snapshot or filter) are not drawn again. */
 const Card = memo(ArtifactCard)
 
 /**
@@ -71,7 +74,7 @@ function subtitle(rows: readonly ArtifactRow[], takenAt: number) {
   ].join(" · ")
 }
 
-/** The toolbar, the cards drawn so far and the sentinel that asks for more. */
+/** The toolbar, one page of cards and the pager. */
 function Artifacts({ rows }: { rows: readonly ArtifactRow[] }) {
   const slot = useArtifactListStore(s => s.slot)
   const picked = useArtifactListStore(s => s.set)
@@ -108,7 +111,8 @@ function Artifacts({ rows }: { rows: readonly ArtifactRow[] }) {
     () => visibleArtifacts(rows, { slot, set, onlyFree }),
     [rows, slot, set, onlyFree],
   )
-  const { visible, more, sentinel } = useBatches(shown)
+  const { visible, page, pages, setPage } = usePages(shown, PAGE)
+  const list = useRef<HTMLElement>(null)
   const { setSet, setOnlyFree } = useArtifactListStore.getState()
   return (
     <>
@@ -130,15 +134,23 @@ function Artifacts({ rows }: { rows: readonly ArtifactRow[] }) {
         <EmptyState>{t.none}</EmptyState>
       ) : (
         <section
+          ref={list}
           aria-label={t.list}
-          className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3"
+          className="grid scroll-mt-6 grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3"
         >
           {visible.map(row => (
             <Card key={row.id} row={row} />
           ))}
         </section>
       )}
-      {more && <div ref={sentinel} aria-hidden className="h-px" />}
+      <Pager
+        page={page}
+        pages={pages}
+        onPage={next => {
+          setPage(next)
+          list.current?.scrollIntoView({ block: "start" })
+        }}
+      />
     </>
   )
 }

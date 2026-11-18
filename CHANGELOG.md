@@ -30,17 +30,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rights. Uses Teyvat.me Capture v1.17.28.
 - Auto sync keeps every change while you play, with its time: the pages
   follow the game, and the overview shows each login's timeline.
+- Auto sync carries the last Stygian Onslaught and Spiral Abyss records into
+  later logins, as the game sends them only when their screens are opened.
 - Several accounts: switch the one the pages show at the top of the side
   menu; logging in to the game switches to that account.
 - Account overview, laid out like Teyvat.me's: account card, totals, daily
-  tasks, Spiral Abyss, Imaginarium Theater, Stygian Onslaught, exploration
-  and collections, and Mora and Primogem history.
+  tasks, Spiral Abyss, Imaginarium Theater, Stygian Onslaught (with its total
+  time), exploration and collections, and Mora and Primogem history.
 - Characters page as cards or a list, with filters and sorting. The details
   show talents and constellations (described on hover), weapon, artifacts,
   panel stats worked out from game data, and changes since the previous
   snapshot.
-- Weapons, artifacts and materials pages with filters; materials show their
-  change since the previous snapshot.
+- Weapons, artifacts and materials pages with filters; artifacts come 60 a
+  page, and materials show their change since the previous snapshot.
 - Artifact set effects on hover.
 - Game icons, downloaded from Enka.Network or Project Amber when first shown
   and kept on disk.

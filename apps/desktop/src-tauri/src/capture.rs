@@ -20,6 +20,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
     reason = "the raw socket capture calls WinSock and IP Helper"
 )]
 mod backend;
+mod carry;
 mod decoder;
 pub mod helper;
 mod ipc;

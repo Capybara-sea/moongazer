@@ -7,6 +7,7 @@ import { text } from "@/text/zh"
 import {
   currentAbyssPeriod,
   currentStygian,
+  fightTime,
   stygianSummary,
   theaterActs,
   timeLeft,
@@ -131,11 +132,12 @@ describe("stygian onslaught", () => {
       done: 2,
       total: 3,
       fastest: 58,
+      totalTime: 132,
       team: ["A", "B", "Traveler", "C", "D"],
     })
   })
 
-  it("has no fastest time when no fight was won", () => {
+  it("has no fastest or total time when no fight was won", () => {
     const summary = stygianSummary({
       season: 1,
       difficulty: 1,
@@ -143,5 +145,12 @@ describe("stygian onslaught", () => {
       fights: [{ time: 30, done: false, team: [] }],
     })
     expect(summary.fastest).toBeUndefined()
+    expect(summary.totalTime).toBeUndefined()
+  })
+
+  it("writes a time under a minute in seconds, else in minutes and seconds", () => {
+    expect(fightTime(52)).toBe(text.challenges.seconds(52))
+    expect(fightTime(412)).toBe(text.challenges.minutesSeconds(6, 52))
+    expect(fightTime(59.6)).toBe(text.challenges.minutesSeconds(1, 0))
   })
 })

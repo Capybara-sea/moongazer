@@ -27,6 +27,7 @@ use tauri::{AppHandle, Emitter, Manager};
 use teyvatme_core::decode::KeyReport;
 use teyvatme_protocol::KeyState;
 
+use super::carry::{self, Carry};
 use super::decoder::{Account, Decoder, Exported};
 use super::ipc::{Command, Report};
 use super::link::{Link, LinkError};
@@ -208,6 +209,9 @@ struct Chain {
     unsaved: bool,
     /// Storing a batch failed (logged once per session).
     failed: bool,
+    /// The account's challenge records its exports lack until the game
+    /// sends them again (see carry.rs).
+    carry: Carry,
 }
 
 /// What became of a batch.
@@ -750,11 +754,14 @@ impl Supervisor {
 
     /// A settled login's first export: saved as its login snapshot, it starts
     /// the session the login's batches go to.
-    fn on_settled(&mut self, exported: Exported) {
+    fn on_settled(&mut self, mut exported: Exported) {
         self.end_chain();
+        let mut carry = self.carry_for(exported.account.uid);
+        exported.json = carry::fill_text(std::mem::take(&mut exported.json), &carry);
         let Some((export, json)) = self.take(exported) else {
             return;
         };
+        carry.extend(carry::held(&export.value));
         let saved = self.save_snapshot(&export, &json, Some(Session::New));
         self.chain = Some(Chain {
             session: saved.as_ref().and_then(|saved| saved.session),
@@ -762,18 +769,42 @@ impl Supervisor {
             last: export.value,
             unsaved: saved.is_none(),
             failed: false,
+            carry,
         });
+    }
+
+    /// The account's last challenge records, from its newest kept exports.
+    /// Exports carry them on once they are found, so only the first few
+    /// are read: an account that never had them costs no more.
+    fn carry_for(&self, uid: Option<u32>) -> Carry {
+        const LOOKBACK: usize = 10;
+        let mut carry = Carry::new();
+        let Some(uid) = uid else {
+            return carry;
+        };
+        let storage = self.app.state::<snapshots::Storage>();
+        for raw in storage.kept_exports(u64::from(uid)).take(LOOKBACK) {
+            let Ok(export) = serde_json::from_slice::<Value>(&raw) else {
+                continue;
+            };
+            if carry::gather(&mut carry, &export) {
+                break;
+            }
+        }
+        carry
     }
 
     /// An export while playing: what changed since the last one is stored as
     /// a batch, and the export is what the page shows.
-    fn on_batch(&mut self, exported: Exported) {
-        let Some(chain) = &self.chain else {
+    fn on_batch(&mut self, mut exported: Exported) {
+        let Some(chain) = &mut self.chain else {
             return;
         };
+        exported.json = carry::fill_text(std::mem::take(&mut exported.json), &chain.carry);
         let Some(export) = parse(&exported.json) else {
             return;
         };
+        chain.carry.extend(carry::held(&export.value));
         let at = taken_at(&export);
         // Queued while a snapshot took a later export.
         if at <= chain.last_at {
@@ -819,10 +850,16 @@ impl Supervisor {
     /// as a batch at the snapshot's time, and the snapshot joins the session.
     /// With `only_if_changed`, nothing is saved when nothing changed since
     /// the last snapshot.
-    fn store(&mut self, exported: Exported, only_if_changed: bool) {
+    fn store(&mut self, mut exported: Exported, only_if_changed: bool) {
+        if let Some(chain) = &self.chain {
+            exported.json = carry::fill_text(std::mem::take(&mut exported.json), &chain.carry);
+        }
         let Some((export, json)) = self.take(exported) else {
             return;
         };
+        if let Some(chain) = &mut self.chain {
+            chain.carry.extend(carry::held(&export.value));
+        }
         let at = taken_at(&export);
         let mut session = None;
         // The changes since the last batch, and whether storing them failed.

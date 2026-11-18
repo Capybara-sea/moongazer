@@ -35,8 +35,9 @@ commands:
   changelog <X.Y.Z|Unreleased>    print one CHANGELOG section
   verify-tag <tag>                check that a tag matches the workspace version
   release <X.Y.Z> [--dry-run]     bump the version, date the changelog, commit and tag
-  dist [--config <file>] [--base-url <url>]
+  dist [--config <file>] [--base-url <url>] [--no-capture]
                                   build the signed installer, portable zip, latest.json and checksums
+                                  (with auto sync and its capture pack unless --no-capture)
   icons <source>                  regenerate the app icons from the logo (SVG or square PNG)
   gen-data [--update]             generate the game data tables (--update: move the source pins
                                   to the latest upstream commits first)

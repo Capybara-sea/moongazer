@@ -17,6 +17,8 @@ function failure(error: BackendError) {
       return { reason: errors.invalid, detail: error.message }
     case "notGood":
       return { reason: errors.notGood, detail: null }
+    case "notLeyline":
+      return { reason: errors.notLeyline, detail: errors.notLeylineDetail }
     case "unsupportedVersion":
       return { reason: errors.unsupportedVersion(error.message), detail: null }
     case "storage":

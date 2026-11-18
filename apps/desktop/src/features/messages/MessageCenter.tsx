@@ -12,12 +12,13 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import { cn } from "@/lib/cn"
-import { navigate } from "@/lib/route"
 import { useNow } from "@/lib/useNow"
+import { useAccountName } from "@/stores/accountStore"
 import { type Message, type MessageKind, useMessageStore } from "@/stores/messageStore"
 import { useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
 import { messageGroups, messageTime } from "./groups"
+import { openTarget } from "./target"
 
 const t = text.messages
 
@@ -145,13 +146,14 @@ function MessageList() {
 
 function Item({ message, fresh, now }: { message: Message; fresh: boolean; now: number }) {
   const { Icon, className } = LOOKS[message.kind]
+  const account = useAccountName(message.account)
   return (
     <div className="relative px-2">
       <button
         type="button"
         onClick={() => {
           useMessageStore.getState().setOpen(false)
-          navigate(message.page)
+          openTarget(message.page, message.account)
         }}
         className="flex w-full cursor-pointer gap-2.5 rounded-[8px] p-2 text-left hover:bg-surface-secondary"
       >
@@ -169,6 +171,9 @@ function Item({ message, fresh, now }: { message: Message; fresh: boolean; now: 
             <span className="min-w-0 flex-1 font-semibold text-[13px] leading-[19px]">
               {fresh && <span className="sr-only">{t.fresh}</span>}
               {message.title}
+              {account && (
+                <span className="font-normal text-[12px] text-muted">{t.ofAccount(account)}</span>
+              )}
             </span>
             <span className="tabular flex-none text-[11px] text-muted">
               {messageTime(message.at, now)}
@@ -198,7 +203,7 @@ function Action({ action }: { action: NonNullable<Message["action"]> }) {
           useMessageStore.getState().setOpen(false)
           void useUpdateStore.getState().install()
         }}
-        className="h-7 cursor-pointer rounded-[7px] border border-accent bg-accent px-2.5 font-semibold text-[12px] text-white"
+        className="h-7 cursor-pointer rounded-[7px] border border-accent bg-accent px-2.5 font-semibold text-(--on-accent) text-[12px]"
       >
         {action === "restart" ? text.update.restart : text.update.openPageShort}
       </button>

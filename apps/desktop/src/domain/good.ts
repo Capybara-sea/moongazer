@@ -45,13 +45,13 @@ export type Artifact = {
   lock: boolean
   substats: Substat[]
   unactivatedSubstats: Substat[]
-  /** Missing in GOOD files from exporters older than GOOD v3. */
+  /** Missing in files older than GOOD v3. */
   totalRolls?: number
   astralMark: boolean
   elixirCrafted: boolean
 }
 
-/** Leyline only: friendship and when the character joined. */
+/** Friendship and when the character joined. */
 export type CharacterInfo = { friendship?: number; obtainedAt?: number }
 
 function isSlot(value: unknown): value is SlotKey {

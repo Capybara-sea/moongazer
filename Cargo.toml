@@ -20,6 +20,10 @@ anyhow = "1.0"
 base64 = "0.22"
 flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
 log = { version = "0.4.35", features = ["max_level_info", "release_max_level_info"] }
+# The packet monitor bindings Teyvat.me Capture captures with, from the same
+# repository and tag as its decoding crates (see those). Without `tokio`:
+# capture runs on plain threads here.
+pktmon = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.17.28" }
 # No default features: they add a statement cache and a WebAssembly VFS.
 # `fallible_uint` stores u64 values, failing on any above i64::MAX.
 rusqlite = { version = "0.43", default-features = false, features = ["bundled", "fallible_uint"] }
@@ -30,6 +34,8 @@ rustls = { version = "0.23", default-features = false, features = ["ring"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.11"
+# `all` has the raw socket type the compatible capture opens.
+socket2 = { version = "0.6", features = ["all"] }
 storage = { path = "crates/storage" }
 # Keep the Rust and JS halves of Tauri on the same minor version.
 # The tray icon keeps the app running with its window closed.
@@ -58,6 +64,14 @@ tracing = { version = "0.1.44", features = ["max_level_info", "release_max_level
 tracing-appender = "0.2.5"
 # No `env-filter`: the log level must not be raised from the environment.
 tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "std", "tracing-log"] }
+# For the raw socket capture copied from Teyvat.me Capture, which upstream
+# builds on 0.61; 0.62 is the version Tauri already brings in.
+windows = { version = "0.62", features = [
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_NetworkManagement_Ndis",
+    "Win32_Networking_WinSock",
+    "Win32_System_IO",
+] }
 windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging"] }
 zip = { version = "9.5", default-features = false }
 

@@ -2,11 +2,12 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { type MouseEvent, useMemo, useState } from "react"
+import { Delta } from "@/components/Delta"
 import { LabeledSelect } from "@/components/LabeledSelect"
 import { Panel } from "@/components/Panel"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
-import { formatAmount, formatDelta, formatNumber } from "@/lib/format"
+import { formatAmount, formatDelta, formatNumber, signedDelta } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
 import { text } from "@/text/zh"
 import {
@@ -188,8 +189,9 @@ function SeriesChart({ currency, buckets, mode, hover, onHover }: ChartProps) {
             {hovered === -1 ? text.trend.latest : bucketLabel(current.at, mode)}
           </span>
           <span className="font-semibold text-base">{series.format(current.value)}</span>
-          <span className={cn("text-[12px]", delta > 0 ? "text-(--accent-text)" : "text-muted")}>
-            {hovered === -1 ? text.trend.inRange(formatDelta(delta)) : formatDelta(delta)}
+          <span className="text-[12px]">
+            <Delta signed={signedDelta(delta)} />
+            {hovered === -1 && <span className="text-muted"> {text.trend.inRange}</span>}
           </span>
         </span>
       </div>

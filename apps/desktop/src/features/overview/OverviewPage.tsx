@@ -3,11 +3,11 @@
 
 import { Button } from "@heroui/react"
 import { Upload } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { Notice } from "@/components/Notice"
 import type { Account } from "@/domain/account"
-import type { Snapshot } from "@/lib/backend"
-import { type AccountEntry, useAccountStore, useCurrentSnapshot } from "@/stores/accountStore"
+import { isHead, type Snapshot } from "@/lib/backend"
+import { useCurrentSnapshot } from "@/stores/accountStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 import { AccountCard } from "./AccountCard"
@@ -21,6 +21,7 @@ import { ImportResults } from "./ImportResults"
 import { MonthTable } from "./MonthTable"
 import { RecentSnapshots, sourceLabel } from "./RecentSnapshots"
 import { RegionGrid } from "./RegionGrid"
+import { ReviewNotices } from "./ReviewNotices"
 import { SnapshotPicker } from "./SnapshotPicker"
 import { TrendChart } from "./TrendChart"
 
@@ -33,63 +34,51 @@ export function OverviewPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
   const current = useCurrentSnapshot()
-  useEffect(() => {
-    for (const snapshot of [current.snapshot, current.fallback]) {
-      if (snapshot?.hasRaw) void useAccountStore.getState().load(snapshot.id)
-    }
-  }, [current.snapshot, current.fallback])
-  // The page keeps showing the previous snapshot until the next one's exports
-  // are read, so cards do not vanish and rise again, moving everything below.
-  const read = (entry: AccountEntry | undefined) =>
-    entry !== undefined && entry.status !== "loading"
+  // The page keeps showing the previous snapshot until the next one's export
+  // is read, so cards do not vanish and rise again, moving everything below.
+  // Its account's list is kept with it, so the header and the history change
+  // with the cards when the account does.
   const settled =
-    (!current.snapshot?.hasRaw || read(current.entry)) &&
-    (!current.fallback || read(current.fallbackEntry))
+    !current.snapshot?.hasRaw || (current.entry !== undefined && current.entry.status !== "loading")
   const [shown, setShown] = useState<typeof current | null>(null)
   if (
     settled &&
     (shown?.snapshot !== current.snapshot ||
       shown?.entry !== current.entry ||
-      shown?.fallbackEntry !== current.fallbackEntry)
+      shown?.list !== current.list)
   ) {
     setShown(current)
   }
-  const { snapshot, older, entry, fallback, fallbackEntry } = shown ?? {}
-  const own = snapshot?.hasRaw && entry?.status === "ready" ? entry.account : undefined
-  // A GOOD file shows the newest older Leyline snapshot in full.
-  const borrowed =
-    own && fallback && fallbackEntry?.status === "ready"
-      ? { account: fallbackEntry.account, takenAt: fallback.takenAt }
-      : undefined
-  const account = borrowed?.account ?? own
-  const takenAt = borrowed?.takenAt ?? snapshot?.takenAt ?? 0
+  const { snapshot, list, older, entry } = shown ?? {}
+  const account = snapshot?.hasRaw && entry?.status === "ready" ? entry.account : undefined
 
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-4.5 p-6">
-      <Header />
+      <Header snapshot={snapshot} list={list} />
       <ImportResults />
+      {snapshots && <ReviewNotices snapshots={snapshots} />}
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
       {snapshots?.length === 0 && (
         <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody} />
       )}
-      {snapshot && snapshots && (
+      {snapshot && list && (
         <>
-          {/* Keyed by snapshot, so a UID shown for one snapshot is masked again for the next. */}
-          {account && <AccountCard key={snapshot.id} account={account} />}
+          {/*
+            Keyed by snapshot, so the eye's choice for one snapshot goes back to
+            the setting for the next; an auto sync login's snapshots and head
+            rows share one.
+          */}
+          {account && <AccountCard key={snapshot.session ?? snapshot.id} account={account} />}
           {(!snapshot.hasRaw || entry?.status === "summaryOnly") && (
             <Notice title={text.snapshot.summaryOnly} />
           )}
           {entry?.status === "failed" && (
             <Notice title={text.snapshot.loadFailed} detail={entry.message} />
           )}
-          <CountTiles
-            snapshot={snapshot}
-            older={older ?? []}
-            standIn={borrowed ? fallback : undefined}
-          />
-          {account && <TodayBlocks account={account} takenAt={takenAt} />}
-          {account?.leyline && <WorldBlocks account={account} />}
-          <History snapshots={snapshots} />
+          <CountTiles snapshot={snapshot} older={older ?? []} />
+          {account && <TodayBlocks account={account} takenAt={snapshot.takenAt} />}
+          {account && <WorldBlocks account={account} />}
+          <History snapshots={list} />
         </>
       )}
       <ConfirmImport />
@@ -97,18 +86,17 @@ export function OverviewPage() {
   )
 }
 
-function Header() {
-  const snapshots = useSnapshotStore(s => s.snapshots)
+/** The title, the source and how many snapshots the account has, not counting head rows. */
+function Header({ snapshot, list }: { snapshot?: Snapshot; list?: Snapshot[] }) {
   const progress = useSnapshotStore(s => s.progress)
-  const { snapshot } = useCurrentSnapshot()
   const input = useRef<HTMLInputElement>(null)
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-col">
         <h1 className="font-semibold text-[20px] leading-[1.3]">{text.overview.title}</h1>
-        {snapshot && snapshots && (
+        {snapshot && list && (
           <span className="text-[12px] text-muted">
-            {text.overview.source(sourceLabel(snapshot, true), snapshots.length)}
+            {text.overview.source(sourceLabel(snapshot, true), list.filter(s => !isHead(s)).length)}
           </span>
         )}
       </div>
@@ -152,7 +140,7 @@ function TodayBlocks({ account, takenAt }: { account: Account; takenAt: number }
   )
 }
 
-/** Exploration, anecdotes and collections; Leyline files only. */
+/** Exploration, anecdotes and collections. */
 function WorldBlocks({ account }: { account: Account }) {
   return (
     <>
@@ -163,7 +151,10 @@ function WorldBlocks({ account }: { account: Account }) {
   )
 }
 
-/** Mora and Primogems over time and by month on the left, the snapshot list on the right. */
+/**
+ * Mora and Primogems over time and by month on the left, the snapshot list on
+ * the right; all of one account.
+ */
 function History({ snapshots }: { snapshots: Snapshot[] }) {
   return (
     <div className="flex flex-wrap items-start gap-4">

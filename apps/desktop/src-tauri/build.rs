@@ -10,6 +10,10 @@ fn main() {
     println!("cargo:rerun-if-changed=icons");
     if std::env::var_os("CARGO_FEATURE_CAPTURE").is_some() {
         upstream_source();
+        // The exe's own imports load from System32 only, not from the folder
+        // it sits in: it also runs elevated, as auto sync's capture mode.
+        // Dynamic loads are covered at run time (`win::capture`).
+        println!("cargo:rustc-link-arg-bin=moongazer=/DEPENDENTLOADFLAG:0x800");
     }
     tauri_build::build();
 }

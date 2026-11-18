@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 /**
- * The parts of a GOOD or Leyline export the pages show, read from the JSON
+ * The parts of a Leyline export the pages show, read from the JSON
  * the backend hands over. Leyline leaves out whatever Capture did not see, so
  * every `gi_*` part is optional and a malformed field reads as missing.
  * Times are converted from unix seconds to milliseconds.
@@ -90,8 +90,6 @@ export type Collections = {
 }
 
 export type Account = {
-  /** Leyline files carry the `gi_*` parts; plain GOOD files have none of them. */
-  leyline: boolean
   player?: Player
   /** Characters at friendship 10. */
   maxFriendship?: number
@@ -106,7 +104,7 @@ export type Account = {
   artifacts: Artifact[]
   /** Counts by material key, currencies included; empty when the file has none. */
   materials: Map<string, number>
-  /** By character key; Leyline only. */
+  /** By character key. */
   characterInfo: Map<string, CharacterInfo>
 }
 
@@ -278,7 +276,6 @@ export function parseAccount(value: unknown): Account {
   const raw = record(value) ?? {}
   const info = characterInfo(raw.gi_characters)
   return {
-    leyline: raw.leyline !== undefined || raw.gi_player !== undefined,
     player: player(raw.gi_player),
     maxFriendship: record(raw.gi_characters)
       ? [...info.values()].filter(c => c.friendship === 10).length

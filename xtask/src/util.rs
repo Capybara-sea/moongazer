@@ -8,6 +8,22 @@ use std::process::Command;
 
 use anyhow::{Context, Result, bail};
 
+/// The release signing key's variables. Only `tauri signer sign` may see
+/// them: builds run scripts from hundreds of packages.
+const KEY_VARS: [&str; 3] = [
+    "TAURI_SIGNING_PRIVATE_KEY",
+    "TAURI_SIGNING_PRIVATE_KEY_PATH",
+    "TAURI_SIGNING_PRIVATE_KEY_PASSWORD",
+];
+
+/// Takes the signing key's variables out of a child's environment.
+pub fn without_key(cmd: &mut Command) -> &mut Command {
+    for var in KEY_VARS {
+        cmd.env_remove(var);
+    }
+    cmd
+}
+
 /// The repository root: the parent of this crate's manifest directory.
 pub fn repo_root() -> PathBuf {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));

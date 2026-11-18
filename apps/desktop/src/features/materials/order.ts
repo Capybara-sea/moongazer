@@ -9,28 +9,25 @@ import { text } from "@/text/zh"
 export type MaterialRow = MaterialData & {
   key: string
   count: number
-  /** Since the previous snapshot; none with nothing to compare with or not listed there. */
+  /** Since the previous snapshot; none with nothing to compare with. */
   change?: number
 }
 
-type Held = Pick<Account, "leyline" | "materials">
+type Held = Pick<Account, "materials">
 
 /**
  * Every material held, and those used up since the previous snapshot, shown
- * with 0. An account without materials, such as a GOOD export of artifacts
- * only, lists none: against an older one, everything would look used up.
- * Only Leyline leaves out what is used up; other exporters may just not list
- * a material, so a missing one counts as 0 only in a Leyline file.
+ * with 0: Leyline leaves out what is used up. An account without materials
+ * lists none: against an older one, everything would look used up.
  */
 export function materialRows(now: Held, previous: Held | null): MaterialRow[] {
   if (now.materials.size === 0) return []
   const keys = new Set(now.materials.keys())
-  if (previous && now.leyline) for (const key of previous.materials.keys()) keys.add(key)
+  if (previous) for (const key of previous.materials.keys()) keys.add(key)
   const rows: MaterialRow[] = []
   for (const key of keys) {
     const count = now.materials.get(key) ?? 0
-    const before = previous?.materials.get(key) ?? (previous?.leyline ? 0 : undefined)
-    const change = before === undefined ? undefined : count - before
+    const change = previous ? count - (previous.materials.get(key) ?? 0) : undefined
     if (count > 0 || (change !== undefined && change !== 0)) {
       rows.push({ key, ...materialData(key), count, change })
     }

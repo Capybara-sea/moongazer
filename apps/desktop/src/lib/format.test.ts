@@ -7,10 +7,15 @@ import {
   formatAmount,
   formatDateTime,
   formatDelta,
+  formatDuration,
   formatMonthDay,
   formatNumber,
   formatTime,
+  formatTimeWithSeconds,
   formatWhen,
+  maskUid,
+  movedTo,
+  signedDelta,
 } from "./format"
 
 const now = new Date(2026, 10, 17, 12, 0).getTime()
@@ -49,6 +54,10 @@ describe("formatMonthDay and formatTime", () => {
     expect(formatTime(at(3, 5, 7, 9))).toBe("07:09")
     expect(formatTime(at(11, 17, 0, 0))).toBe("00:00")
     expect(formatTime(at(12, 31, 23, 59))).toBe("23:59")
+  })
+
+  it("adds padded seconds when asked", () => {
+    expect(formatTimeWithSeconds(at(3, 5, 7, 9) + 4000)).toBe("07:09:04")
   })
 })
 
@@ -90,5 +99,31 @@ describe("formatDelta", () => {
     expect(formatDelta(-1_234)).toBe("-1,234")
     expect(formatDelta(12_480_000)).toBe(`+${text.number.tenThousand("1,248.0")}`)
     expect(formatDelta(-12_480_000)).toBe(`-${text.number.tenThousand("1,248.0")}`)
+  })
+})
+
+describe("signedDelta and movedTo", () => {
+  it("say a rise is a gain, a fall a loss and no change neither", () => {
+    expect(signedDelta(160)).toEqual({ text: "+160", way: "gain" })
+    expect(signedDelta(-3)).toEqual({ text: "-3", way: "loss" })
+    expect(signedDelta(0)).toEqual({ text: "0", way: "same" })
+    expect(movedTo(9, 10)).toEqual({ text: text.number.movedTo(10), way: "gain" })
+    expect(movedTo(10, 9)).toEqual({ text: text.number.movedTo(9), way: "loss" })
+  })
+})
+
+describe("formatDuration", () => {
+  it("pads minutes after hours and drops hours under one", () => {
+    expect(formatDuration((65 * 60 + 59) * 1000)).toBe(text.time.hoursMinutes(1, "05"))
+    expect(formatDuration(72 * 60_000)).toBe(text.time.hoursMinutes(1, "12"))
+    expect(formatDuration(12 * 60_000 + 30_000)).toBe(text.time.minutes(12))
+    expect(formatDuration(-5_000)).toBe(text.time.minutes(0))
+  })
+})
+
+describe("maskUid", () => {
+  it("keeps the first digit and hides each other digit", () => {
+    expect(maskUid(987654321)).toBe("9••••••••")
+    expect(maskUid(5)).toBe("5")
   })
 })

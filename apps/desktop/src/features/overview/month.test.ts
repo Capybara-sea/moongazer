@@ -13,8 +13,8 @@ const snapshot = (takenAt: number, summary: Partial<Summary>): Snapshot => ({
   id: takenAt,
   takenAt,
   importedAt: takenAt,
-  format: "leyline",
   source: "Teyvat.me",
+  uid: null,
   summary: {
     characters: 1,
     weapons: 1,
@@ -28,6 +28,9 @@ const snapshot = (takenAt: number, summary: Partial<Summary>): Snapshot => ({
     ...summary,
   },
   hasRaw: true,
+  review: false,
+  session: null,
+  live: false,
 })
 
 const november = monthOf(at(1))

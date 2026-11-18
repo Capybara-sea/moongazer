@@ -97,7 +97,6 @@ describe("formatDate", () => {
 
 describe("comparedAccount", () => {
   const account: Account = {
-    leyline: false,
     characters: [],
     weapons: [],
     artifacts: [],

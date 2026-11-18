@@ -5,12 +5,6 @@ import type { Account } from "@/domain/account"
 import { formatNumber } from "@/lib/format"
 import { text } from "@/text/zh"
 
-/** The first digit, then a bullet for each other digit. */
-export function maskUid(uid: number) {
-  const digits = String(uid)
-  return digits.charAt(0) + "•".repeat(digits.length - 1)
-}
-
 const shown = (n: number | undefined) => (n === undefined ? text.number.missing : formatNumber(n))
 
 /** The values of the account card's six rows; missing ones show as a dash. */

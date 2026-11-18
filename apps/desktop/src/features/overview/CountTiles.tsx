@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { ChevronRight } from "lucide-react"
+import { Delta } from "@/components/Delta"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
@@ -12,16 +13,14 @@ import { countTiles, type Tile } from "./tileValues"
  * The snapshot's totals with their change since the snapshot before (`older`
  * is every older one, newest first).
  */
-type Props = { snapshot: Snapshot; older: Snapshot[]; standIn?: Snapshot }
-
-export function CountTiles({ snapshot, older, standIn }: Props) {
+export function CountTiles({ snapshot, older }: { snapshot: Snapshot; older: Snapshot[] }) {
   return (
     // Full rows only: one row from the window width where every tile fits, else rows of half.
     <section
       aria-label={text.tiles.label}
       className="grid grid-cols-3 gap-3 min-[1184px]:grid-cols-6"
     >
-      {countTiles(snapshot, older, standIn).map(tile => {
+      {countTiles(snapshot, older).map(tile => {
         const { page } = tile
         const look =
           "glass flex min-w-0 flex-col gap-0.5 rounded-[14px] border border-border bg-surface px-4 py-3.5 text-left"
@@ -63,18 +62,31 @@ function TileContent({ tile }: { tile: Tile }) {
       >
         {tile.value}
       </span>
-      {tile.change && (
-        <span
-          key={tile.change.text}
-          data-rise
-          className={cn(
-            "text-[12px] tabular",
-            tile.change.up ? "text-(--accent-text)" : "text-muted",
-          )}
-        >
-          {tile.change.text}
-        </span>
-      )}
+      {tile.change && <ChangeLine change={tile.change} />}
     </>
+  )
+}
+
+/** The changes colored and the note after them muted; a pair reads "+6 / -1". */
+function ChangeLine({ change }: { change: NonNullable<Tile["change"]> }) {
+  const [a, b] = change.deltas
+  return (
+    <span
+      key={change.deltas.map(d => d.text).join() + change.note}
+      data-rise
+      className="text-[12px] tabular"
+    >
+      {a && <Delta signed={a} />}
+      {b && (
+        <>
+          <span className="text-muted"> / </span>
+          <Delta signed={b} />
+        </>
+      )}
+      <span className="text-muted">
+        {a && " "}
+        {change.note}
+      </span>
+    </span>
   )
 }

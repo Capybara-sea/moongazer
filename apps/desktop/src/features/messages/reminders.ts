@@ -2,9 +2,9 @@
 // Copyright (c) 2026 Capybara_sea
 
 import type { Account } from "@/domain/account"
+import { currentWelkin, projectResin, RESIN_CAP } from "@/domain/daily"
 import { lastDailyReset } from "@/domain/gameTime"
 import { theaterEnd } from "@/domain/overviewData"
-import { currentWelkin, projectResin, RESIN_CAP } from "@/features/overview/daily"
 import { formatMonthDay, formatNumber, formatTime } from "@/lib/format"
 import type { NewMessage } from "@/stores/messageStore"
 import { text } from "@/text/zh"
@@ -29,14 +29,23 @@ export const CATCH_UP = 12 * HOUR
  * What the account data says will happen, each at the time it comes due. They
  * are worked out from the snapshot taken at `takenAt`, so none is due before
  * it. Ids carry the time, so the same event from a newer snapshot is not
- * recorded twice.
+ * recorded twice, and the account's token, so another account's same event is
+ * recorded too.
  */
-export function reminders(account: Account, takenAt: number): NewMessage[] {
+export function reminders(account: Account, takenAt: number, token: number): NewMessage[] {
   const t = text.messages
   const tasks = account.tasks
   const out: NewMessage[] = []
   const remind = (id: string, at: number, title: string, body: string) =>
-    out.push({ id, kind: "remind", title, body, at: Math.max(at, takenAt), page: "overview" })
+    out.push({
+      id: `${token}:${id}`,
+      kind: "remind",
+      title,
+      body,
+      at: Math.max(at, takenAt),
+      page: "overview",
+      account: token,
+    })
 
   const fullAt = tasks?.resin && projectResin(tasks.resin, takenAt).fullAt
   if (fullAt !== undefined && fullAt > takenAt) {

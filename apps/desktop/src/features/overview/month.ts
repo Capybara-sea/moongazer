@@ -42,7 +42,7 @@ function startOfDay(ms: number) {
 
 /**
  * The days of `month` that have snapshots, newest first. Each column shows
- * the day's last snapshot that has it, so a GOOD file without materials does
+ * the day's last snapshot that has it, so a snapshot without materials does
  * not hide the currencies read earlier that day; the change is against the
  * last earlier day with a value, which may be in an earlier month.
  */

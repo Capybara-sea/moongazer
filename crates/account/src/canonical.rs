@@ -7,9 +7,15 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 pub fn hash(value: &Value) -> [u8; 32] {
+    Sha256::digest(bytes(value)).into()
+}
+
+/// The bytes the hash is of: equal exactly when the values are equal but
+/// for order.
+pub fn bytes(value: &Value) -> Vec<u8> {
     let mut bytes = Vec::new();
     write(value, &mut bytes);
-    Sha256::digest(&bytes).into()
+    bytes
 }
 
 /// Writes JSON with object keys and array items in sorted order. Strings stay

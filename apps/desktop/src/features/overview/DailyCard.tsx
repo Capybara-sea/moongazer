@@ -7,11 +7,6 @@ import { Bar } from "@/components/Bar"
 import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
 import type { Account, Tasks } from "@/domain/account"
-import { lookup } from "@/domain/names"
-import { cn } from "@/lib/cn"
-import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
-import { useNow } from "@/lib/useNow"
-import { text } from "@/text/zh"
 import {
   currentBosses,
   currentCommissions,
@@ -21,7 +16,12 @@ import {
   RESIN_CAP,
   ratio,
   transformerState,
-} from "./daily"
+} from "@/domain/daily"
+import { lookup } from "@/domain/names"
+import { cn } from "@/lib/cn"
+import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
+import { useNow } from "@/lib/useNow"
+import { text } from "@/text/zh"
 
 const t = text.daily
 
@@ -47,23 +47,15 @@ export function DailyCard({ account, takenAt }: { account: Account; takenAt: num
     <Panel aria-label={t.title} className="min-w-0 flex-[1_1_380px] gap-0 px-[18px] pt-3.5 pb-2">
       <div className="flex items-baseline justify-between gap-2 pb-1.5">
         <h2 className="font-semibold text-base">{t.title}</h2>
-        {account.leyline && (
-          <span className="tabular text-[12px] text-muted">{t.asOf(monthDayTime(takenAt))}</span>
-        )}
+        <span className="tabular text-[12px] text-muted">{t.asOf(monthDayTime(takenAt))}</span>
       </div>
-      {account.leyline ? (
-        <>
-          <Resin resin={tasks?.resin} now={now} />
-          <Commissions commissions={tasks?.commissions} takenAt={takenAt} now={now} />
-          <Realm realm={tasks?.realm} />
-          <Bosses bosses={tasks?.weeklyBosses} takenAt={takenAt} now={now} />
-          <Expeditions expeditions={tasks?.expeditions} now={now} />
-          <Transformer transformer={tasks?.transformer} now={now} />
-          <Welkin welkin={tasks?.welkin} takenAt={takenAt} now={now} />
-        </>
-      ) : (
-        <p className="border-(--separator) border-t py-3 text-[13px] text-muted">{t.empty}</p>
-      )}
+      <Resin resin={tasks?.resin} now={now} />
+      <Commissions commissions={tasks?.commissions} takenAt={takenAt} now={now} />
+      <Realm realm={tasks?.realm} />
+      <Bosses bosses={tasks?.weeklyBosses} takenAt={takenAt} now={now} />
+      <Expeditions expeditions={tasks?.expeditions} now={now} />
+      <Transformer transformer={tasks?.transformer} now={now} />
+      <Welkin welkin={tasks?.welkin} takenAt={takenAt} now={now} />
     </Panel>
   )
 }

@@ -10,6 +10,8 @@ import { readStored, writeStored } from "@/lib/storage"
 export type MessageKind = "remind" | "update" | "warn" | "danger"
 /** What a message's button does. */
 export type MessageAction = "restart" | "download"
+/** What a click on a message opens: a page, or the auto sync panel. */
+export type MessageTarget = PageKey | "sync"
 export type Message = {
   /** Also what keeps one from being recorded twice. */
   id: string
@@ -20,9 +22,11 @@ export type Message = {
   body: string
   /** When it happened, unix milliseconds. */
   at: number
-  /** The page it opens. */
-  page: PageKey
+  /** What it opens. */
+  page: MessageTarget
   action?: MessageAction
+  /** The token of the account a reminder is about; never its UID or nickname. */
+  account?: number
 }
 export type NewMessage = Omit<Message, "seq">
 
@@ -73,6 +77,10 @@ export function hasUnseen(state: Messages) {
   return state.lastSeq > state.seen
 }
 
+function isMessageTarget(value: string): value is MessageTarget {
+  return value === "sync" || isPageKey(value)
+}
+
 /** The saved state, or none when it is missing or not in this shape. */
 export function parseMessages(json: string | null): Messages {
   if (json === null) return EMPTY
@@ -109,8 +117,9 @@ function isMessage(value: unknown): value is Message {
     typeof m.body === "string" &&
     typeof m.at === "number" &&
     typeof m.page === "string" &&
-    isPageKey(m.page) &&
-    (m.action === undefined || (typeof m.action === "string" && ACTIONS.includes(m.action)))
+    isMessageTarget(m.page) &&
+    (m.action === undefined || (typeof m.action === "string" && ACTIONS.includes(m.action))) &&
+    (m.account === undefined || typeof m.account === "number")
   )
 }
 
@@ -157,7 +166,7 @@ export const useMessageStore = create<MessageState>((set, get) => {
       set({ ...next, rings: open ? rings : rings + 1 })
       save()
       if (notify && worthNotifying(message.kind) && inBackground()) {
-        showNotification(message.title, message.body, message.page).catch(() => {
+        showNotification(message.title, message.body, message.page, message.account).catch(() => {
           // The message is in the list either way.
         })
       }

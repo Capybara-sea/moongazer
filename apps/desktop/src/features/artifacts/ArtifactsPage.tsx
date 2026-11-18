@@ -38,16 +38,14 @@ const Card = memo(ArtifactCard)
 export function ArtifactsPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
-  const { snapshot, entry, account, standIn } = useCurrentAccount()
+  const { snapshot, entry, account } = useCurrentAccount()
   const rows = useMemo(() => account && artifactRows(account.artifacts), [account])
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-4 p-6">
       <div className="flex flex-col">
         <h1 className="font-semibold text-[20px] leading-[1.3]">{t.title}</h1>
         {rows && snapshot && (
-          <span className="text-[12px] text-muted tabular">
-            {subtitle(rows, (standIn ?? snapshot).takenAt)}
-          </span>
+          <span className="text-[12px] text-muted tabular">{subtitle(rows, snapshot.takenAt)}</span>
         )}
       </div>
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}

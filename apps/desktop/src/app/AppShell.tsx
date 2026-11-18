@@ -4,7 +4,9 @@
 import iconUrl from "@logo/icon.svg?url"
 import { Gem, House, Info, LayoutDashboard, Package, Settings, Sword, Users } from "lucide-react"
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { AccountSwitcher } from "@/features/accounts/AccountSwitcher"
 import { MessageCenter } from "@/features/messages/MessageCenter"
+import { SyncCard, SyncShade } from "@/features/sync/SyncCard"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { navigate, type PageKey, usePage } from "@/lib/route"
@@ -68,12 +70,15 @@ export function AppShell({ pages }: Props) {
     <div className="flex h-full min-h-0 flex-col">
       <TitleBar />
       <div className="flex min-h-0 flex-1">
+        {/* Scrolls in a window too short for it, rather than squeezing the theme button. */}
         <nav
           aria-label={text.nav.label}
-          className="glass flex w-44 flex-none flex-col border-border border-r bg-surface px-2 py-3 [--glass-shadow:none]"
+          className="glass flex w-44 flex-none flex-col overflow-y-auto border-border border-r bg-surface px-2 py-3 [--glass-shadow:none]"
         >
+          <AccountSwitcher />
           <SideMenu page={page} />
           <span className="min-h-4 flex-1" />
+          <SyncCard />
           <ThemeToggle />
         </nav>
         {/* Each page scrolls on its own and main clips, so a page sliding in
@@ -102,6 +107,7 @@ export function AppShell({ pages }: Props) {
               </section>
             ) : null,
           )}
+          <SyncShade />
         </main>
       </div>
     </div>
@@ -112,7 +118,8 @@ export function AppShell({ pages }: Props) {
 function SideMenu({ page }: { page: PageKey }) {
   const items = useRef(new Map<PageKey, HTMLButtonElement>())
   // Measured, since group labels and dividers make the rows uneven. Before
-  // paint, so the highlight never shows at the old place.
+  // paint, so the highlight never shows at the old place. Offsets are from
+  // this menu's own box, so the account block above it moves the two together.
   const [highlight, setHighlight] = useState<{ top: number; height: number } | null>(null)
   useLayoutEffect(() => {
     const item = items.current.get(page)

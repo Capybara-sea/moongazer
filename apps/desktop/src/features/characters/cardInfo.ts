@@ -16,7 +16,6 @@ export type CardSet = { key: string; name: string; icon?: string; rarity: number
 export type CardInfo = {
   /** Normal attack, skill and burst, with the +3 of the constellations reached. */
   talents: ({ key: TalentKey } & TalentLevel)[]
-  /** Leyline only. */
   friendship?: number
   weapon?: { key: string; name: string; icon?: string; rarity?: number; refinement: number }
   /** Sets with two or more equipped pieces, most first; undefined when no artifact is equipped. */

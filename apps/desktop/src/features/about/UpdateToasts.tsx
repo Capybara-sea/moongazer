@@ -41,7 +41,7 @@ function notice(
               className={cn(
                 "h-7 cursor-pointer rounded-[7px] border px-2.5 text-[12px]",
                 action.primary
-                  ? "border-accent bg-accent font-semibold text-white"
+                  ? "border-accent bg-accent font-semibold text-(--on-accent)"
                   : "border-border bg-transparent font-medium text-foreground",
               )}
             >

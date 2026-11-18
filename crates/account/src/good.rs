@@ -3,8 +3,8 @@
 
 //! The GOOD v1–3 file shape, plus the Leyline keys the app reads.
 //!
-//! Fields that GOOD v3 added, and everything Leyline adds, are optional: other
-//! exporters omit them and Capture leaves out whatever it did not see.
+//! Fields that GOOD v3 added, and everything Leyline adds, are optional:
+//! Capture leaves out whatever it did not see.
 
 use std::collections::BTreeMap;
 
@@ -15,10 +15,8 @@ use serde::{Deserialize, Deserializer};
 pub struct Good {
     #[serde(default)]
     pub source: String,
-    /// Leyline only: when the export was saved, in unix milliseconds.
+    /// When the export was saved, in unix milliseconds.
     pub timestamp: Option<i64>,
-    /// Leyline only, from Capture 1.17.2 on.
-    pub leyline: Option<u32>,
     #[serde(default)]
     pub characters: Vec<Character>,
     #[serde(default)]

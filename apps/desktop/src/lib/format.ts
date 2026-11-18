@@ -53,6 +53,11 @@ export function formatTime(ms: number) {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+/** "21:04:05" in local time. */
+export function formatTimeWithSeconds(ms: number) {
+  return `${formatTime(ms)}:${pad(new Date(ms).getSeconds())}`
+}
+
 const grouped = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 })
 const groupedTenths = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 1,
@@ -75,4 +80,35 @@ export function formatAmount(n: number) {
 export function formatDelta(n: number) {
   const sign = n > 0 ? "+" : n < 0 ? "-" : ""
   return sign + formatAmount(Math.abs(n))
+}
+
+/** Which way a change went: gains show green, losses red. */
+export type Way = "gain" | "loss" | "same"
+/** A signed number ("+160") or a new value ("→ 10"), with the way it went. */
+export type Signed = { text: string; way: Way }
+/** A label and the change after it, if any: "Primogems" and "+60". */
+export type Labeled = { label: string; change: Signed | null }
+
+export const wayOf = (n: number): Way => (n > 0 ? "gain" : n < 0 ? "loss" : "same")
+
+/** As formatDelta, with the way it went. */
+export const signedDelta = (n: number): Signed => ({ text: formatDelta(n), way: wayOf(n) })
+
+/** "→ 10", a gain when it went up. */
+export const movedTo = (from: number, to: number): Signed => ({
+  text: text.number.movedTo(to),
+  way: wayOf(to - from),
+})
+
+/** Hours and zero-padded minutes, or minutes alone under an hour; never below zero. */
+export function formatDuration(ms: number) {
+  const minutes = Math.max(0, Math.floor(ms / MINUTE))
+  const hours = Math.floor(minutes / 60)
+  return hours > 0 ? text.time.hoursMinutes(hours, pad(minutes % 60)) : text.time.minutes(minutes)
+}
+
+/** The first digit, then a bullet for each other digit. */
+export function maskUid(uid: number) {
+  const digits = String(uid)
+  return digits.charAt(0) + "•".repeat(digits.length - 1)
 }

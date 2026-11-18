@@ -49,7 +49,6 @@ describe("parseAccount on a Leyline export", () => {
       },
       gi_achievements: [1, 2, 3],
     })
-    expect(account.leyline).toBe(true)
     expect(account.maxFriendship).toBe(2)
     expect(account.achievements).toBe(3)
     expect(leyline({ gi_characters: {} }).maxFriendship).toBe(0)
@@ -262,9 +261,8 @@ describe("parseAccount on a Leyline export", () => {
 })
 
 describe("parseAccount on other input", () => {
-  it("reads a plain GOOD file as not Leyline, with no Leyline parts", () => {
-    const account = parseAccount({ format: "GOOD", version: 3, characters: [], materials: {} })
-    expect(account.leyline).toBe(false)
+  it("reads every part an export leaves out as missing", () => {
+    const account = leyline({ characters: [], materials: {} })
     expect(account.player).toBeUndefined()
     expect(account.maxFriendship).toBeUndefined()
     expect(account.achievements).toBeUndefined()
@@ -276,8 +274,7 @@ describe("parseAccount on other input", () => {
     expect(account.materials.size).toBe(0)
   })
 
-  it("reads the material counts of a GOOD file", () => {
-    const account = parseAccount({ format: "GOOD", version: 3, materials: { FakeOre: 3 } })
-    expect(account.materials.get("FakeOre")).toBe(3)
+  it("reads the material counts", () => {
+    expect(leyline({ materials: { FakeOre: 3 } }).materials.get("FakeOre")).toBe(3)
   })
 })

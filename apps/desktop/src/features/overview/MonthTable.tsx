@@ -3,10 +3,11 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { type ReactNode, useMemo, useState } from "react"
+import { Delta } from "@/components/Delta"
 import { Panel } from "@/components/Panel"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
-import { formatAmount, formatDelta, formatMonthDay, formatNumber } from "@/lib/format"
+import { formatAmount, formatMonthDay, formatNumber, signedDelta } from "@/lib/format"
 import { text } from "@/text/zh"
 import { type Cell, monthBounds, monthRows } from "./month"
 
@@ -106,19 +107,15 @@ function StepButton({ label, disabled, onClick, children }: StepProps) {
   )
 }
 
-function Delta({ value }: { value: number }) {
-  return (
-    <span className={cn("text-[12px]", value > 0 ? "text-(--accent-text)" : "text-muted")}>
-      {formatDelta(value)}
-    </span>
-  )
+function Change({ value }: { value: number }) {
+  return <Delta signed={signedDelta(value)} className="text-[12px]" />
 }
 
 function Value({ cell, format }: { cell: Cell | null; format: (n: number) => string }) {
   if (!cell) return <span className="text-muted">{text.month.none}</span>
   return (
     <span>
-      {format(cell.value)} {cell.delta !== null && <Delta value={cell.delta} />}
+      {format(cell.value)} {cell.delta !== null && <Change value={cell.delta} />}
     </span>
   )
 }
@@ -132,12 +129,12 @@ function LowArtifacts({ four, three }: { four: Cell | null; three: Cell | null }
     <span>
       {value}{" "}
       {four.delta === 0 && three.delta === 0 ? (
-        <Delta value={0} />
+        <Change value={0} />
       ) : (
         <>
-          <Delta value={four.delta} />
+          <Change value={four.delta} />
           <span className="text-[12px] text-muted"> · </span>
-          <Delta value={three.delta} />
+          <Change value={three.delta} />
         </>
       )}
     </span>

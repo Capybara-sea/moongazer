@@ -51,7 +51,7 @@ function shift(start: number, mode: TimeMode, n: number) {
  * none; its change is against the bucket before (the first one's against the
  * last value before the range, or none). Hour mode always covers the last
  * week, month and year modes the whole history. Snapshots without the
- * currency (GOOD files without materials) are left out.
+ * currency (those without materials) are left out.
  */
 export function buildBuckets(
   snapshots: Snapshot[],

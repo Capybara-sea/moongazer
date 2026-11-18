@@ -17,16 +17,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   replaces itself. Off until releases are published.
 - Portable version: a zip that keeps all data in an `app-data` folder next
   to the program, and offers to install WebView2 when it is missing.
-- Importing GOOD and Leyline files into a snapshot history, with what
-  changed since the previous snapshot. The newest 100 keep everything;
-  older ones keep their totals. A file that looks wrong (fewer characters,
-  far fewer weapons or artifacts, another account) is saved only after you
+- Importing Leyline files (from Teyvat.me Capture) into a snapshot history,
+  with what changed since the previous snapshot. The newest 100 of each
+  account keep everything; older ones keep their totals.
+  A file that looks wrong next to its account's previous snapshot (fewer
+  characters, far fewer weapons or artifacts) is saved only after you
   confirm. Items newer than the app's game data show as not yet updated.
 - Settings page: data folder, theme, glass look and motion.
+- Auto sync: while Moongazer runs, logging in to the game saves a snapshot by
+  itself, and the sidebar shows the connection. Only the sync helper, a second
+  Moongazer process that just receives network data, needs administrator
+  rights. Uses Teyvat.me Capture v1.17.28.
+- Auto sync keeps every change while you play, with its time: the pages
+  follow the game, and the overview shows each login's timeline.
+- Several accounts: switch the one the pages show at the top of the side
+  menu; logging in to the game switches to that account.
 - Account overview, laid out like Teyvat.me's: account card, totals, daily
   tasks, Spiral Abyss, Imaginarium Theater, Stygian Onslaught, exploration
-  and collections, and Mora and Primogem history. Most of it needs a
-  Leyline file from Teyvat.me Capture.
+  and collections, and Mora and Primogem history.
 - Characters page as cards or a list, with filters and sorting. The details
   show talents and constellations (described on hover), weapon, artifacts,
   panel stats worked out from game data, and changes since the previous
@@ -34,12 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Weapons, artifacts and materials pages with filters; materials show their
   change since the previous snapshot.
 - Artifact set effects on hover.
-- When a GOOD snapshot is picked, the pages show the newest earlier Leyline
-  snapshot instead.
 - Game icons, downloaded from Enka.Network or Project Amber when first shown
   and kept on disk.
 - Message center behind a bell in the title bar: reminders worked out from
-  the newest Leyline snapshot (Original Resin, expeditions, commissions,
+  each account's newest snapshot (Original Resin, expeditions, commissions,
   Spiral Abyss resets and more) and new versions.
 - Windows notifications for reminders while the app is in the background;
   clicking one on screen opens its page. They can be turned off.

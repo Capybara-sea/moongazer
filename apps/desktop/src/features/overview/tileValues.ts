@@ -2,11 +2,19 @@
 // Copyright (c) 2026 Capybara_sea
 
 import type { Snapshot } from "@/lib/backend"
-import { formatAmount, formatDelta, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
+import {
+  formatAmount,
+  formatMonthDay,
+  formatNumber,
+  formatTime,
+  type Signed,
+  signedDelta,
+} from "@/lib/format"
 import type { PageKey } from "@/lib/route"
 import { text } from "@/text/zh"
 
-type Change = { text: string; up: boolean }
+/** The changes since the snapshot before, then a note on them; or a note alone. */
+type Change = { deltas: Signed[]; note: string }
 
 export type Tile = {
   label: string
@@ -23,29 +31,20 @@ export type Tile = {
 }
 
 const { tiles } = text
-const FIRST: Change = { text: tiles.first, up: false }
+const noted = (note: string): Change => ({ deltas: [], note })
+const FIRST = noted(tiles.first)
 
 function since(deltas: [number] | [number, number]): Change {
-  const [a, b] = deltas
-  const shown = b === undefined ? formatDelta(a) : tiles.pair(formatDelta(a), formatDelta(b))
-  return { text: tiles.sincePrevious(shown), up: deltas.some(d => d > 0) }
+  return { deltas: deltas.map(signedDelta), note: tiles.sincePrevious }
 }
 
 /**
  * The six totals of a snapshot, each with its change since the snapshot
- * before (`older` is every older one, newest first). A GOOD file without
+ * before (`older` is every older one, newest first). A snapshot without
  * materials knows no Mora or Primogems, so currencies compare with the last
- * snapshot that did, and show its values when the file has none.
+ * snapshot that did, and show its values when it has none.
  */
-export function countTiles(snapshot: Snapshot, older: Snapshot[], standIn?: Snapshot): Tile[] {
-  // A GOOD file shows the Leyline snapshot standing in for it, marked as such.
-  if (standIn) {
-    const when = `${formatMonthDay(standIn.takenAt)} ${formatTime(standIn.takenAt)}`
-    return countTiles(standIn, []).map(tile => ({
-      ...tile,
-      change: tile.hint ? null : { text: tiles.borrowed(when), up: false },
-    }))
-  }
+export function countTiles(snapshot: Snapshot, older: Snapshot[]): Tile[] {
   const now = snapshot.summary
   const before = older[0]?.summary
 
@@ -58,7 +57,7 @@ export function countTiles(snapshot: Snapshot, older: Snapshot[], standIn?: Snap
     if (value === null) {
       if (!known || last === null) return { label, value: text.number.missing, change: null }
       const when = `${formatMonthDay(known.takenAt)} ${formatTime(known.takenAt)}`
-      return { label, value: format(last), change: { text: tiles.borrowed(when), up: false } }
+      return { label, value: format(last), change: noted(tiles.borrowed(when)) }
     }
     const change = older.length === 0 ? FIRST : last === null ? null : since([value - last])
     return { label, value: format(value), change }

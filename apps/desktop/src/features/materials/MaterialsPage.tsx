@@ -38,9 +38,9 @@ const Card = memo(MaterialCard)
 export function MaterialsPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
-  const { snapshot, entry, account, standIn } = useCurrentAccount()
+  const { snapshot, entry, account } = useCurrentAccount()
   const previous = usePreviousAccount()
-  // An older file without materials has nothing to compare with.
+  // An older export without materials has nothing to compare with.
   const compared = previous?.materials.size === 0 ? null : previous
   // Nothing shows until the older account is read: the rows it adds would push the others.
   const rows = useMemo(
@@ -58,7 +58,7 @@ export function MaterialsPage() {
               {[
                 t.summary(formatNumber(rows.length)),
                 hasCompared ? t.compared : t.notCompared,
-                text.characters.snapshotAt(formatDateTime((standIn ?? snapshot).takenAt)),
+                text.characters.snapshotAt(formatDateTime(snapshot.takenAt)),
               ].join(" · ")}
             </span>
           )}

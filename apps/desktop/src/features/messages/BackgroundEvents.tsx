@@ -3,23 +3,21 @@
 
 import { useEffect } from "react"
 import { onHiddenToTray, onOpenPage, showNotification } from "@/lib/backend"
-import { isPageKey, navigate } from "@/lib/route"
 import { readStored, writeStored } from "@/lib/storage"
 import { text } from "@/text/zh"
+import { openTarget } from "./target"
 
 const TOLD_KEY = "moongazer:messages:toldInTray"
 
 /**
- * Goes to the page of a clicked notification, and the first time the window
+ * Opens what a clicked notification is about, and the first time the window
  * is closed says once, whatever the notification setting, that the app keeps
  * running in the tray. Renders nothing.
  */
 export function BackgroundEvents() {
   useEffect(() => {
     const listening = [
-      onOpenPage(page => {
-        if (isPageKey(page)) navigate(page)
-      }),
+      onOpenPage(openTarget),
       onHiddenToTray(() => {
         if (readStored(TOLD_KEY)) return
         writeStored(TOLD_KEY, "yes")

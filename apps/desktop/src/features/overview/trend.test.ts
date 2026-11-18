@@ -13,8 +13,8 @@ const snapshot = (takenAt: number, mora: number | null, primogems = mora): Snaps
   id: takenAt,
   takenAt,
   importedAt: takenAt,
-  format: "leyline",
   source: "Teyvat.me",
+  uid: null,
   summary: {
     characters: 1,
     weapons: 1,
@@ -27,6 +27,9 @@ const snapshot = (takenAt: number, mora: number | null, primogems = mora): Snaps
     essence: 0,
   },
   hasRaw: true,
+  review: false,
+  session: null,
+  live: false,
 })
 
 const now = at(17, 10)

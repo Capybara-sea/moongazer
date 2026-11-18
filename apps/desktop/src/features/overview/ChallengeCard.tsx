@@ -69,11 +69,9 @@ export function ChallengeCard({ account, takenAt }: { account: Account; takenAt:
   return (
     <Panel aria-label={t.title} className="min-w-0 flex-[1_1_380px] gap-0 px-[18px] pt-3.5 pb-2">
       <h2 className="pb-1.5 font-semibold text-base">{t.title}</h2>
-      {account.leyline ? (
-        rows.map(challenge => <Row key={challenge.name} {...challenge} />)
-      ) : (
-        <p className="border-(--separator) border-t py-3 text-[13px] text-muted">{t.empty}</p>
-      )}
+      {rows.map(challenge => (
+        <Row key={challenge.name} {...challenge} />
+      ))}
     </Panel>
   )
 }

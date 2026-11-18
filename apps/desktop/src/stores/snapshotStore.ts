@@ -5,8 +5,11 @@ import { create } from "zustand"
 import { NAME_KINDS, type NameKind, unnamed } from "@/domain/names"
 import {
   BackendError,
+  deleteSnapshot,
   type ImportWarning,
   importSnapshot,
+  isHead,
+  keepSnapshot,
   listSnapshots,
   type Snapshot,
   toBackendError,
@@ -20,7 +23,10 @@ type FileOutcome =
 /** `id` tells apart files of the same name. */
 export type FileResult = FileOutcome & { id: number }
 
-/** A file that looks wrong next to the snapshot before it, waiting for the user. */
+/**
+ * A file that looks wrong next to its account's snapshot before it, or is of
+ * a new account, waiting for the user.
+ */
 export type PendingConfirmation = { file: string; warnings: ImportWarning[] }
 
 type SnapshotState = {
@@ -35,13 +41,40 @@ type SnapshotState = {
   unnamed: Record<NameKind, string[]> | null
   confirmation: PendingConfirmation | null
   load: () => Promise<void>
+  /** Puts a session's new head row in place of its old one, without reading the list again. */
+  setHead: (head: Snapshot) => void
   importFiles: (files: File[]) => Promise<void>
   /** Answers the pending confirmation. */
   confirm: (save: boolean) => void
   dismissResults: () => void
+  /**
+   * Keeps or deletes a snapshot auto sync marked for review. A failed answer
+   * is thrown; failing to read the history again after it lands in loadError.
+   */
+  keep: (id: number) => Promise<void>
+  remove: (id: number) => Promise<void>
 }
 
 let answer: ((save: boolean) => void) | null = null
+
+/** Reads of the list started so far: only the last one's answer is kept. */
+let reads = 0
+
+/** How many head rows setHead put in so far, and each session's last one with its count then. */
+let headsPut = 0
+const lastHeads = new Map<number | null, { head: Snapshot; count: number }>()
+
+/**
+ * The list (newest first, by time and then id, as storage lists it) with
+ * `head` in place of its session's head row before.
+ */
+export function withHead(snapshots: readonly Snapshot[], head: Snapshot): Snapshot[] {
+  const rest = snapshots.filter(s => !(isHead(s) && s.session === head.session))
+  const at = rest.findIndex(
+    s => s.takenAt < head.takenAt || (s.takenAt === head.takenAt && s.id < head.id),
+  )
+  return at === -1 ? [...rest, head] : [...rest.slice(0, at), head, ...rest.slice(at)]
+}
 
 export const useSnapshotStore = create<SnapshotState>((set, get) => ({
   snapshots: null,
@@ -52,11 +85,33 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
   confirmation: null,
 
   async load() {
+    const read = ++reads
+    const started = headsPut
     try {
-      set({ snapshots: await listSnapshots(), loadError: null })
+      let snapshots = await listSnapshots()
+      // A later read is on its way, and lists at least as much.
+      if (read !== reads) return
+      // A head row put in while the list was read, unless the list has its
+      // session as new: a later head row, or a snapshot holding it.
+      for (const { head, count } of lastHeads.values()) {
+        const covered = snapshots.some(
+          s =>
+            s.session === head.session && (isHead(s) ? s.id <= head.id : s.takenAt >= head.takenAt),
+        )
+        if (count > started && !covered) snapshots = withHead(snapshots, head)
+      }
+      set({ snapshots, loadError: null })
     } catch (error) {
-      set({ loadError: toBackendError(error).message })
+      if (read === reads) set({ loadError: toBackendError(error).message })
     }
+  },
+
+  setHead(head) {
+    headsPut++
+    lastHeads.set(head.session, { head, count: headsPut })
+    const { snapshots } = get()
+    // Before the first read the list comes with the head anyway.
+    if (snapshots) set({ snapshots: withHead(snapshots, head) })
   },
 
   /** One file at a time, oldest first, so each is checked against the one before. */
@@ -90,6 +145,16 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
 
   dismissResults() {
     set({ results: null, unnamed: null })
+  },
+
+  async keep(id) {
+    await keepSnapshot(id)
+    await get().load()
+  },
+
+  async remove(id) {
+    await deleteSnapshot(id)
+    await get().load()
   },
 }))
 

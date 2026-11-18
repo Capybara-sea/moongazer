@@ -46,6 +46,8 @@ pub struct AppInfo {
     /// Whether an update is downloaded and put in place on restart, rather
     /// than only pointing to the download page.
     updates_in_place: bool,
+    /// Whether this build has auto sync.
+    capture: bool,
 }
 
 #[derive(Serialize)]
@@ -78,6 +80,7 @@ pub fn app_info(app: AppHandle, mode: State<'_, portable::Mode>) -> AppInfo {
         portable: mode.portable,
         updates_enabled: updates_enabled(&app),
         updates_in_place: !mode.portable || mode.replaceable,
+        capture: cfg!(feature = "capture"),
     }
 }
 
@@ -184,6 +187,26 @@ pub async fn install_update(
             .map_err(|err| UpdateError::Install(err.to_string()));
     }
 
+    // The capture mode runs this same exe, which the update replaces; it has
+    // to be gone first. Checked before the package is taken, so a failure
+    // keeps it for another try.
+    #[cfg(feature = "capture")]
+    let sync = tauri::Manager::try_state::<crate::capture::service::AutoSync>(&app);
+    #[cfg(feature = "capture")]
+    let sync_was_on = sync
+        .as_ref()
+        .is_some_and(|sync| sync.status().phase != crate::capture::service::Phase::Off);
+    #[cfg(feature = "capture")]
+    if let Some(sync) = &sync
+        && !sync.shutdown()
+    {
+        if sync_was_on {
+            sync.update_failed();
+        }
+        return Err(UpdateError::Install(
+            "auto sync's capture mode did not exit".to_owned(),
+        ));
+    }
     let package = lock(&pending.package)
         .take()
         .ok_or(UpdateError::NothingPending)?;
@@ -202,6 +225,10 @@ pub async fn install_update(
     if installed.is_err() {
         // Kept, so the user can try again without downloading it again.
         *lock(&pending.package) = Some(package);
+        #[cfg(feature = "capture")]
+        if sync_was_on && let Some(sync) = &sync {
+            sync.update_failed();
+        }
     }
     installed
 }

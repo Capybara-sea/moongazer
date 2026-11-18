@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! Account exports: GOOD files, and Leyline files (GOOD plus `gi_*` keys,
-//! from Teyvat.me Capture), read the same way.
+//! Account exports: Leyline files (GOOD plus `gi_*` keys), as Teyvat.me
+//! Capture and the app's auto sync write them.
 
 mod canonical;
+pub mod delta;
 mod good;
 
 use std::collections::BTreeSet;
@@ -17,30 +18,6 @@ pub use good::{Artifact, Character, Good, Player, Substat, Talent, Weapon};
 /// The GOOD versions Genshin Optimizer itself accepts.
 const VERSIONS: std::ops::RangeInclusive<u64> = 1..=3;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub enum Format {
-    Good,
-    Leyline,
-}
-
-impl Format {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Good => "good",
-            Self::Leyline => "leyline",
-        }
-    }
-
-    pub fn parse(text: &str) -> Option<Self> {
-        match text {
-            "good" => Some(Self::Good),
-            "leyline" => Some(Self::Leyline),
-            _ => None,
-        }
-    }
-}
-
 #[derive(Debug)]
 pub enum ParseError {
     /// Not JSON, or a field of the wrong type. serde's message has the line
@@ -48,16 +25,19 @@ pub enum ParseError {
     Json(serde_json::Error),
     NotGood,
     UnsupportedVersion(u64),
+    /// GOOD without Leyline's keys: too little for the pages.
+    NotLeyline,
 }
 
 /// A parsed export.
 #[derive(Debug)]
 pub struct Export {
-    pub format: Format,
     pub data: Good,
     /// SHA-256 of the whole file with object keys and array items sorted:
     /// Capture writes both in a different order every time.
     pub content_hash: [u8; 32],
+    /// The whole file, for working out what changed between two.
+    pub value: Value,
 }
 
 pub fn parse(bytes: &[u8]) -> Result<Export, ParseError> {
@@ -69,21 +49,19 @@ pub fn parse(bytes: &[u8]) -> Result<Export, ParseError> {
     if !VERSIONS.contains(&version) {
         return Err(ParseError::UnsupportedVersion(version));
     }
+    // Capture files older than 1.17.2 have no `leyline` key, but always
+    // have `gi_player`.
+    if value.get("leyline").is_none() && value.get("gi_player").is_none() {
+        return Err(ParseError::NotLeyline);
+    }
     let content_hash = canonical::hash(&value);
     // Parsed again from the bytes, not from `value`, so errors keep their
     // line and column.
     let data: Good = serde_json::from_slice(bytes).map_err(ParseError::Json)?;
-    // Capture files older than 1.17.2 have no `leyline` key, but always
-    // have `gi_player`.
-    let format = if data.leyline.is_some() || data.player.is_some() {
-        Format::Leyline
-    } else {
-        Format::Good
-    };
     Ok(Export {
-        format,
         data,
         content_hash,
+        value,
     })
 }
 
@@ -100,8 +78,7 @@ pub struct Summary {
     pub artifacts3: Option<u32>,
     /// Material kinds with a non-zero count.
     pub materials: u32,
-    /// `None` when the file does not say, as GO's own exports without
-    /// materials.
+    /// `None` when the file lists no materials at all.
     pub mora: Option<u64>,
     pub primogems: Option<u64>,
     /// Sanctifying Essence, under the same rule as Mora.
@@ -120,7 +97,7 @@ pub struct Keys {
 }
 
 impl Export {
-    /// Leyline's save time in unix milliseconds; GOOD files have none.
+    /// The save time in unix milliseconds, if the file has one.
     pub fn taken_at(&self) -> Option<i64> {
         self.data.timestamp
     }
@@ -131,9 +108,9 @@ impl Export {
 
     pub fn summary(&self) -> Summary {
         let data = &self.data;
-        // Leyline leaves out zero counts, so there a missing currency is 0 once
-        // the file has any materials. Other exporters may just not list it.
-        let zero_if_missing = self.format == Format::Leyline && !data.materials.is_empty();
+        // Leyline leaves out zero counts, so a missing currency is 0 once the
+        // file has any materials.
+        let zero_if_missing = !data.materials.is_empty();
         let currency = |key: &str| match data.materials.get(key) {
             Some(&n) => Some(n),
             None => zero_if_missing.then_some(0),
@@ -192,19 +169,16 @@ pub enum Warning {
         before: u32,
         after: u32,
     },
-    OtherAccount,
+    /// A file of an account no snapshot is of yet, while there are others.
+    /// Only the database can tell: `warnings` never gives it.
+    NewAccount,
 }
 
-/// Compares a new export with the snapshot before it. Characters never go
-/// away in the game, so any loss is suspect; weapons and artifacts are eaten
-/// as fodder, so only a loss of more than a fifth is. A misread export tends
-/// to lose most of one kind.
-pub fn warnings(
-    previous: &Summary,
-    previous_uid: Option<u64>,
-    next: &Summary,
-    next_uid: Option<u64>,
-) -> Vec<Warning> {
+/// Compares a new export with its account's snapshot before it. Characters
+/// never go away in the game, so any loss is suspect; weapons and artifacts
+/// are eaten as fodder, so only a loss of more than a fifth is. A misread
+/// export tends to lose most of one kind.
+pub fn warnings(previous: &Summary, next: &Summary) -> Vec<Warning> {
     let mut warnings = Vec::new();
     let fewer = |what, before: u32, after: u32| Warning::Fewer {
         what,
@@ -225,11 +199,6 @@ pub fn warnings(
         if u64::from(after) * 5 < u64::from(before) * 4 {
             warnings.push(fewer(what, before, after));
         }
-    }
-    if let (Some(before), Some(after)) = (previous_uid, next_uid)
-        && before != after
-    {
-        warnings.push(Warning::OtherAccount);
     }
     warnings
 }

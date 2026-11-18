@@ -3,9 +3,9 @@
 
 use super::*;
 
-/// Synthetic GOOD v2 file without the v3 artifact fields.
-const GOOD: &str = r#"{
-  "format": "GOOD", "version": 2, "source": "Fake Exporter",
+/// Synthetic Leyline file without any of the optional fields.
+const BARE: &str = r#"{
+  "format": "GOOD", "version": 3, "source": "Fake Exporter", "leyline": 1,
   "characters": [
     {"key": "FakeHero", "level": 90, "ascension": 6, "constellation": 1,
      "talent": {"auto": 1, "skill": 9, "burst": 10}},
@@ -48,9 +48,8 @@ fn parse_str(text: &str) -> Result<Export, ParseError> {
 }
 
 #[test]
-fn a_good_file_parses_without_v3_fields() {
-    let export = parse_str(GOOD).unwrap();
-    assert_eq!(export.format, Format::Good);
+fn a_leyline_file_parses_without_the_optional_fields() {
+    let export = parse_str(BARE).unwrap();
     assert_eq!(export.taken_at(), None);
     assert_eq!(export.uid(), None);
     assert_eq!(
@@ -77,7 +76,6 @@ fn a_good_file_parses_without_v3_fields() {
 #[test]
 fn a_leyline_file_has_its_time_account_and_currencies() {
     let export = parse_str(&leyline(111_111_111, 1_700_000_000_000)).unwrap();
-    assert_eq!(export.format, Format::Leyline);
     assert_eq!(export.taken_at(), Some(1_700_000_000_000));
     assert_eq!(export.uid(), Some(111_111_111));
     let summary = export.summary();
@@ -91,17 +89,6 @@ fn a_leyline_file_has_its_time_account_and_currencies() {
 }
 
 #[test]
-fn a_good_file_without_currencies_does_not_claim_zero() {
-    let text = r#"{"format": "GOOD", "version": 2, "materials": {"FakeHerb": 7}}"#;
-    let summary = parse_str(text).unwrap().summary();
-    assert_eq!(
-        (summary.mora, summary.primogems, summary.essence),
-        (None, None, None)
-    );
-    assert_eq!(summary.materials, 1);
-}
-
-#[test]
 fn artifacts_are_counted_by_rarity_and_essence_is_read() {
     let artifact = |rarity: u32| {
         format!(
@@ -111,7 +98,7 @@ fn artifacts_are_counted_by_rarity_and_essence_is_read() {
     };
     let artifacts: Vec<String> = [5, 4, 4, 3, 3, 3, 1].map(artifact).into();
     let text = format!(
-        r#"{{"format": "GOOD", "version": 2, "artifacts": [{}],
+        r#"{{"format": "GOOD", "version": 3, "leyline": 1, "artifacts": [{}],
             "materials": {{"SanctifyingEssence": 42}}}}"#,
         artifacts.join(",")
     );
@@ -132,7 +119,14 @@ fn both_spellings_of_elixir_crafted_are_read() {
 #[test]
 fn an_old_capture_file_without_the_leyline_key_is_still_leyline() {
     let text = r#"{"format": "GOOD", "version": 3, "source": "Teyvat.me", "gi_player": {}}"#;
-    assert_eq!(parse_str(text).unwrap().format, Format::Leyline);
+    assert!(parse_str(text).is_ok());
+}
+
+#[test]
+fn a_plain_good_file_is_refused() {
+    let text = r#"{"format": "GOOD", "version": 2, "source": "Fake Exporter",
+        "characters": [], "materials": {"Mora": 7}}"#;
+    assert!(matches!(parse_str(text), Err(ParseError::NotLeyline)));
 }
 
 #[test]
@@ -179,7 +173,8 @@ fn files_that_are_not_good_are_rejected() {
 
 #[test]
 fn a_field_of_the_wrong_type_is_reported_with_its_position() {
-    let text = "{\"format\": \"GOOD\", \"version\": 3,\n\"characters\": [{\"key\": 5}]}";
+    let text =
+        "{\"format\": \"GOOD\", \"version\": 3, \"leyline\": 1,\n\"characters\": [{\"key\": 5}]}";
     let Err(ParseError::Json(err)) = parse_str(text) else {
         panic!("expected a JSON error");
     };
@@ -197,7 +192,7 @@ fn summary(characters: u32, weapons: u32, artifacts: u32) -> Summary {
 
 #[test]
 fn any_lost_character_needs_confirmation() {
-    let warnings = warnings(&summary(50, 0, 0), None, &summary(49, 0, 0), None);
+    let warnings = warnings(&summary(50, 0, 0), &summary(49, 0, 0));
     assert_eq!(
         warnings,
         [Warning::Fewer {
@@ -211,17 +206,8 @@ fn any_lost_character_needs_confirmation() {
 #[test]
 fn weapons_and_artifacts_need_confirmation_only_past_a_fifth() {
     let before = summary(1, 100, 1000);
-    assert!(warnings(&before, None, &summary(1, 80, 800), None).is_empty());
-    let lost = warnings(&before, None, &summary(1, 79, 0), None);
+    assert!(warnings(&before, &summary(1, 80, 800)).is_empty());
+    let lost = warnings(&before, &summary(1, 79, 0));
     assert_eq!(lost.len(), 2);
-    assert!(warnings(&before, None, &summary(2, 500, 5000), None).is_empty());
-}
-
-#[test]
-fn another_account_needs_confirmation_when_both_files_name_one() {
-    let s = summary(1, 1, 1);
-    assert_eq!(warnings(&s, Some(1), &s, Some(2)), [Warning::OtherAccount]);
-    assert!(warnings(&s, Some(1), &s, Some(1)).is_empty());
-    assert!(warnings(&s, None, &s, Some(2)).is_empty());
-    assert!(warnings(&s, Some(1), &s, None).is_empty());
+    assert!(warnings(&before, &summary(2, 500, 5000)).is_empty());
 }

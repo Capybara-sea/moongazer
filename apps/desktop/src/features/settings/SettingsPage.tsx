@@ -9,6 +9,7 @@ import { Switch } from "@/components/Switch"
 import { getDataDir, openDataDir, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { type ThemeMode, useAppearanceStore } from "@/stores/appearanceStore"
+import { useCaptureStore } from "@/stores/captureStore"
 import { useMessageStore } from "@/stores/messageStore"
 import { text } from "@/text/zh"
 
@@ -22,6 +23,7 @@ export function SettingsPage() {
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-4.5 p-6">
       <h1 className="font-semibold text-[20px] leading-[1.3]">{text.settings.title}</h1>
+      <SyncSection />
       <NotificationsPanel />
       <DataPanel />
       <AppearancePanel />
@@ -38,17 +40,63 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-type RowProps = { title: string; hint: string; children?: ReactNode }
+type RowProps = { title: string; hint: string; error?: string | null; children?: ReactNode }
 
-function Row({ title, hint, children }: RowProps) {
+function Row({ title, hint, error, children }: RowProps) {
   return (
     <div className="flex items-center justify-between gap-6 border-(--separator) border-t py-3.5">
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="font-medium text-sm">{title}</span>
         <span className="text-[12px] text-muted">{hint}</span>
+        {error && <span className="select-text text-[12px] text-danger">{error}</span>}
       </div>
       {children}
     </div>
+  )
+}
+
+/** Auto sync's settings; builds without auto sync leave the section out. */
+function SyncSection() {
+  const capture = useCaptureStore(s => s.capture)
+  const loaded = useCaptureStore(s => s.status !== null)
+  const loadError = useCaptureStore(s => s.loadError)
+  const autoStart = useCaptureStore(s => s.autoStart)
+  const error = useCaptureStore(s => s.autoStartError)
+  if (!capture) return null
+  const store = useCaptureStore.getState
+  return (
+    <Section title={text.settings.sync}>
+      <Row
+        title={text.settings.autoStart}
+        hint={text.settings.autoStartHint}
+        error={error && `${text.settings.saveFailed}: ${error}`}
+      >
+        <Switch
+          checked={autoStart === true}
+          label={text.settings.autoStart}
+          disabled={autoStart === null}
+          onChange={on => void store().setAutoStart(on)}
+        />
+      </Row>
+      <Row
+        title={text.settings.status}
+        hint={text.settings.statusHint}
+        error={loadError && `${text.settings.syncLoadFailed}: ${loadError}`}
+      >
+        <Button
+          variant="secondary"
+          aria-label={text.settings.viewStatus}
+          isDisabled={!loaded}
+          onPress={() => store().setPanelOpen(true)}
+          className="h-9 flex-none rounded-[9px] border border-border bg-transparent px-3.5 font-normal text-[13px] text-foreground"
+        >
+          {text.settings.view}
+        </Button>
+      </Row>
+      <p className="border-(--separator) border-t pt-3 pb-2.5 text-[12px] text-muted">
+        {text.settings.syncNote}
+      </p>
+    </Section>
   )
 }
 
@@ -105,6 +153,7 @@ function AppearancePanel() {
   const theme = useAppearanceStore(s => s.theme)
   const glass = useAppearanceStore(s => s.glass)
   const motion = useAppearanceStore(s => s.motion)
+  const maskUid = useAppearanceStore(s => s.maskUid)
   const store = useAppearanceStore.getState
   return (
     <Section title={text.settings.ui}>
@@ -140,6 +189,13 @@ function AppearancePanel() {
           checked={motion}
           label={text.settings.motion}
           onChange={on => store().setMotion(on)}
+        />
+      </Row>
+      <Row title={text.settings.maskUid} hint={text.settings.maskUidHint}>
+        <Switch
+          checked={maskUid}
+          label={text.settings.maskUid}
+          onChange={on => store().setMaskUid(on)}
         />
       </Row>
     </Section>

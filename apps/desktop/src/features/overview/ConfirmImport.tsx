@@ -3,22 +3,21 @@
 
 import { AlertDialog, Button } from "@heroui/react"
 import { useState } from "react"
-import type { ImportWarning } from "@/lib/backend"
 import { type PendingConfirmation, useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 
-function describe(warning: ImportWarning) {
-  if (warning.kind === "otherAccount") return text.confirm.otherAccount
-  return text.confirm.fewer[warning.what](warning.before, warning.after)
-}
-
-/** Asks whether to save a file that looks wrong next to the snapshot before it. */
+/**
+ * Asks whether to save a file that looks wrong next to its account's snapshot
+ * before it, or that is of an account not saved yet while others are.
+ */
 export function ConfirmImport() {
   const pending = useSnapshotStore(s => s.confirmation)
   // The last one stays rendered while the dialog fades out.
   const [shown, setShown] = useState<PendingConfirmation | null>(pending)
   if (pending && pending !== shown) setShown(pending)
   const answer = (save: boolean) => useSnapshotStore.getState().confirm(save)
+  // A new account has no snapshot before it, so nothing else is said with it.
+  const isNew = shown?.warnings.some(w => w.kind === "newAccount") ?? false
   return (
     <AlertDialog
       isOpen={pending !== null}
@@ -31,28 +30,38 @@ export function ConfirmImport() {
         <AlertDialog.Container>
           <AlertDialog.Dialog>
             <AlertDialog.Header>
-              <AlertDialog.Icon status="warning" />
-              <AlertDialog.Heading>{text.confirm.title}</AlertDialog.Heading>
+              <AlertDialog.Icon status={isNew ? "accent" : "warning"} />
+              <AlertDialog.Heading>
+                {isNew ? text.confirm.newTitle : text.confirm.title}
+              </AlertDialog.Heading>
             </AlertDialog.Header>
             {shown && (
               <AlertDialog.Body className="flex flex-col gap-2 text-[13px]">
-                <p className="break-all">{text.confirm.body(shown.file)}</p>
-                <ul className="list-disc pl-5">
-                  {shown.warnings.map(warning => (
-                    <li key={warning.kind === "fewer" ? warning.what : warning.kind}>
-                      {describe(warning)}
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-muted">{text.confirm.hint}</p>
+                {isNew ? (
+                  <p className="break-all">{text.confirm.newBody(shown.file)}</p>
+                ) : (
+                  <>
+                    <p className="break-all">{text.confirm.body(shown.file)}</p>
+                    <ul className="list-disc pl-5">
+                      {shown.warnings.map(warning =>
+                        warning.kind === "fewer" ? (
+                          <li key={warning.what}>
+                            {text.confirm.fewer[warning.what](warning.before, warning.after)}
+                          </li>
+                        ) : null,
+                      )}
+                    </ul>
+                    <p className="text-muted">{text.confirm.hint}</p>
+                  </>
+                )}
               </AlertDialog.Body>
             )}
             <AlertDialog.Footer>
               <Button variant="tertiary" onPress={() => answer(false)}>
                 {text.confirm.skip}
               </Button>
-              <Button variant="danger" onPress={() => answer(true)}>
-                {text.confirm.save}
+              <Button variant={isNew ? "primary" : "danger"} onPress={() => answer(true)}>
+                {isNew ? text.confirm.newSave : text.confirm.save}
               </Button>
             </AlertDialog.Footer>
           </AlertDialog.Dialog>

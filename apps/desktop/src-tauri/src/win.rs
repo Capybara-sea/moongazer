@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! The app's only Windows FFI: native dialogs that work without the webview.
+//! The app's Windows FFI: native dialogs that work without the webview, and
+//! (`capture`) what auto sync needs from Windows.
+
+#[cfg(feature = "capture")]
+pub mod capture;
 
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     IDYES, MB_ICONERROR, MB_ICONWARNING, MB_OK, MB_YESNO, MESSAGEBOX_STYLE, MessageBoxW,

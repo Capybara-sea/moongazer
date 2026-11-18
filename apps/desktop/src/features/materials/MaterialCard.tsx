@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { Delta } from "@/components/Delta"
 import { GameIcon } from "@/components/GameIcon"
 import { RARITY_TONES } from "@/components/RarityChip"
 import { cn } from "@/lib/cn"
-import { formatDelta, formatNumber } from "@/lib/format"
+import { formatNumber, signedDelta } from "@/lib/format"
 import type { MaterialRow } from "./order"
 
 /** One material: its icon, name, count and the change since the previous snapshot. */
@@ -30,9 +31,7 @@ export function MaterialCard({ row }: { row: MaterialRow }) {
         <span className="tabular flex flex-wrap items-baseline gap-x-2 whitespace-nowrap">
           <span className="font-semibold text-[16px]">{formatNumber(count)}</span>
           {change !== undefined && change !== 0 && (
-            <span className={cn("text-[12px]", change > 0 ? "text-(--accent-text)" : "text-muted")}>
-              {formatDelta(change)}
-            </span>
+            <Delta signed={signedDelta(change)} className="text-[12px]" />
           )}
         </span>
       </div>

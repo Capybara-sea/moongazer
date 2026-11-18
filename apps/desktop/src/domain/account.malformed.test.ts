@@ -9,9 +9,9 @@ const leyline = (parts: Record<string, unknown>) =>
   parseAccount({ format: "GOOD", version: 3, leyline: 1, ...parts })
 
 describe("parseAccount on malformed input", () => {
-  it("reads anything but an object as an empty GOOD file", () => {
+  it("reads anything but an object as an empty export", () => {
     for (const value of [null, undefined, "GOOD", 42, [{ gi_player: {} }]]) {
-      expect(parseAccount(value).leyline).toBe(false)
+      expect(parseAccount(value).characters).toEqual([])
       expect(parseAccount(value).player).toBeUndefined()
     }
   })

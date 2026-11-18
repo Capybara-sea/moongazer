@@ -13,6 +13,7 @@ import { BackgroundEvents } from "@/features/messages/BackgroundEvents"
 import { ReminderTimer } from "@/features/messages/ReminderTimer"
 import { OverviewPage } from "@/features/overview/OverviewPage"
 import { SettingsPage } from "@/features/settings/SettingsPage"
+import { SyncEvents } from "@/features/sync/SyncEvents"
 import { WeaponsPage } from "@/features/weapons/WeaponsPage"
 import { AppShell } from "./AppShell"
 
@@ -35,6 +36,7 @@ export function App() {
       <UpdateToasts />
       <ReminderTimer />
       <BackgroundEvents />
+      <SyncEvents />
       <LogoWarmUp />
     </>
   )

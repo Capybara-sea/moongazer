@@ -28,7 +28,7 @@ export function ThemeToggle() {
         useAppearanceStore.getState().setTheme(next.theme, e.currentTarget.getBoundingClientRect())
       }
       aria-label={text.theme.toggle}
-      className="flex h-9 cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-[6px] border border-border px-3 text-left text-[13px] text-muted transition-colors hover:bg-default/60 hover:text-foreground motion-reduce:transition-none"
+      className="flex h-9 flex-none cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-[6px] border border-border px-3 text-left text-[13px] text-muted transition-colors hover:bg-default/60 hover:text-foreground motion-reduce:transition-none"
     >
       <Icon size={16} aria-hidden />
       {label}

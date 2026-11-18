@@ -17,7 +17,6 @@ const takenAt = cst(11, 15, 10)
 
 function account(tasks: Tasks, endgame?: Account["endgame"]): Account {
   return {
-    leyline: true,
     tasks,
     endgame,
     characters: [],
@@ -28,16 +27,27 @@ function account(tasks: Tasks, endgame?: Account["endgame"]): Account {
   }
 }
 
-const ids = (tasks: Tasks) => reminders(account(tasks), takenAt).map(r => r.id.split(":")[0])
+/** A made-up account token. */
+const TOKEN = 7
+const ids = (tasks: Tasks) => reminders(account(tasks), takenAt, TOKEN).map(r => r.id.split(":")[1])
 const one = (tasks: Tasks) => {
-  const [first, ...rest] = reminders(account(tasks), takenAt)
+  const [first, ...rest] = reminders(account(tasks), takenAt, TOKEN)
   expect(rest).toEqual([])
   return first
 }
 
 describe("reminders", () => {
   it("has nothing without task data", () => {
-    expect(reminders(account({}), takenAt)).toEqual([])
+    expect(reminders(account({}), takenAt, TOKEN)).toEqual([])
+  })
+
+  it("names the account by its token, so two accounts' same event are both recorded", () => {
+    const tasks = { commissions: { finished: 4, total: 4, claimed: false } }
+    const [first] = reminders(account(tasks), takenAt, TOKEN)
+    const [other] = reminders(account(tasks), takenAt, TOKEN + 1)
+    expect(first).toMatchObject({ account: TOKEN })
+    expect(first?.id.startsWith(`${TOKEN}:commissions:`)).toBe(true)
+    expect(other?.id).not.toBe(first?.id)
   })
 
   it("reminds when resin will be full, unless it already is", () => {
@@ -86,6 +96,7 @@ describe("reminders", () => {
     const [first] = reminders(
       account({ commissions: { finished: 4, total: 4, claimed: false } }),
       late,
+      TOKEN,
     )
     expect(first?.at).toBe(late)
   })

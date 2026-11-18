@@ -5,13 +5,15 @@ import type { Account } from "@/domain/account"
 import { type TalentKey, wielderKey } from "@/domain/builds"
 import { type Artifact, SLOTS, type SlotKey, type Substat, type Weapon } from "@/domain/good"
 import { lookup } from "@/domain/names"
+import { type Labeled, movedTo } from "@/lib/format"
 import { text } from "@/text/zh"
 
 const t = text.characterDetail
 const TALENTS: readonly TalentKey[] = ["auto", "skill", "burst"]
+const plain = (label: string): Labeled => ({ label, change: null })
 
 /** What changed for one character since the previous snapshot, one line each. */
-export function characterChanges(current: Account, previous: Account, key: string): string[] {
+export function characterChanges(current: Account, previous: Account, key: string): Labeled[] {
   const now = current.characters.find(c => c.key === key)
   if (!now) return []
   // Leyline names the Traveler after their current element, so after a switch
@@ -21,10 +23,10 @@ export function characterChanges(current: Account, previous: Account, key: strin
   const before =
     previous.characters.find(c => c.key === key) ??
     previous.characters.find(c => wielderKey(c.key) === at)
-  if (!before) return [t.joinedNow]
-  const lines: string[] = []
-  const compare = (label: string, from: string | number, to: string | number) => {
-    if (from !== to) lines.push(t.changed(label, from, to))
+  if (!before) return [plain(t.joinedNow)]
+  const lines: Labeled[] = []
+  const compare = (label: string, from: number, to: number) => {
+    if (from !== to) lines.push({ label: t.changedFrom(label, from), change: movedTo(from, to) })
   }
   compare(t.level, before.level, now.level)
   compare(t.ascension, before.ascension, now.ascension)
@@ -45,9 +47,9 @@ export function characterChanges(current: Account, previous: Account, key: strin
     compare(t.refinement, weaponBefore.refinement, weaponNow.refinement)
   } else if (weaponNow) {
     const name = lookup("weapons", weaponNow.key).name
-    lines.push(weaponBefore ? t.weaponSwapped(name) : t.equipped(name))
+    lines.push(plain(weaponBefore ? t.weaponSwapped(name) : t.equipped(name)))
   } else if (weaponBefore) {
-    lines.push(t.unequipped(t.weapon))
+    lines.push(plain(t.unequipped(t.weapon)))
   }
 
   for (const slot of SLOTS) {
@@ -56,7 +58,7 @@ export function characterChanges(current: Account, previous: Account, key: strin
       artifactOf(previous, key, slot),
       artifactOf(current, key, slot),
     )
-    if (line) lines.push(line)
+    if (line) lines.push(plain(line))
   }
   return lines
 }

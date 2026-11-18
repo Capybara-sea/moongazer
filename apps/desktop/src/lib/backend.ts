@@ -2,13 +2,22 @@
 // Copyright (c) 2026 Capybara_sea
 
 /**
- * The only module that talks to the Rust side. Every response is checked at
- * runtime before the rest of the app sees it.
+ * With the modules under lib/backend/, the only ones that talk to the Rust
+ * side. Every response is checked at runtime before the rest of the app sees it.
  */
 
-import { invoke } from "@tauri-apps/api/core"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
 import { getCurrentWindow } from "@tauri-apps/api/window"
+import {
+  call,
+  isNullableNumber,
+  isNumber,
+  isRecord,
+  isStrings,
+  protocolError,
+} from "@/lib/backend/shared"
+
+export { BackendError, toBackendError } from "@/lib/backend/shared"
 
 export type AppInfo = {
   version: string
@@ -16,6 +25,8 @@ export type AppInfo = {
   updatesEnabled: boolean
   /** An update is downloaded and put in place on restart, not only announced. */
   updatesInPlace: boolean
+  /** This build has auto sync; its commands exist only then. */
+  capture: boolean
 }
 export type UpdateInfo = { version: string; notes: string | null }
 export type UpdateProgress = { downloaded: number; total: number | null }
@@ -39,15 +50,31 @@ export type Snapshot = {
   /** Unix milliseconds: when the data was read, and when it was imported. */
   takenAt: number
   importedAt: number
-  format: "good" | "leyline"
   source: string
+  /** Tells accounts apart; shown unless set to mask it. Null when the file has none. */
+  uid: number | null
   summary: Summary
-  /** Whether the original export is still kept (the newest 100 are). */
+  /** Whether the original export is still kept (the newest 100 of each account are). */
   hasRaw: boolean
+  /** Saved by auto sync although it looked wrong next to the one before: keep or delete it. */
+  review: boolean
+  /** Auto sync's login it belongs to (that login's first snapshot's id); null for imports. */
+  session: number | null
+  /** A head row standing for the export auto sync holds right now. */
+  live: boolean
 }
+
+/**
+ * A head row: a session's newest batch of changes, listed when it is newer
+ * than the session's newest snapshot. While playing it is the live point;
+ * after a crash, the last sync. Its id is the batch's, negated.
+ */
+export const isHead = (snapshot: Snapshot) => snapshot.id < 0
+
 export type ImportWarning =
   | { kind: "fewer"; what: "characters" | "weapons" | "artifacts"; before: number; after: number }
-  | { kind: "otherAccount" }
+  /** Of an account no snapshot is of yet, while others are; asked for files only. */
+  | { kind: "newAccount" }
 export type ImportOutcome =
   | { status: "saved"; snapshot: Snapshot }
   | { status: "duplicate"; takenAt: number }
@@ -60,37 +87,21 @@ export type ImportKeys = {
 }
 export type Imported = { outcome: ImportOutcome; keys: ImportKeys }
 
-export class BackendError extends Error {
-  readonly kind: string
-
-  constructor(kind: string, message: string) {
-    super(message)
-    this.name = "BackendError"
-    this.kind = kind
-  }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
-}
-
-function protocolError(what: string) {
-  return new BackendError("protocol", `unexpected ${what} from the backend`)
-}
-
 export function parseAppInfo(value: unknown): AppInfo {
   if (
     isRecord(value) &&
     typeof value.version === "string" &&
     typeof value.portable === "boolean" &&
     typeof value.updatesEnabled === "boolean" &&
-    typeof value.updatesInPlace === "boolean"
+    typeof value.updatesInPlace === "boolean" &&
+    typeof value.capture === "boolean"
   ) {
     return {
       version: value.version,
       portable: value.portable,
       updatesEnabled: value.updatesEnabled,
       updatesInPlace: value.updatesInPlace,
+      capture: value.capture,
     }
   }
   throw protocolError("app info")
@@ -118,12 +129,6 @@ export function parseProgress(value: unknown): UpdateProgress | null {
   }
   return null
 }
-
-const isNumber = (value: unknown): value is number => typeof value === "number"
-const isNullableNumber = (value: unknown): value is number | null =>
-  value === null || typeof value === "number"
-const isStrings = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every(item => typeof item === "string")
 
 function parseSummary(value: unknown): Summary {
   if (
@@ -159,25 +164,31 @@ export function parseSnapshot(value: unknown): Snapshot {
     isNumber(value.id) &&
     isNumber(value.takenAt) &&
     isNumber(value.importedAt) &&
-    (value.format === "good" || value.format === "leyline") &&
     typeof value.source === "string" &&
-    typeof value.hasRaw === "boolean"
+    isNullableNumber(value.uid) &&
+    typeof value.hasRaw === "boolean" &&
+    typeof value.review === "boolean" &&
+    isNullableNumber(value.session) &&
+    typeof value.live === "boolean"
   ) {
     return {
       id: value.id,
       takenAt: value.takenAt,
       importedAt: value.importedAt,
-      format: value.format,
       source: value.source,
+      uid: value.uid,
       summary: parseSummary(value.summary),
       hasRaw: value.hasRaw,
+      review: value.review,
+      session: value.session,
+      live: value.live,
     }
   }
   throw protocolError("snapshot")
 }
 
 function parseWarning(value: unknown): ImportWarning {
-  if (isRecord(value) && value.kind === "otherAccount") return { kind: "otherAccount" }
+  if (isRecord(value) && value.kind === "newAccount") return { kind: "newAccount" }
   if (
     isRecord(value) &&
     value.kind === "fewer" &&
@@ -232,28 +243,6 @@ export function parseImported(value: unknown): Imported {
   throw protocolError("import result")
 }
 
-/** Rust command errors arrive as `{ kind, message? }`. */
-export function toBackendError(error: unknown): BackendError {
-  if (error instanceof BackendError) return error
-  if (isRecord(error) && typeof error.kind === "string") {
-    const message =
-      typeof error.message === "string" || typeof error.message === "number"
-        ? String(error.message)
-        : error.kind
-    return new BackendError(error.kind, message)
-  }
-  if (error instanceof Error) return new BackendError("unknown", error.message)
-  return new BackendError("unknown", String(error))
-}
-
-async function call(command: string, args?: Record<string, unknown>): Promise<unknown> {
-  try {
-    return await invoke<unknown>(command, args)
-  } catch (error) {
-    throw toBackendError(error)
-  }
-}
-
 export async function getAppInfo() {
   return parseAppInfo(await call("app_info"))
 }
@@ -271,16 +260,17 @@ export async function installUpdate() {
 }
 
 /**
- * Imports one GOOD or Leyline file. GOOD files carry no time of their own,
- * so `modifiedAt` (the file's, in unix milliseconds) stands in. A file that
- * looks wrong next to the snapshot before it comes back as
- * "needsConfirmation" until it is sent again with `confirmed`.
+ * Imports one Leyline file; `modifiedAt` (the file's, in unix milliseconds)
+ * stands in when it carries no time of its own. A file that looks wrong next
+ * to its account's snapshot before it, or is of an account not saved yet
+ * while others are, comes back as "needsConfirmation" until it is sent again
+ * with `confirmed`. A file without Leyline data fails as "notLeyline".
  */
 export async function importSnapshot(text: string, modifiedAt: number, confirmed: boolean) {
   return parseImported(await call("import_snapshot", { text, modifiedAt, confirmed }))
 }
 
-/** Every snapshot, newest first. */
+/** Every snapshot, and each session's head row when it has one, newest first. */
 export async function listSnapshots() {
   const value = await call("list_snapshots")
   if (!Array.isArray(value)) throw protocolError("snapshot list")
@@ -289,7 +279,9 @@ export async function listSnapshots() {
 
 /**
  * The original export of a snapshot as JSON, or null once only its summary
- * is kept. Checked field by field in domain/account.
+ * is kept. A head row's is rebuilt from its session's batches unless it is
+ * live; one that does not rebuild exactly fails. Checked field by field in
+ * domain/account.
  */
 export async function getSnapshotExport(id: number): Promise<unknown> {
   const value = await call("snapshot_export", { id })
@@ -302,6 +294,15 @@ export async function getSnapshotExport(id: number): Promise<unknown> {
   }
 }
 
+/** Clears a snapshot's review mark. */
+export async function keepSnapshot(id: number) {
+  await call("keep_snapshot", { id })
+}
+
+export async function deleteSnapshot(id: number) {
+  await call("delete_snapshot", { id })
+}
+
 export async function getDataDir() {
   const value = await call("data_dir")
   if (typeof value !== "string") throw protocolError("data directory")
@@ -310,6 +311,10 @@ export async function getDataDir() {
 
 export async function openDataDir() {
   await call("open_data_dir")
+}
+
+export async function openLogDir() {
+  await call("open_log_dir")
 }
 
 /**
@@ -324,15 +329,33 @@ export async function setWindowTitle(title: string) {
   }
 }
 
-/** Shows a Windows notification; a click on it opens the app at `page`. */
-export async function showNotification(title: string, body: string, page: string) {
-  await call("notify", { title, body, page })
+/**
+ * Shows a Windows notification; a click on it opens the app at `page`, on
+ * `account` (a token) when given. Rust hands the page back as it got it, so
+ * the token rides in it as `page@token`.
+ */
+export async function showNotification(
+  title: string,
+  body: string,
+  page: string,
+  account?: number,
+) {
+  await call("notify", { title, body, page: account === undefined ? page : `${page}@${account}` })
 }
 
-/** A notification was clicked: the page it is about. */
-export function onOpenPage(handler: (page: string) => void): Promise<UnlistenFn> {
+/** What a clicked notification is about: its page, and its account's token if it has one. */
+export function parseOpenPage(payload: unknown): { page: string; account?: number } | null {
+  if (typeof payload !== "string") return null
+  const [page = "", token] = payload.split("@")
+  const account = Number(token)
+  return Number.isSafeInteger(account) && account > 0 ? { page, account } : { page }
+}
+
+/** A notification was clicked: the page it is about, and the account if it is about one. */
+export function onOpenPage(handler: (page: string, account?: number) => void): Promise<UnlistenFn> {
   return listen<unknown>("open-page", event => {
-    if (typeof event.payload === "string") handler(event.payload)
+    const target = parseOpenPage(event.payload)
+    if (target) handler(target.page, target.account)
   })
 }
 

@@ -5,11 +5,17 @@ import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
 import type { Artifact, Character, Weapon } from "@/domain/good"
 import { lookup } from "@/domain/names"
+import { type Labeled, movedTo } from "@/lib/format"
 import { text } from "@/text/zh"
 import { characterChanges } from "./changes"
 
 const t = text.characterDetail
 const slots = text.game.slots
+const plain = (label: string): Labeled => ({ label, change: null })
+const moved = (label: string, from: number, to: number): Labeled => ({
+  label: t.changedFrom(label, from),
+  change: movedTo(from, to),
+})
 
 const character = (patch: Partial<Character> = {}): Character => ({
   key: "FakeHero",
@@ -46,7 +52,6 @@ const artifact = (patch: Partial<Artifact> = {}): Artifact => ({
 })
 
 const account = (parts: Partial<Account> = {}): Account => ({
-  leyline: false,
   characters: [character()],
   weapons: [weapon()],
   artifacts: [artifact()],
@@ -64,7 +69,9 @@ describe("characterChanges", () => {
 
   it("says only that the character is new when the previous snapshot lacks it", () => {
     const now = account({ characters: [character({ level: 90 })] })
-    expect(characterChanges(now, account({ characters: [] }), "FakeHero")).toEqual([t.joinedNow])
+    expect(characterChanges(now, account({ characters: [] }), "FakeHero")).toEqual([
+      plain(t.joinedNow),
+    ])
   })
 
   it("lists level, ascension, constellation and base talent levels in that order", () => {
@@ -79,11 +86,11 @@ describe("characterChanges", () => {
       ],
     })
     expect(characterChanges(now, account(), "FakeHero")).toEqual([
-      t.changed(t.level, 70, 80),
-      t.changed(t.ascension, 4, 5),
-      t.changed(t.constellation, 0, 2),
-      t.changed(text.game.talents.skill, 6, 7),
-      t.changed(text.game.talents.burst, 9, 10),
+      moved(t.level, 70, 80),
+      moved(t.ascension, 4, 5),
+      moved(t.constellation, 0, 2),
+      moved(text.game.talents.skill, 6, 7),
+      moved(text.game.talents.burst, 9, 10),
     ])
   })
 
@@ -91,7 +98,7 @@ describe("characterChanges", () => {
     const known = (friendship: number) => new Map([["FakeHero", { friendship }]])
     const now = account({ characterInfo: known(8) })
     expect(characterChanges(now, account({ characterInfo: known(7) }), "FakeHero")).toEqual([
-      t.changed(t.friendship, 7, 8),
+      moved(t.friendship, 7, 8),
     ])
     expect(characterChanges(now, account(), "FakeHero")).toEqual([])
   })
@@ -99,17 +106,17 @@ describe("characterChanges", () => {
   it("reports the weapon's level and refinement when it is the same weapon", () => {
     const now = account({ weapons: [weapon({ level: 90, refinement: 2 })] })
     expect(characterChanges(now, account(), "FakeHero")).toEqual([
-      t.changed(t.weaponLevel, 80, 90),
-      t.changed(t.refinement, 1, 2),
+      moved(t.weaponLevel, 80, 90),
+      moved(t.refinement, 1, 2),
     ])
   })
 
   it("reports a swapped, newly equipped or removed weapon", () => {
     const other = account({ weapons: [weapon({ key: "FakeBow" })] })
     const none = account({ weapons: [weapon({ location: "" })] })
-    expect(characterChanges(account(), other, "FakeHero")).toEqual([t.weaponSwapped(blade)])
-    expect(characterChanges(account(), none, "FakeHero")).toEqual([t.equipped(blade)])
-    expect(characterChanges(none, account(), "FakeHero")).toEqual([t.unequipped(t.weapon)])
+    expect(characterChanges(account(), other, "FakeHero")).toEqual([plain(t.weaponSwapped(blade))])
+    expect(characterChanges(account(), none, "FakeHero")).toEqual([plain(t.equipped(blade))])
+    expect(characterChanges(none, account(), "FakeHero")).toEqual([plain(t.unequipped(t.weapon))])
   })
 
   it("takes the highest level weapon when several share the character", () => {
@@ -125,7 +132,7 @@ describe("characterChanges", () => {
         artifacts: [artifact({ location: "Traveler" })],
       })
     expect(characterChanges(traveler(90), traveler(80), "TravelerFake")).toEqual([
-      t.changed(t.weaponLevel, 80, 90),
+      moved(t.weaponLevel, 80, 90),
     ])
   })
 
@@ -143,8 +150,8 @@ describe("characterChanges", () => {
       90,
     )
     expect(characterChanges(now, before, "TravelerFakeRock")).toEqual([
-      t.changed(t.level, 80, 90),
-      t.changed(t.weaponLevel, 80, 90),
+      moved(t.level, 80, 90),
+      moved(t.weaponLevel, 80, 90),
     ])
   })
 
@@ -152,8 +159,8 @@ describe("characterChanges", () => {
     const now = account({ artifacts: [artifact({ slotKey: "circlet" }), artifact()] })
     const before = account({ artifacts: [artifact(), artifact({ slotKey: "plume" })] })
     expect(characterChanges(now, before, "FakeHero")).toEqual([
-      t.unequipped(slots.plume),
-      t.equipped(slots.circlet),
+      plain(t.unequipped(slots.plume)),
+      plain(t.equipped(slots.circlet)),
     ])
   })
 
@@ -161,20 +168,24 @@ describe("characterChanges", () => {
     const now = account({
       artifacts: [artifact({ level: 20, substats: [{ key: "critRate_", value: 7.0 }] })],
     })
-    expect(characterChanges(now, account(), "FakeHero")).toEqual([t.upgraded(slots.flower, 20)])
+    expect(characterChanges(now, account(), "FakeHero")).toEqual([
+      plain(t.upgraded(slots.flower, 20)),
+    ])
   })
 
   it("reads any other difference as a new piece", () => {
     const changed = (patch: Partial<Artifact>) =>
       characterChanges(account({ artifacts: [artifact(patch)] }), account(), "FakeHero")
-    expect(changed({ setKey: "OtherFakeSet", level: 20 })).toEqual([t.replaced(slots.flower)])
-    expect(changed({ mainStatKey: "atk" })).toEqual([t.replaced(slots.flower)])
-    expect(changed({ level: 12 })).toEqual([t.replaced(slots.flower)])
+    expect(changed({ setKey: "OtherFakeSet", level: 20 })).toEqual([
+      plain(t.replaced(slots.flower)),
+    ])
+    expect(changed({ mainStatKey: "atk" })).toEqual([plain(t.replaced(slots.flower))])
+    expect(changed({ level: 12 })).toEqual([plain(t.replaced(slots.flower))])
     expect(changed({ substats: [{ key: "critDMG_", value: 7.8 }] })).toEqual([
-      t.replaced(slots.flower),
+      plain(t.replaced(slots.flower)),
     ])
     expect(changed({ unactivatedSubstats: [{ key: "atk", value: 19 }] })).toEqual([
-      t.replaced(slots.flower),
+      plain(t.replaced(slots.flower)),
     ])
   })
 })

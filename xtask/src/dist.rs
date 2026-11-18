@@ -15,6 +15,10 @@
 //! flag (test builds use it for a local endpoint and version). `--base-url`
 //! points the download links in latest.json somewhere other than the GitHub
 //! release.
+//!
+//! The build has auto sync: it runs `pack` first and ships the capture pack
+//! next to the exe, in the installer and the zip. `--no-capture` builds
+//! without it (hard rule: a build without capture must always be possible).
 
 use std::fs::{self, File};
 use std::io::{BufWriter, Write};
@@ -37,21 +41,21 @@ const PORTABLE_MARKER: &str = "portable";
 const MARKER_TEXT: &str = "This file makes Moongazer portable: its settings, data, logs and \
                            webview data stay in the app-data folder next to it.\r\n";
 const SUMS: &str = "SHA256SUMS.txt";
-const KEY_VARS: [&str; 3] = [
-    "TAURI_SIGNING_PRIVATE_KEY",
-    "TAURI_SIGNING_PRIVATE_KEY_PATH",
-    "TAURI_SIGNING_PRIVATE_KEY_PASSWORD",
-];
+/// The capture pack, written by `pack`; the app looks for it next to its exe.
+const PACK_DIR: &str = "apps/desktop/src-tauri/capture-pack";
+const PACK_FILES: [&str; 3] = ["gi.json", "game_data.gz", "pack.json"];
 
 struct Options {
     config: Option<PathBuf>,
     base_url: Option<String>,
+    capture: bool,
 }
 
 fn parse(args: &[&str]) -> Result<Options> {
     let mut options = Options {
         config: None,
         base_url: None,
+        capture: true,
     };
     let mut rest = args.iter();
     while let Some(arg) = rest.next() {
@@ -65,8 +69,11 @@ fn parse(args: &[&str]) -> Result<Options> {
                 let url = rest.next().context("--base-url needs a URL")?;
                 options.base_url = Some(format!("{}/", url.trim_end_matches('/')));
             }
+            "--no-capture" => options.capture = false,
             other => {
-                bail!("usage: cargo xtask dist [--config <file>] [--base-url <url>]; got `{other}`")
+                bail!(
+                    "usage: cargo xtask dist [--config <file>] [--base-url <url>] [--no-capture]; got `{other}`"
+                )
             }
         }
     }
@@ -115,6 +122,9 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
     let zip_time = commit_time(root)?;
 
     let target = target_dir(root)?;
+    if options.capture {
+        build_pack(root)?;
+    }
     let out = target.join("dist").join(format!("v{version}"));
     if out.exists() {
         fs::remove_dir_all(&out).with_context(|| format!("clearing {}", out.display()))?;
@@ -126,11 +136,23 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
     // tauri.conf.json turns off the bundler's own signing
     // (createUpdaterArtifacts).
     let mut data = gen_data::command(root, false);
+    util::without_key(&mut data);
     let mut build = util::node_tool("pnpm", root);
-    build.args(["--filter", PACKAGE, "tauri", "build"]);
-    for var in KEY_VARS {
-        data.env_remove(var);
-        build.env_remove(var);
+    util::without_key(&mut build).args(["--filter", PACKAGE, "tauri", "build"]);
+    if options.capture {
+        // Not in the dist folder: SHA256SUMS.txt covers everything there.
+        let patch = target.join("dist").join("capture.conf.json");
+        let resources: Vec<String> = PACK_FILES
+            .iter()
+            .map(|file| format!("capture-pack/{file}"))
+            .collect();
+        fs::write(
+            &patch,
+            serde_json::to_string_pretty(&json!({ "bundle": { "resources": resources } }))?,
+        )?;
+        build
+            .args(["--features", "capture", "--config"])
+            .arg(&patch);
     }
     if let Some(path) = &options.config {
         build.arg("--config").arg(path);
@@ -147,9 +169,18 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
     // The exe in target/release is the unpatched one, without the bundler's
     // installer-type marker, which is what the portable build needs.
     let portable = format!("{product}_{version}_x64-portable.zip");
+    let pack: Vec<PathBuf> = if options.capture {
+        PACK_FILES
+            .iter()
+            .map(|file| root.join(PACK_DIR).join(file))
+            .collect()
+    } else {
+        Vec::new()
+    };
     write_portable_zip(
         &out.join(&portable),
         &release.join(BINARY),
+        &pack,
         &product,
         zip_time,
     )?;
@@ -295,13 +326,40 @@ fn target_dir(root: &Path) -> Result<PathBuf> {
         .context("cargo metadata has no target_directory")
 }
 
-fn write_portable_zip(path: &Path, exe: &Path, product: &str, time: zip::DateTime) -> Result<()> {
+/// The capture pack, built before the app so the bundler finds it.
+#[cfg(feature = "capture")]
+fn build_pack(root: &Path) -> Result<()> {
+    crate::pack::run(root)
+}
+
+#[cfg(not(feature = "capture"))]
+fn build_pack(_root: &Path) -> Result<()> {
+    bail!(
+        "this xtask was built without `capture`: run `cargo xtask dist` (the alias has it), or add --no-capture"
+    )
+}
+
+fn write_portable_zip(
+    path: &Path,
+    exe: &Path,
+    pack: &[PathBuf],
+    product: &str,
+    time: zip::DateTime,
+) -> Result<()> {
     let options = SimpleFileOptions::default()
         .compression_method(CompressionMethod::Deflated)
         .last_modified_time(time);
     let mut zip = ZipWriter::new(BufWriter::new(File::create(path)?));
     zip.start_file(format!("{product}/{product}.exe"), options)?;
     zip.write_all(&fs::read(exe).with_context(|| format!("reading {}", exe.display()))?)?;
+    for file in pack {
+        let name = file
+            .file_name()
+            .and_then(|name| name.to_str())
+            .context("a pack file name")?;
+        zip.start_file(format!("{product}/capture-pack/{name}"), options)?;
+        zip.write_all(&fs::read(file).with_context(|| format!("reading {}", file.display()))?)?;
+    }
     zip.start_file(format!("{product}/{PORTABLE_MARKER}"), options)?;
     zip.write_all(MARKER_TEXT.as_bytes())?;
     zip.finish()?.flush()?;

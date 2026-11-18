@@ -53,8 +53,7 @@ export function formatDate(ms: number) {
 
 /**
  * The older account as usePreviousAccount gives it, or null when it lists no
- * characters: a file without them, such as a GOOD export of artifacts only,
- * would show everyone as new.
+ * characters: an export without them would show everyone as new.
  */
 export function comparedAccount(previous: Account | null | undefined) {
   return previous?.characters.length === 0 ? null : previous

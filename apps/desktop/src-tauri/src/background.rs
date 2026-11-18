@@ -15,6 +15,8 @@ use crate::text;
 
 const OPEN: &str = "open";
 const QUIT: &str = "quit";
+#[cfg(feature = "capture")]
+const SYNC: &str = "sync";
 /// What the page is told when the window was closed to the tray.
 const HIDDEN_EVENT: &str = "hidden-to-tray";
 /// What the page is told when a notification was clicked: the page to show.
@@ -34,6 +36,23 @@ pub fn show_main(app: &AppHandle) {
 pub fn tray(app: &AppHandle) -> tauri::Result<()> {
     let open = MenuItem::with_id(app, OPEN, text::TRAY_OPEN, true, None::<&str>)?;
     let quit = MenuItem::with_id(app, QUIT, text::TRAY_QUIT, true, None::<&str>)?;
+    #[cfg(feature = "capture")]
+    let menu = {
+        let line = MenuItem::with_id(app, SYNC, text::sync::OFF, false, None::<&str>)?;
+        let menu = Menu::with_items(
+            app,
+            &[
+                &line,
+                &PredefinedMenuItem::separator(app)?,
+                &open,
+                &PredefinedMenuItem::separator(app)?,
+                &quit,
+            ],
+        )?;
+        app.manage(SyncLine(line));
+        menu
+    };
+    #[cfg(not(feature = "capture"))]
     let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &quit])?;
     let mut builder = TrayIconBuilder::with_id("main")
         .tooltip(text::APP_NAME)
@@ -59,6 +78,47 @@ pub fn tray(app: &AppHandle) -> tauri::Result<()> {
     }
     builder.build(app)?;
     Ok(())
+}
+
+/// The tray menu's line saying how auto sync is doing; not clickable.
+#[cfg(feature = "capture")]
+struct SyncLine(MenuItem<tauri::Wry>);
+
+/// Shows auto sync's state in the tray menu and the tray icon's tooltip.
+/// Queued for the main thread rather than waited for: the supervisor calls
+/// this, and the main thread may be waiting for the supervisor.
+#[cfg(feature = "capture")]
+pub fn sync_status(app: &AppHandle, status: &crate::capture::service::Status) {
+    use crate::capture::service::Phase;
+    let line = match status.phase {
+        Phase::Off => text::sync::OFF,
+        Phase::Starting => text::sync::STARTING,
+        Phase::WaitingGame => text::sync::WAITING_GAME,
+        Phase::WaitingLogin => text::sync::WAITING_LOGIN,
+        Phase::Connected => text::sync::CONNECTED,
+        Phase::Interrupted => text::sync::INTERRUPTED,
+    };
+    let tooltip = match status.phase {
+        Phase::Connected => format!("{} · {}", text::APP_NAME, text::sync::CONNECTED_SHORT),
+        Phase::Interrupted => format!("{} · {}", text::APP_NAME, text::sync::INTERRUPTED_SHORT),
+        _ => text::APP_NAME.to_owned(),
+    };
+    let handle = app.clone();
+    let queued = app.run_on_main_thread(move || {
+        if let Some(item) = handle.try_state::<SyncLine>()
+            && let Err(err) = item.0.set_text(line)
+        {
+            tracing::warn!(%err, "could not update the tray menu");
+        }
+        if let Some(tray) = handle.tray_by_id("main")
+            && let Err(err) = tray.set_tooltip(Some(tooltip))
+        {
+            tracing::warn!(%err, "could not update the tray tooltip");
+        }
+    });
+    if let Err(err) = queued {
+        tracing::warn!(%err, "could not update the tray");
+    }
 }
 
 /// Closing the main window hides it instead: the app keeps reminding from the

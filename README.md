@@ -1,10 +1,10 @@
 # 望月（moongazer）
 
-本地、离线的原神账号工具，Windows 桌面应用。已经能导入 GOOD / Leyline 文件、保存快照历史，并查看账号总览（账号信息、日常、挑战、探索、摩拉原石走势）、角色、武器、圣遗物和材料；计划中的功能：练度统计，以及登录时自动读取账号数据。
+本地、离线的原神账号工具，Windows 桌面应用。已经能导入 Leyline 文件（Teyvat.me Capture 导出的），也能在登录游戏时自动同步账号数据（玩的时候的变化带时间记下）；保存快照历史，支持多个账号，并查看账号总览（账号信息、日常、挑战、探索、摩拉原石走势）、角色、武器、圣遗物和材料。
 
 目前处于开发早期，还没有可用的版本。
 
-A local, offline Genshin Impact account viewer for Windows. It imports GOOD and Leyline files, keeps a snapshot history and shows an account overview (account, daily tasks, challenges, exploration, Mora and Primogem history), characters, weapons, artifacts and materials; planned are build progress statistics, and reading account data at login. It is in early development and has no usable release yet.
+A local, offline Genshin Impact account viewer for Windows. It imports Leyline files (as Teyvat.me Capture exports them) and syncs account data while you play the game (every change kept with its time), keeps a snapshot history for one or more accounts and shows an account overview (account, daily tasks, challenges, exploration, Mora and Primogem history), characters, weapons, artifacts and materials. It is in early development and has no usable release yet.
 
 ## 开发 / Development
 

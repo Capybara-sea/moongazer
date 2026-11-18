@@ -14,16 +14,15 @@ import {
 } from "./order"
 
 const counts = (entries: Record<string, number>) => new Map(Object.entries(entries))
-const leyline = (entries: Record<string, number>) => ({ leyline: true, materials: counts(entries) })
-const good = (entries: Record<string, number>) => ({ leyline: false, materials: counts(entries) })
+const stock = (entries: Record<string, number>) => ({ materials: counts(entries) })
 const summary = (rows: readonly MaterialRow[]) => rows.map(r => [r.key, r.count, r.change])
 const all = { onlyChanged: false, query: "" }
 
 describe("materialRows", () => {
   it("lists what is held, with the change since the previous snapshot", () => {
     const rows = materialRows(
-      leyline({ Mora: 1500, Primogem: 160, HerosWit: 0 }),
-      leyline({ Mora: 1000, Primogem: 160 }),
+      stock({ Mora: 1500, Primogem: 160, HerosWit: 0 }),
+      stock({ Mora: 1000, Primogem: 160 }),
     )
     expect(summary(rows)).toEqual([
       ["Mora", 1500, 500],
@@ -32,37 +31,24 @@ describe("materialRows", () => {
   })
 
   it("adds what was used up with 0, and counts what is new from 0", () => {
-    const rows = materialRows(leyline({ Mora: 10, Primogem: 0 }), leyline({ HerosWit: 3 }))
+    const rows = materialRows(stock({ Mora: 10, Primogem: 0 }), stock({ HerosWit: 3 }))
     expect(summary(rows)).toEqual([
       ["Mora", 10, 10],
       ["HerosWit", 0, -3],
     ])
   })
 
-  it("against a GOOD file, has changes only for what that file lists", () => {
-    const rows = materialRows(leyline({ Mora: 10, HerosWit: 2 }), good({ Mora: 4 }))
-    expect(summary(rows)).toEqual([
-      ["Mora", 10, 6],
-      ["HerosWit", 2, undefined],
-    ])
-  })
-
-  it("for a GOOD file, adds nothing as used up", () => {
-    const rows = materialRows(good({ Mora: 10 }), leyline({ Mora: 4, HerosWit: 3 }))
-    expect(summary(rows)).toEqual([["Mora", 10, 6]])
-  })
-
   it("has no changes without a previous snapshot", () => {
-    const rows = materialRows(leyline({ Mora: 10, HerosWit: 0 }), null)
+    const rows = materialRows(stock({ Mora: 10, HerosWit: 0 }), null)
     expect(summary(rows)).toEqual([["Mora", 10, undefined]])
   })
 
   it("lists nothing for an account without materials", () => {
-    expect(materialRows(good({}), leyline({ Mora: 10 }))).toEqual([])
+    expect(materialRows(stock({}), stock({ Mora: 10 }))).toEqual([])
   })
 
   it("names unknown keys as not in the data, with no type", () => {
-    const [only] = materialRows(leyline({ FakeMaterial: 1 }), null)
+    const [only] = materialRows(stock({ FakeMaterial: 1 }), null)
     expect(only?.name).toBe(text.names.unknown("FakeMaterial"))
     expect(only?.type).toBeUndefined()
   })
@@ -73,7 +59,7 @@ describe("visibleRows", () => {
     visibleRows(rows, options).map(row => row.key)
 
   it("keeps names containing the query, ignoring case and spaces around it", () => {
-    const rows = materialRows(leyline({ Mora: 1, Primogem: 1, FakeMaterial: 1 }), null)
+    const rows = materialRows(stock({ Mora: 1, Primogem: 1, FakeMaterial: 1 }), null)
     expect(keys(rows, { ...all, query: ` ${materialData("Mora").name} ` })).toEqual(["Mora"])
     expect(keys(rows, { ...all, query: "FAKEMAT" })).toEqual(["FakeMaterial"])
     expect(keys(rows, { ...all, query: "no such name" })).toEqual([])
@@ -81,22 +67,22 @@ describe("visibleRows", () => {
 
   it("with only changed on, drops what did not change", () => {
     const rows = materialRows(
-      leyline({ Mora: 5, Primogem: 160, HerosWit: 0 }),
-      leyline({ Mora: 1, Primogem: 160, HerosWit: 2 }),
+      stock({ Mora: 5, Primogem: 160, HerosWit: 0 }),
+      stock({ Mora: 1, Primogem: 160, HerosWit: 2 }),
     )
     expect(keys(rows, { ...all, onlyChanged: true })).toEqual(["Mora", "HerosWit"])
   })
 
   it("with only changed on, drops what has no known change", () => {
-    const rows = materialRows(leyline({ Mora: 5, HerosWit: 2 }), good({ Mora: 1 }))
-    expect(keys(rows, { ...all, onlyChanged: true })).toEqual(["Mora"])
+    const rows = materialRows(stock({ Mora: 5, HerosWit: 2 }), null)
+    expect(keys(rows, { ...all, onlyChanged: true })).toEqual([])
   })
 })
 
 describe("tabCounts", () => {
   const rows = materialRows(
-    leyline({ Mora: 5, Primogem: 160, HerosWit: 0, CallaLily: 2, CorLapis: 4 }),
-    leyline({ Mora: 1, Primogem: 160, HerosWit: 2, CallaLily: 2, CorLapis: 4 }),
+    stock({ Mora: 5, Primogem: 160, HerosWit: 0, CallaLily: 2, CorLapis: 4 }),
+    stock({ Mora: 1, Primogem: 160, HerosWit: 2, CallaLily: 2, CorLapis: 4 }),
   )
   const counts = (options = all) => Object.fromEntries(tabCounts(visibleRows(rows, options)))
 
@@ -128,7 +114,7 @@ describe("tabCounts", () => {
 
 describe("tabGroups", () => {
   const held = (...keys: string[]) =>
-    materialRows(leyline(Object.fromEntries(keys.map(key => [key, 1]))), null)
+    materialRows(stock(Object.fromEntries(keys.map(key => [key, 1]))), null)
   const groupKeys = (rows: readonly MaterialRow[], tab: MaterialTab) =>
     tabGroups(rows, tab).map(group => group.rows.map(row => row.key))
 

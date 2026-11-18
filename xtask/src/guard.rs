@@ -39,13 +39,15 @@ const LARGE_FILE_ALLOWLIST: &[&str] = &["Cargo.lock", "pnpm-lock.yaml"];
 /// for images, and for binary files at all.
 const ASSET_DIRS: &[&str] = &["assets/logo/", "apps/desktop/src-tauri/icons/"];
 /// Where CJK text may appear: the bilingual README, the Chinese changelog, the
-/// Chinese UI strings and the game names the data generator adds by hand.
+/// Chinese UI strings, the installer hooks' message and the game names the data
+/// generator adds by hand.
 /// Entries ending in `/` cover a whole directory.
 const CJK_ALLOWLIST: &[&str] = &[
     "README.md",
     changelog::FILE_ZH,
     "apps/desktop/src/text/",
     "apps/desktop/src-tauri/src/text.rs",
+    "apps/desktop/src-tauri/installer-hooks.nsh",
     "tools/datagen/src/manual.ts",
 ];
 /// Public wording that must not claim safety or ban avoidance (warnings only).

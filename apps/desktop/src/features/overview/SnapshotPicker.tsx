@@ -3,20 +3,22 @@
 
 import { ListBox, Select } from "@heroui/react"
 import { ChevronDown, History } from "lucide-react"
-import { formatDateTime } from "@/lib/format"
+import { liveUid, timeLabel } from "@/domain/accounts"
+import type { Snapshot } from "@/lib/backend"
 import { useAccountStore, useCurrentSnapshot } from "@/stores/accountStore"
-import { useSnapshotStore } from "@/stores/snapshotStore"
+import { useCaptureStore } from "@/stores/captureStore"
 import { text } from "@/text/zh"
 import { sourceLabel } from "./RecentSnapshots"
 
 /**
- * Which snapshot the account pages show. Only snapshots whose export is kept
- * have details to show, so only those are listed.
+ * Which of the account's snapshots the account pages show. Only snapshots
+ * whose export is kept have details to show, so only those are listed.
  */
 export function SnapshotPicker() {
-  const snapshots = useSnapshotStore(s => s.snapshots)
-  const { snapshot } = useCurrentSnapshot()
-  const kept = snapshots?.filter(s => s.hasRaw) ?? []
+  const { snapshot, list } = useCurrentSnapshot()
+  const kept = list.filter(s => s.hasRaw)
+  const live = useCaptureStore(s => liveUid(s.status))
+  const label = (s: Snapshot) => timeLabel(s, s === list[0] && s.uid !== null && s.uid === live)
   return (
     <Select
       aria-label={text.snapshot.pick}
@@ -33,9 +35,7 @@ export function SnapshotPicker() {
         <History aria-hidden className="size-4 flex-none" />
         <span className="text-muted">{text.snapshot.label}</span>
         {snapshot && (
-          <Select.Value className="flex-none text-[13px] tabular">
-            {formatDateTime(snapshot.takenAt)}
-          </Select.Value>
+          <Select.Value className="flex-none text-[13px] tabular">{label(snapshot)}</Select.Value>
         )}
         <ChevronDown
           aria-hidden
@@ -52,10 +52,10 @@ export function SnapshotPicker() {
             <ListBox.Item
               key={item.id}
               id={item.id}
-              textValue={formatDateTime(item.takenAt)}
+              textValue={label(item)}
               className="justify-between gap-4 rounded-[6px] text-[13px]"
             >
-              <span className="tabular">{formatDateTime(item.takenAt)}</span>
+              <span className="tabular">{label(item)}</span>
               <span className="text-[12px] text-muted">{sourceLabel(item, false)}</span>
               <ListBox.ItemIndicator />
             </ListBox.Item>

@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { Snapshot, Summary } from "@/lib/backend"
+import type { Signed, Way } from "@/lib/format"
 import { text } from "@/text/zh"
 import { countTiles } from "./tileValues"
 
@@ -10,8 +11,8 @@ const snapshot = (id: number, summary: Partial<Summary>): Snapshot => ({
   id,
   takenAt: id,
   importedAt: id,
-  format: "leyline",
   source: "Teyvat.me",
+  uid: null,
   summary: {
     characters: 10,
     weapons: 20,
@@ -25,9 +26,15 @@ const snapshot = (id: number, summary: Partial<Summary>): Snapshot => ({
     ...summary,
   },
   hasRaw: true,
+  review: false,
+  session: null,
+  live: false,
 })
 
 const { tiles } = text
+const signed = (text: string, way: Way): Signed => ({ text, way })
+const since = (...deltas: Signed[]) => ({ deltas, note: tiles.sincePrevious })
+const noted = (note: string) => ({ deltas: [], note })
 const byLabel = (snapshot: Snapshot, older: Snapshot[], label: string) =>
   countTiles(snapshot, older).find(tile => tile.label === label)
 
@@ -45,38 +52,28 @@ describe("countTiles", () => {
 
   it("marks every total of the first snapshot as the first", () => {
     for (const tile of countTiles(snapshot(1, {}), [])) {
-      expect(tile.change).toEqual({ text: tiles.first, up: false })
+      expect(tile.change).toEqual(noted(tiles.first))
     }
   })
 
-  it("compares with the snapshot before and marks only gains as up", () => {
+  it("compares with the snapshot before and marks gains and losses", () => {
     const older = [snapshot(1, {})]
     const now = snapshot(2, { mora: 127_000, characters: 11, weapons: 19, artifacts: 30 })
     expect(byLabel(now, older, tiles.mora)).toEqual({
       label: tiles.mora,
       value: text.number.tenThousand("12.7"),
-      change: { text: tiles.sincePrevious(`+${text.number.tenThousand("12.6")}`), up: true },
+      change: since(signed(`+${text.number.tenThousand("12.6")}`, "gain")),
     })
-    expect(byLabel(now, older, tiles.characters)?.change).toEqual({
-      text: tiles.sincePrevious("+1"),
-      up: true,
-    })
-    expect(byLabel(now, older, tiles.weapons)?.change).toEqual({
-      text: tiles.sincePrevious("-1"),
-      up: false,
-    })
-    expect(byLabel(now, older, tiles.artifacts)?.change).toEqual({
-      text: tiles.sincePrevious("0"),
-      up: false,
-    })
+    expect(byLabel(now, older, tiles.characters)?.change).toEqual(since(signed("+1", "gain")))
+    expect(byLabel(now, older, tiles.weapons)?.change).toEqual(since(signed("-1", "loss")))
+    expect(byLabel(now, older, tiles.artifacts)?.change).toEqual(since(signed("0", "same")))
   })
 
   it("compares currencies past a snapshot that did not know them", () => {
     const older = [snapshot(2, { mora: null, primogems: null }), snapshot(1, { primogems: 100 })]
-    expect(byLabel(snapshot(3, { primogems: 260 }), older, tiles.primogems)?.change).toEqual({
-      text: tiles.sincePrevious("+160"),
-      up: true,
-    })
+    expect(byLabel(snapshot(3, { primogems: 260 }), older, tiles.primogems)?.change).toEqual(
+      since(signed("+160", "gain")),
+    )
   })
 
   it("shows a dash and no change for a currency no snapshot knew", () => {
@@ -91,25 +88,13 @@ describe("countTiles", () => {
     expect(tile).toEqual({
       label: tiles.mora,
       value: text.number.tenThousand("12.7"),
-      change: { text: tiles.borrowed("11-15 21:04"), up: false },
+      change: noted(tiles.borrowed("11-15 21:04")),
     })
   })
 
   it("has no change when no older snapshot knew the currency", () => {
     const older = [snapshot(1, { mora: null })]
     expect(byLabel(snapshot(2, {}), older, tiles.mora)?.change).toBeNull()
-  })
-
-  it("shows the Leyline snapshot standing in for a GOOD file, saying where it is from", () => {
-    const takenAt = new Date(2026, 10, 15, 21, 4).getTime()
-    const standIn = { ...snapshot(1, { characters: 99, mora: 127_000 }), takenAt }
-    const shown = countTiles(snapshot(2, { characters: 3, mora: null }), [], standIn)
-    const borrowed = { text: tiles.borrowed("11-15 21:04"), up: false }
-    expect(shown.find(t => t.label === tiles.characters)).toMatchObject({
-      value: "99",
-      change: borrowed,
-    })
-    expect(shown.find(t => t.label === tiles.mora)?.change).toEqual(borrowed)
   })
 
   it("shows 4-star and 3-star artifacts as a pair with both changes", () => {
@@ -119,7 +104,7 @@ describe("countTiles", () => {
       label: tiles.lowArtifacts,
       page: "artifacts",
       value: tiles.pair("58", "75"),
-      change: { text: tiles.sincePrevious(tiles.pair("+6", "-1")), up: true },
+      change: since(signed("+6", "gain"), signed("-1", "loss")),
     })
   })
 

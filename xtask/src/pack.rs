@@ -81,8 +81,10 @@ pub fn run(root: &Path) -> Result<()> {
         .context("reading upstream's dispatch keys")?;
     // Upstream's own pinned tables only say which files to fetch.
     let tables = root.join(TABLES);
+    // `dist` runs this with the signing key in its environment; the
+    // download script must not see it.
     util::run(
-        util::node_tool("node", root)
+        util::without_key(&mut util::node_tool("node", root))
             .arg("tools/datagen/src/captureTables.ts")
             .arg(checkout.join("game-data/manifest.json"))
             .arg(&tables),
@@ -130,7 +132,7 @@ pub fn run(root: &Path) -> Result<()> {
 /// The upstream source as Cargo.lock names it (the app's build script reads
 /// the same string) and the root of Cargo's checkout of it.
 fn upstream(root: &Path) -> Result<(String, PathBuf)> {
-    let metadata = util::output(util::cargo(root).args([
+    let metadata = util::output(util::without_key(&mut util::cargo(root)).args([
         "metadata",
         "--locked",
         "--all-features",

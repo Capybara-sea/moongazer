@@ -46,6 +46,8 @@
     --info: #1459bd;
     --knob-off: #8792ab;
     --pop-shadow: 0 12px 32px rgb(20 28 48 / 0.14);
+    /* Text and icons on solid accent, ok and danger fills. */
+    --on-accent: #ffffff;
   }
 
   /* Dark: layers lighten upward from hsl(222, 41%, 16%); borders use the same blue-gray hue. */
@@ -76,13 +78,16 @@
     --info: #7fb2ff;
     --knob-off: #93a2c3;
     --pop-shadow: 0 0 0 1px rgb(0 0 0 / 0.05), 0 12px 32px rgb(0 0 0 / 0.45);
+    --on-accent: #ffffff;
   }
 
-  /* Account pages: links and gains, the 5-star gold, and the Mora and Primogem series. */
+  /* Account pages: links, gains and losses, the 5-star gold, and the Mora and Primogem series. */
   :root,
   .light,
   [data-theme="light"] {
     --accent-text: #1459bd;
+    --gain: #2e7a58;
+    --loss: #b0504e;
     --gold-fg: #7d5a0f;
     --gold-bg: rgb(200 155 60 / 0.16);
     --c-mora: #9a6f12;
@@ -92,6 +97,8 @@
   .dark,
   [data-theme="dark"] {
     --accent-text: #7fb2ff;
+    --gain: #86c8a6;
+    --loss: #e59f9f;
     --gold-fg: #e5c07b;
     --gold-bg: rgb(200 155 60 / 0.18);
     --c-mora: #b88a2e;

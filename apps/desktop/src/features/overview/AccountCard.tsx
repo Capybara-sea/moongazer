@@ -1,25 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import {
-  Cake,
-  Compass,
-  Eye,
-  EyeOff,
-  Heart,
-  Layers,
-  type LucideIcon,
-  Mountain,
-  Trophy,
-} from "lucide-react"
+import { Cake, Compass, Heart, Layers, type LucideIcon, Mountain, Trophy } from "lucide-react"
 import { useState } from "react"
-import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
+import { ProfileAvatar } from "@/components/ProfileAvatar"
+import { UidLine } from "@/components/UidLine"
 import type { Account, Player } from "@/domain/account"
-import { nameCardPicture, profileFrameIcon, profilePictureIcon } from "@/domain/overviewData"
+import { nameCardPicture } from "@/domain/overviewData"
 import { cn } from "@/lib/cn"
+import { useAppearanceStore } from "@/stores/appearanceStore"
 import { text } from "@/text/zh"
-import { accountStats, maskUid } from "./accountRows"
+import { accountStats } from "./accountRows"
 
 const CARD = "flex-row flex-wrap items-stretch gap-4 rounded-[18px] p-4"
 const FADE = "transition-colors duration-300 ease-out motion-reduce:transition-none"
@@ -31,16 +23,9 @@ type Row = { icon: LucideIcon; label: string; value: string }
 
 /**
  * Who the account is and its standing: avatar, name, signature and UID on
- * the left, six figures in two boxes on the right. GOOD files have none of it.
+ * the left, six figures in two boxes on the right.
  */
 export function AccountCard({ account }: { account: Account }) {
-  if (!account.leyline) {
-    return (
-      <Panel aria-label={text.account.label} className={CARD}>
-        <p className="p-1 text-[13px] text-muted">{text.account.noLeyline}</p>
-      </Panel>
-    )
-  }
   const stats = accountStats(account)
   const columns: Row[][] = [
     [
@@ -93,6 +78,7 @@ function Identity({ player }: { player: Player | undefined }) {
   const [failed, setFailed] = useState<string>()
   const art = card === failed ? undefined : card
   const onArt = art !== undefined && loaded === art
+  const maskUid = useAppearanceStore(s => s.maskUid)
   return (
     <div
       className={cn(
@@ -121,7 +107,12 @@ function Identity({ player }: { player: Player | undefined }) {
           <div className="absolute inset-0 bg-(image:--name-card-shade)" />
         </div>
       )}
-      <Avatar player={player} />
+      <ProfileAvatar
+        picture={player?.profilePicture}
+        frame={player?.profileFrame}
+        label={player?.nickname ?? ""}
+        size="large"
+      />
       <div className="flex min-w-0 flex-col gap-1">
         <h2
           className={cn(
@@ -138,91 +129,15 @@ function Identity({ player }: { player: Player | undefined }) {
             {player.signature}
           </span>
         )}
-        <UidLine uid={player?.uid} onArt={onArt} />
+        <UidLine
+          // A new default masks or shows the UID again.
+          key={String(maskUid)}
+          uid={player?.uid}
+          masked={maskUid}
+          className={cn("text-[12px] text-muted", FADE, onArt && "text-white/80")}
+          buttonClassName={cn("size-[26px]", onArt && "hover:bg-white/15 hover:text-white")}
+        />
       </div>
     </div>
-  )
-}
-
-/**
- * The profile picture, in the player's frame when it has one: the frame is a
- * transparent ring drawn over the picture, which takes about 62% of its width.
- * Until the ring loads, and when no host has it, the picture keeps its border.
- */
-function Avatar({ player }: { player: Player | undefined }) {
-  const picture = player?.profilePicture
-  const frame =
-    player?.profileFrame === undefined ? undefined : profileFrameIcon(player.profileFrame)
-  const [loaded, setLoaded] = useState<string>()
-  const icon = picture === undefined ? undefined : profilePictureIcon(picture)
-  const label = player?.nickname ?? ""
-  if (frame === undefined) {
-    return (
-      <GameIcon
-        icon={icon}
-        label={label}
-        className="size-20 rounded-full border-2 border-border bg-surface-secondary text-[30px]"
-      />
-    )
-  }
-  const framed = loaded === frame
-  return (
-    <span className="relative flex size-28 flex-none items-center justify-center">
-      <GameIcon
-        icon={icon}
-        label={label}
-        className={cn(
-          "size-[70px] rounded-full border-2 bg-surface-secondary text-[26px]",
-          FADE,
-          framed ? "border-transparent" : "border-border",
-        )}
-      />
-      <img
-        src={iconUrl(frame)}
-        alt=""
-        decoding="async"
-        draggable={false}
-        onLoad={() => setLoaded(frame)}
-        className={cn(
-          "pointer-events-none absolute inset-0 size-full object-contain transition-opacity duration-300 ease-out motion-reduce:transition-none",
-          !framed && "opacity-0",
-        )}
-      />
-    </span>
-  )
-}
-
-/** Masked until the eye is pressed. Not stored, so a card mounted anew starts masked. */
-function UidLine({ uid, onArt }: { uid: number | undefined; onArt: boolean }) {
-  const [shown, setShown] = useState(false)
-  const label = shown ? text.account.hideUid : text.account.showUid
-  const Icon = shown ? EyeOff : Eye
-  return (
-    <span
-      className={cn(
-        "flex items-center gap-1.5 text-[12px] text-muted tabular",
-        FADE,
-        onArt && "text-white/80",
-      )}
-    >
-      <span>{text.account.uid}</span>
-      <span key={String(shown)} data-rise>
-        {uid === undefined ? text.number.missing : shown ? String(uid) : maskUid(uid)}
-      </span>
-      {uid !== undefined && (
-        <button
-          type="button"
-          aria-label={label}
-          title={label}
-          onClick={() => setShown(!shown)}
-          className={cn(
-            "flex size-[26px] cursor-pointer items-center justify-center rounded-[6px] transition-colors hover:bg-default/60 hover:text-foreground motion-reduce:transition-none",
-            onArt && "hover:bg-white/15 hover:text-white",
-          )}
-        >
-          <Icon aria-hidden className="size-[15px]" />
-        </button>
-      )}
-    </span>
   )
 }

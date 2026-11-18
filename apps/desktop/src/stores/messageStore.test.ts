@@ -81,4 +81,16 @@ describe("parseMessages", () => {
     const broken = { ...state, messages: [...state.messages, { id: "x", page: "nowhere" }] }
     expect(parseMessages(JSON.stringify(broken)).messages.map(m => m.id)).toEqual(["a"])
   })
+
+  it("keeps messages that open the sync panel", () => {
+    const state = addMessage(EMPTY, { ...message("s"), page: "sync" }, false)
+    expect(parseMessages(JSON.stringify(state))).toEqual(state)
+  })
+
+  it("keeps a reminder's account token, and messages without one", () => {
+    const state = addMessage(addAll(EMPTY, ["a"]), { ...message("r"), account: 7 }, false)
+    expect(parseMessages(JSON.stringify(state))).toEqual(state)
+    const broken = { ...state, messages: [{ ...message("x"), seq: 9, account: "7" }] }
+    expect(parseMessages(JSON.stringify(broken)).messages).toEqual([])
+  })
 })

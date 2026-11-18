@@ -4,11 +4,11 @@
 import { Button } from "@heroui/react"
 import { RotateCw } from "lucide-react"
 import { Panel } from "@/components/Panel"
+import { StatusDot, type Tone } from "@/components/StatusDot"
 import { Switch } from "@/components/Switch"
 import { cn } from "@/lib/cn"
 import { type UpdateStatus, useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
-import { StatusDot, type Tone } from "./StatusDot"
 
 const TONE: Record<UpdateStatus, Tone> = {
   idle: "idle",

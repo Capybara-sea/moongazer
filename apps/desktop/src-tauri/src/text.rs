@@ -9,6 +9,19 @@ pub const APP_NAME: &str = "望月";
 pub const TRAY_OPEN: &str = "打开望月";
 pub const TRAY_QUIT: &str = "退出望月";
 
+/// Auto sync's state in the tray menu and tooltip.
+#[cfg(feature = "capture")]
+pub mod sync {
+    pub const OFF: &str = "自动同步：未开启";
+    pub const STARTING: &str = "自动同步：正在开启";
+    pub const WAITING_GAME: &str = "自动同步：等待游戏";
+    pub const WAITING_LOGIN: &str = "自动同步：等待登录";
+    pub const CONNECTED: &str = "自动同步：已连接";
+    pub const INTERRUPTED: &str = "自动同步：连接中断";
+    pub const CONNECTED_SHORT: &str = "已连接";
+    pub const INTERRUPTED_SHORT: &str = "连接中断";
+}
+
 pub const FATAL_ERROR: &str = "程序出错，需要关闭。\n\n\
     可以试试重新打开；如果反复出现，请重新安装或下载最新版本。\n\n错误信息：";
 

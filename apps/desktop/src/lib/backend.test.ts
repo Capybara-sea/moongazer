@@ -6,6 +6,7 @@ import {
   BackendError,
   parseAppInfo,
   parseImported,
+  parseOpenPage,
   parseProgress,
   parseSnapshot,
   parseUpdate,
@@ -16,8 +17,8 @@ const snapshot = {
   id: 1,
   takenAt: 1_700_000_000_000,
   importedAt: 1_700_000_100_000,
-  format: "leyline",
   source: "Teyvat.me",
+  uid: 100000001,
   summary: {
     characters: 2,
     weapons: 3,
@@ -30,12 +31,22 @@ const snapshot = {
     essence: 7,
   },
   hasRaw: true,
+  review: false,
+  session: null,
+  live: false,
 }
 
 describe("backend responses", () => {
   it("accepts well-formed app info and rejects anything else", () => {
-    const info = { version: "0.1.0", portable: false, updatesEnabled: false, updatesInPlace: true }
+    const info = {
+      version: "0.1.0",
+      portable: false,
+      updatesEnabled: false,
+      updatesInPlace: true,
+      capture: true,
+    }
     expect(parseAppInfo(info)).toEqual(info)
+    expect(() => parseAppInfo({ ...info, capture: undefined })).toThrow(BackendError)
     expect(() => parseAppInfo({ version: "0.1.0" })).toThrow(BackendError)
     expect(() => parseAppInfo(null)).toThrow(BackendError)
   })
@@ -56,8 +67,18 @@ describe("backend responses", () => {
 
   it("checks snapshots down to their summary", () => {
     expect(parseSnapshot(snapshot)).toEqual(snapshot)
-    expect(() => parseSnapshot({ ...snapshot, format: "csv" })).toThrow(BackendError)
+    expect(parseSnapshot({ ...snapshot, uid: null })).toEqual({ ...snapshot, uid: null })
+    expect(() => parseSnapshot({ ...snapshot, review: undefined })).toThrow(BackendError)
+    expect(() => parseSnapshot({ ...snapshot, uid: "1" })).toThrow(BackendError)
     expect(() => parseSnapshot({ ...snapshot, summary: { characters: 2 } })).toThrow(BackendError)
+  })
+
+  it("reads a snapshot's session and a head row's live mark", () => {
+    const head = { ...snapshot, id: -7, session: 3, live: true }
+    expect(parseSnapshot(head)).toEqual(head)
+    expect(() => parseSnapshot({ ...snapshot, session: undefined })).toThrow(BackendError)
+    expect(() => parseSnapshot({ ...snapshot, session: "3" })).toThrow(BackendError)
+    expect(() => parseSnapshot({ ...snapshot, live: null })).toThrow(BackendError)
   })
 
   it("reads each import outcome with the file's keys", () => {
@@ -68,7 +89,7 @@ describe("backend responses", () => {
     expect(parseImported(duplicate)).toEqual(duplicate)
     const warnings = [
       { kind: "fewer", what: "artifacts", before: 10, after: 1 },
-      { kind: "otherAccount" },
+      { kind: "newAccount" },
     ]
     const confirm = { outcome: { status: "needsConfirmation", warnings }, keys }
     expect(parseImported(confirm)).toEqual(confirm)
@@ -84,5 +105,13 @@ describe("backend responses", () => {
     expect(toBackendError(new Error("boom")).kind).toBe("unknown")
     expect(toBackendError("plain").message).toBe("plain")
     expect(toBackendError({ kind: "unsupportedVersion", message: 4 }).message).toBe("4")
+    expect(toBackendError({ kind: "notLeyline" }).kind).toBe("notLeyline")
+  })
+
+  it("reads a clicked notification's page and the account it carries", () => {
+    expect(parseOpenPage("overview@3")).toEqual({ page: "overview", account: 3 })
+    expect(parseOpenPage("home")).toEqual({ page: "home" })
+    expect(parseOpenPage("overview@x")).toEqual({ page: "overview" })
+    expect(parseOpenPage(5)).toBeNull()
   })
 })

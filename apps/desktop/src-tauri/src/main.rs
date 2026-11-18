@@ -7,13 +7,6 @@
 
 mod background;
 #[cfg(feature = "capture")]
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "nothing feeds the decoder before the capture helper exists"
-    )
-)]
 mod capture;
 mod icons;
 mod logging;
@@ -22,7 +15,10 @@ mod snapshots;
 mod text;
 mod update;
 mod webview2;
-#[expect(unsafe_code, reason = "MessageBoxW is the app's only FFI call")]
+#[expect(
+    unsafe_code,
+    reason = "the app's one Windows FFI module: dialogs, and auto sync's elevation and pipes"
+)]
 mod win;
 
 use anyhow::Context;
@@ -34,12 +30,28 @@ use tauri_plugin_decorum::WebviewWindowExt;
 const DARK_BACKGROUND: Color = Color(0x14, 0x1c, 0x30, 0xff);
 
 fn main() {
+    // The elevated capture mode is this exe too, and branches off before
+    // anything of the app's own runs.
+    #[cfg(feature = "capture")]
+    if let Some(code) = capture::helper::run_if_asked() {
+        std::process::exit(code);
+    }
+
     // Any panic ends the app with a dialog. Most startup failures (the window,
     // the webview, the log directory) are panics inside Tauri, and a panic in
     // a background thread would otherwise leave a half-working app behind.
+    // Only decoding may fail alone: auto sync then shows it as interrupted.
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
         default_hook(info);
+        #[cfg(feature = "capture")]
+        if std::thread::current().name() == Some(capture::DECODER_THREAD) {
+            tracing::error!(
+                message = info.payload_as_str().unwrap_or(""),
+                "decoding panicked"
+            );
+            return;
+        }
         tracing::error!(%info, "panicked");
         // The location is a path on the build machine; it goes to the log only.
         fatal(info.payload_as_str().unwrap_or("unknown error"));
@@ -92,6 +104,11 @@ fn main() {
             window.show()?;
             background::tray(app.handle())?;
             background::on_notification_click(app.handle())?;
+            #[cfg(feature = "capture")]
+            app.manage(capture::service::AutoSync::spawn(
+                app.handle(),
+                window.hwnd().ok().map(|hwnd| hwnd.0 as isize),
+            ));
             tracing::info!(
                 version = %app.package_info().version,
                 portable = is_portable,
@@ -103,21 +120,55 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             background::notify,
             snapshots::import_snapshot,
+            snapshots::keep_snapshot,
+            snapshots::delete_snapshot,
             snapshots::list_snapshots,
             snapshots::snapshot_export,
+            snapshots::session_timeline,
             snapshots::data_dir,
             snapshots::open_data_dir,
+            snapshots::open_log_dir,
             update::app_info,
             update::check_update,
             update::download_update,
             update::install_update,
+            #[cfg(feature = "capture")]
+            capture::service::capture_status,
+            #[cfg(feature = "capture")]
+            capture::service::capture_changes,
+            #[cfg(feature = "capture")]
+            capture::service::capture_start,
+            #[cfg(feature = "capture")]
+            capture::service::capture_stop,
+            #[cfg(feature = "capture")]
+            capture::service::capture_save_now,
+            #[cfg(feature = "capture")]
+            capture::settings::sync_settings,
+            #[cfg(feature = "capture")]
+            capture::settings::set_sync_auto_start,
         ])
-        .run(context);
+        .build(context);
 
-    // Only build errors get here (the event loop never returns on Windows).
-    if let Err(err) = result {
-        fatal(&err.to_string());
+    match result {
+        // The event loop never returns on Windows.
+        Ok(app) => app.run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                on_exit(app);
+            }
+        }),
+        Err(err) => fatal(&err.to_string()),
     }
+}
+
+/// The app is exiting (not on a fatal error or an installer update, which
+/// exit at once; the capture mode then sees its pipe close and exits too).
+fn on_exit(app: &tauri::AppHandle) {
+    #[cfg(feature = "capture")]
+    if let Some(sync) = app.try_state::<capture::service::AutoSync>() {
+        sync.shutdown();
+    }
+    #[cfg(not(feature = "capture"))]
+    let _ = app;
 }
 
 /// Shows the error and exits. The release build has no console, so the

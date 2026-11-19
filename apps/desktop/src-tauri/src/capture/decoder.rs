@@ -15,9 +15,10 @@ use teyvatme_core::decode::{
 use teyvatme_core::delta::Keyed;
 use teyvatme_core::player_data::{LoginParts, PlayerData};
 use teyvatme_core::wish::hub::{WishEvent, take_wish_events};
-use teyvatme_protocol::{ConnectionPacket, GamePacket, GameSniffer, KeyState};
+use teyvatme_protocol::{CommandMatch, ConnectionPacket, GamePacket, GameSniffer, KeyState};
 use tokio::sync::mpsc;
 
+use super::anecdotes::Book;
 use super::pack::Pack;
 
 /// What the export names as its source, in place of upstream's own name.
@@ -36,6 +37,8 @@ pub struct Decoder {
     events_rx: mpsc::UnboundedReceiver<SnifferEvent>,
     replacement: DataReplacement,
     player_data: PlayerData,
+    /// The login's Travel Accounts book, kept up to date while playing.
+    book: Option<Book>,
 }
 
 /// What one frame did.
@@ -97,6 +100,7 @@ impl Decoder {
             events_rx,
             replacement: DataReplacement::default(),
             player_data: PlayerData::new(pack.game_data).with_game_data_sha(Some(&pack.data_id)),
+            book: None,
         }
     }
 
@@ -160,21 +164,52 @@ impl Decoder {
                 fed.chinese_client = Some(version.starts_with("CN"));
             }
         }
-        if classified.is_empty() {
-            return;
-        }
-        match self.replacement.verdict_for_batch(key, &mut classified) {
-            DataVerdict::Apply => {}
-            // A new login: its data replaces the account held so far.
-            DataVerdict::ReplaceThenApply => {
-                self.player_data.reset();
-                fed.new_login = true;
+        // Commands upstream recognised; `Flat` is what it did not.
+        let read: Vec<u16> = classified
+            .iter()
+            .filter(|(_, found)| !matches!(found, CommandMatch::Flat(_)))
+            .map(|(id, _)| *id)
+            .collect();
+        if !classified.is_empty() {
+            match self.replacement.verdict_for_batch(key, &mut classified) {
+                DataVerdict::Apply => {}
+                // A new login: its data replaces the account held so far.
+                DataVerdict::ReplaceThenApply => {
+                    self.player_data.reset();
+                    self.book = None;
+                    fed.new_login = true;
+                }
+                DataVerdict::Hold => return,
             }
-            DataVerdict::Hold => return,
+            for (id, found) in &classified {
+                if let CommandMatch::Anecdotes(data) = found
+                    && let Some(command) = commands.iter().find(|c| !c.sent && c.command_id == *id)
+                {
+                    self.book = Some(Book::new(data.clone(), &command.proto_data));
+                }
+            }
+            self.player_data.set_clock(at_ms / 1000);
+            fed.applied = true;
+            fed.data |= decode::apply_commands(&mut self.player_data, classified).any();
         }
-        self.player_data.set_clock(at_ms / 1000);
-        fed.applied = true;
-        fed.data |= decode::apply_commands(&mut self.player_data, classified).any();
+        // The book's notifies are nothing upstream reads (see anecdotes.rs).
+        if key == KeyState::Session
+            && let Some(book) = &mut self.book
+        {
+            let mut changed = false;
+            for command in commands
+                .iter()
+                .filter(|c| !c.sent && !read.contains(&c.command_id))
+            {
+                changed |= book.update(&command.proto_data);
+            }
+            if changed {
+                self.player_data.set_clock(at_ms / 1000);
+                self.player_data.process_anecdotes(book.data());
+                fed.applied = true;
+                fed.data = true;
+            }
+        }
     }
 
     pub fn key(&self) -> KeyReport {

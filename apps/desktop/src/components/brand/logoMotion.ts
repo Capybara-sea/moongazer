@@ -59,8 +59,9 @@ const MOTION: Motion[] = [
   // moon arrives; it only lights up and widens once the moon is mostly out.
   { select: ".mg-halo", ...MOON_RISE },
   { select: ".mg-halo", kind: "scale", from: "0.85", begin: 1250, dur: 1100, splines: EASE_OUT },
+  // The inner arc (ring-b) opens first, then the outer one.
   {
-    select: ".mg-ring-a",
+    select: ".mg-ring-b",
     kind: "scale",
     from: "0.96",
     begin: 1800,
@@ -68,7 +69,7 @@ const MOTION: Motion[] = [
     splines: EASE_IN_OUT,
   },
   {
-    select: ".mg-ring-b",
+    select: ".mg-ring-a",
     kind: "scale",
     from: "0.96",
     begin: 2050,

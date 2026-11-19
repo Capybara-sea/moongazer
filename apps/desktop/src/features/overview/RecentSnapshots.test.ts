@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import type { Snapshot, Summary } from "@/lib/backend"
 import { signedDelta } from "@/lib/format"
 import { text } from "@/text/zh"
-import { describeChange } from "./RecentSnapshots"
+import { describeChange, sourceLabel } from "./RecentSnapshots"
 
 const snapshot = (id: number, summary: Partial<Summary>): Snapshot => ({
   id,
@@ -51,5 +51,12 @@ describe("describeChange", () => {
       { label: change.mora, change: signedDelta(50) },
     ])
     expect(describeChange(bare, older.slice(1))).toBeNull()
+  })
+})
+
+describe("sourceLabel", () => {
+  it("names snapshots by how they came in, not by the source they carry", () => {
+    expect(sourceLabel({ ...snapshot(1, {}), source: "Moongazer" })).toBe(text.overview.autoSync)
+    expect(sourceLabel(snapshot(1, {}))).toBe(text.overview.imported)
   })
 })

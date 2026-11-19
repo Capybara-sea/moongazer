@@ -6,11 +6,10 @@
 //! build, by swapping the executable for the portable one. A portable build
 //! in a read-only folder only opens the download page.
 //!
-//! Updates stay off while `plugins.updater.endpoints` is empty, which is the
-//! case until the repository is public.
+//! A build whose `plugins.updater.endpoints` is empty has updates off.
 
 use std::process::Command;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Mutex, MutexGuard, mpsc};
 
 use anyhow::Context;
 use serde::Serialize;
@@ -240,6 +239,19 @@ fn install_portable(app: &AppHandle, package: &[u8]) -> Result<(), UpdateError> 
         .context("finding the program")
         .map_err(failed)?;
     portable::replace_exe(&exe, package).map_err(failed)?;
+    // Released first, or the new program finds this one's single-instance
+    // lock, hands over its arguments and exits. The lock is a mutex and a
+    // window that only the main thread, which made them, can release, and
+    // commands run elsewhere.
+    let (released, wait) = mpsc::channel();
+    let handle = app.clone();
+    let queued = app.run_on_main_thread(move || {
+        tauri_plugin_single_instance::destroy(&handle);
+        let _ = released.send(());
+    });
+    if queued.is_err() || wait.recv().is_err() {
+        tracing::warn!("the single-instance lock was not released");
+    }
     // The new program is in place, so this one exits even if starting it
     // fails; it then starts the next time the user opens the app, and staying
     // open would only offer an update that can no longer be applied.

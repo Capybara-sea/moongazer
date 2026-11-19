@@ -15,6 +15,7 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+mod anecdotes;
 #[expect(
     unsafe_code,
     reason = "the raw socket capture calls WinSock and IP Helper"

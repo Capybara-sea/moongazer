@@ -27,7 +27,7 @@
         Sleep 500
         Goto moongazer_sync_${MoongazerId}
       ${EndIf}
-      MessageBox MB_OK|MB_ICONSTOP "望月的同步助手还在运行，不能继续。$\n$\n请先在望月里停止自动同步，或者退出望月，再重新运行。" /SD IDOK
+      MessageBox MB_OK|MB_ICONSTOP "望月的同步助手还在运行，不能继续。$\n$\n请先在望月里停止自动同步，或者右键托盘图标选“退出望月”，然后再运行一次。" /SD IDOK
       Abort
     ${EndIf}
   !undef MoongazerId

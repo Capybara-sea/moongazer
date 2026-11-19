@@ -10,52 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Desktop app shell: a home page and an about page with the version.
-- Updates, checked at startup and every hour (this can be turned off on the
-  about page). The installed version downloads in the background and
-  installs on restart without administrator rights; the portable version
-  replaces itself. Off until releases are published.
-- Portable version: a zip that keeps all data in an `app-data` folder next
-  to the program, and offers to install WebView2 when it is missing.
-- Importing Leyline files (from Teyvat.me Capture) into a snapshot history,
-  with what changed since the previous snapshot. The newest 100 of each
-  account keep everything; older ones keep their totals.
-  A file that looks wrong next to its account's previous snapshot (fewer
-  characters, far fewer weapons or artifacts) is saved only after you
-  confirm. Items newer than the app's game data show as not yet updated.
-- Settings page: data folder, theme, glass look and motion.
-- Auto sync: while Moongazer runs, logging in to the game saves a snapshot by
-  itself, and the sidebar shows the connection. Only the sync helper, a second
-  Moongazer process that just receives network data, needs administrator
-  rights. Uses Teyvat.me Capture v1.17.28.
-- Auto sync keeps every change while you play, with its time: the pages
-  follow the game, and the overview shows each login's timeline.
-- Auto sync carries the last Stygian Onslaught and Spiral Abyss records into
-  later logins, as the game sends them only when their screens are opened.
-- Several accounts: switch the one the pages show at the top of the side
-  menu; logging in to the game switches to that account.
-- Account overview, laid out like Teyvat.me's: account card, totals, daily
-  tasks, Spiral Abyss, Imaginarium Theater, Stygian Onslaught (with its total
-  time), exploration and collections, and Mora and Primogem history.
-- Characters page as cards or a list, with filters and sorting. The details
-  show talents and constellations (described on hover), weapon, artifacts,
-  panel stats worked out from game data, and changes since the previous
-  snapshot.
-- Weapons, artifacts and materials pages with filters; artifacts come 60 a
-  page, and materials show their change since the previous snapshot.
-- Artifact set effects on hover.
-- Game icons, downloaded from Enka.Network or Project Amber when first shown
-  and kept on disk.
-- Message center behind a bell in the title bar: reminders worked out from
-  each account's newest snapshot (Original Resin, expeditions, commissions,
-  Spiral Abyss resets and more) and new versions.
-- Windows notifications for reminders while the app is in the background;
-  clicking one on screen opens its page. They can be turned off.
-- Tray icon: closing the window keeps the app running in the tray, and
-  starting it again brings it back.
-- Light, dark and system themes.
-- App logo and icons.
-- Interface motion for themes, page switches and the side menu, off when
-  Windows turns animations off.
+- Account overview, characters, weapons, artifacts and inventory pages; the
+  lists have filters.
+- Importing Leyline files as snapshots, with what changed since the previous
+  one; a file that looks wrong is saved only after you confirm.
+- Auto sync while you play: a snapshot at each login and a timeline of what
+  changed.
+- Several accounts, switched in the side menu, or by auto sync at login.
+- A message center for updates and auto sync's messages, Windows
+  notifications when auto sync has a problem, and a tray icon.
+- An installer and a portable zip; updates download in the background and
+  go in when you restart from the app.
+- Settings page, light and dark themes, animations, and game icons that
+  download when first shown.
+- About page with help and feedback, acknowledgments and third-party
+  licenses; THIRD_PARTY_NOTICES.txt ships next to the program.
 
 [unreleased]: https://github.com/Capybara-sea/moongazer/commits/main

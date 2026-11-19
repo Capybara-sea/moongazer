@@ -12,7 +12,6 @@
 //! the last 10 s.
 
 use std::panic::AssertUnwindSafe;
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
@@ -473,7 +472,7 @@ impl Supervisor {
         self.starting = true;
         self.publish();
 
-        let pack = match Pack::load(&pack_dir(&self.app)) {
+        let pack = match Pack::built_in() {
             Ok(pack) => pack,
             Err(err) => {
                 tracing::error!(error = %format!("{err:#}"), "the capture pack is unusable");
@@ -1226,18 +1225,4 @@ fn taken_at(export: &Export) -> i64 {
     export
         .taken_at()
         .unwrap_or_else(|| i64::try_from(now_ms()).unwrap_or(i64::MAX))
-}
-
-/// The capture pack: next to the exe (where the installer and the portable
-/// zip put it), or in a development build the one `cargo xtask pack` wrote.
-fn pack_dir(app: &AppHandle) -> PathBuf {
-    let installed = app
-        .path()
-        .resource_dir()
-        .map(|dir| dir.join("capture-pack"))
-        .unwrap_or_default();
-    if cfg!(debug_assertions) && !installed.join("pack.json").exists() {
-        return PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("capture-pack");
-    }
-    installed
 }

@@ -6,8 +6,8 @@
 
 /*
  * Theme, from the app's design canvas: deep blues seeded from #1668DC, glass
- * panels, thin borders. Design reference: fribbels' optimizer. HeroUI theme
- * variables are overridden; the glass look is the .glass classes below.
+ * panels, thin borders. HeroUI theme variables are overridden; the glass look
+ * is the .glass classes below.
  */
 @layer base {
   :root,

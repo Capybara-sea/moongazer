@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { useBatches } from "@/lib/useBatches"
 import { useCurrentAccount, usePreviousAccount } from "@/stores/accountStore"
+import { useCaptureStore } from "@/stores/captureStore"
 import { useMaterialListStore } from "@/stores/materialListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
@@ -38,6 +39,7 @@ const Card = memo(MaterialCard)
 export function MaterialsPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
+  const capture = useCaptureStore(s => s.capture)
   const { snapshot, entry, account } = useCurrentAccount()
   const previous = usePreviousAccount()
   // An older export without materials has nothing to compare with.
@@ -67,7 +69,7 @@ export function MaterialsPage() {
       </div>
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
       {snapshots?.length === 0 && (
-        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody} />
+        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody(capture)} />
       )}
       {snapshot && (!snapshot.hasRaw || entry?.status === "summaryOnly") && (
         <Notice title={text.snapshot.summaryOnly} />

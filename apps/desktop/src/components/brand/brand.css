@@ -98,12 +98,14 @@
     .brand-logo .mg-ring-b {
       animation: brand-fade 900ms ease-in-out 1800ms backwards;
     }
-    .brand-logo .mg-ring-b {
+    /* The inner arc (ring-b) opens first, then the outer one. */
+    .brand-logo .mg-ring-a {
       animation-delay: 2050ms;
     }
     /*
-     * The water mirrors the arcs through <use>. It starts after ring-b's motion
-     * does: until then the copy shows ring-b fully lit, then dims at once.
+     * The water mirrors the arcs through <use>. It starts after the outer
+     * arc's motion does: until then the copy shows that arc fully lit, then
+     * dims at once.
      */
     .brand-logo .mg-reflect {
       animation: brand-fade 900ms ease-out 2100ms backwards;

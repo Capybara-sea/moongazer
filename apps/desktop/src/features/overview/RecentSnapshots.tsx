@@ -28,9 +28,12 @@ const LIVE_BADGE =
 const MORE =
   "h-[30px] cursor-pointer rounded-[8px] px-2 text-(--accent-text) text-[13px] hover:bg-default/60"
 
-/** Where a snapshot came from; the long form adds the format. */
-export function sourceLabel(snapshot: Snapshot, long: boolean) {
-  return long ? t.leylineLong(snapshot.source) : t.leyline(snapshot.source)
+/** The source auto sync writes into its exports (src-tauri/src/capture/decoder.rs). */
+const SYNC_SOURCE = "Moongazer"
+
+/** Where a snapshot came from. */
+export function sourceLabel(snapshot: Snapshot) {
+  return snapshot.source === SYNC_SOURCE ? t.autoSync : t.imported
 }
 
 /**
@@ -107,7 +110,7 @@ function SnapshotRow({ snapshot, older, now }: RowProps) {
         </span>
         <span className="flex flex-none items-center gap-1.5">
           {snapshot.review && <span className={REVIEW_BADGE}>{text.review.badge}</span>}
-          <span className={BADGE}>{sourceLabel(snapshot, false)}</span>
+          <span className={BADGE}>{sourceLabel(snapshot)}</span>
         </span>
       </div>
       <span className={cn("text-[13px] tabular-nums", !change && "text-muted")}>

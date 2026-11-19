@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { ListBox, Select } from "@heroui/react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, UserRound } from "lucide-react"
 import { useId } from "react"
 import { ProfileAvatar } from "@/components/ProfileAvatar"
 import { type AccountGroup, liveUid, timeLabel } from "@/domain/accounts"
@@ -22,7 +22,7 @@ const NAME = "truncate font-semibold text-[13px] leading-[1.35]"
  * The account the account pages show, at the top of the side menu: its
  * profile picture in its frame, the name and the UID, masked as the setting
  * says. With two or more accounts it opens a list to the right to choose
- * another; hidden until there is a snapshot.
+ * another; before the first snapshot it says there is no account yet.
  */
 export function AccountSwitcher() {
   const accounts = useAccountStore(s => s.accounts)
@@ -33,7 +33,27 @@ export function AccountSwitcher() {
   const capture = useCaptureStore(s => s.capture)
   const live = useCaptureStore(s => liveUid(s.status))
   const noteId = useId()
-  if (!group) return null
+  if (!group) {
+    return (
+      <div data-rise className="flex flex-col">
+        <div className={BLOCK}>
+          <span
+            aria-hidden
+            className="flex size-8 flex-none items-center justify-center rounded-full bg-default text-muted"
+          >
+            <UserRound className="size-4" />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className={NAME}>{t.none}</span>
+            <span className="truncate text-[11px] text-muted leading-[1.4]">
+              {t.noneHint(capture)}
+            </span>
+          </span>
+        </div>
+        <span aria-hidden className="mx-3 my-2 h-px bg-(--separator)" />
+      </div>
+    )
+  }
   const nameOf = (g: AccountGroup) => accountName(accounts, names, g.token) ?? ""
   const uidOf = (g: AccountGroup) =>
     g.uid === null ? text.number.missing : masked ? maskUid(g.uid) : String(g.uid)

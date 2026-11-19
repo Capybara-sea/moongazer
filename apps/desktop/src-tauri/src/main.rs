@@ -128,6 +128,7 @@ fn main() {
             snapshots::data_dir,
             snapshots::open_data_dir,
             snapshots::open_log_dir,
+            snapshots::open_homepage,
             update::app_info,
             update::check_update,
             update::download_update,

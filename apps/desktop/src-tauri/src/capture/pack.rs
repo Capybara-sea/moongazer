@@ -2,7 +2,8 @@
 // Copyright (c) 2026 Capybara_sea
 
 //! The capture pack: the files decoding needs besides the linked crates,
-//! written by `cargo xtask pack` and never committed.
+//! written by `cargo xtask pack`, never committed, and built into the exe
+//! (build.rs sets `capture_pack` when they are there).
 //!
 //! - `gi.json`: the dispatch keys, base64 by key id.
 //! - `game_data.gz`: the game database, gzipped JSON.
@@ -10,9 +11,7 @@
 //!   data set the database was built from.
 
 use std::collections::HashMap;
-use std::fs::{self, File};
 use std::io::BufReader;
-use std::path::Path;
 
 use anyhow::{Context, Result, bail};
 use base64::Engine as _;
@@ -23,6 +22,28 @@ use teyvatme_game_data::AnimeGameData;
 
 /// The upstream source this build is linked against (see build.rs).
 const UPSTREAM: &str = env!("CAPTURE_UPSTREAM");
+
+/// The three files' contents.
+pub struct Files<'a> {
+    pub manifest: &'a [u8],
+    pub keys: &'a [u8],
+    pub game_data: &'a [u8],
+}
+
+#[cfg(capture_pack)]
+const BUILT_IN: Option<Files<'static>> = Some(Files {
+    manifest: include_bytes!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/capture-pack/pack.json"
+    )),
+    keys: include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/capture-pack/gi.json")),
+    game_data: include_bytes!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/capture-pack/game_data.gz"
+    )),
+});
+#[cfg(not(capture_pack))]
+const BUILT_IN: Option<Files<'static>> = None;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -39,11 +60,18 @@ pub struct Pack {
 }
 
 impl Pack {
-    /// Loads the pack in `dir`. A pack from another upstream version is
-    /// refused: the database is read without a version check, so its tables
-    /// would be trusted as they are.
-    pub fn load(dir: &Path) -> Result<Self> {
-        let manifest: Manifest = read_json(&dir.join("pack.json"))?;
+    /// The pack built into the exe.
+    pub fn built_in() -> Result<Self> {
+        let files = BUILT_IN
+            .as_ref()
+            .context("this build has no capture pack; run `cargo xtask pack` and build again")?;
+        Self::read(files)
+    }
+
+    /// A pack from another upstream version is refused: the database is read
+    /// without a version check, so its tables would be trusted as they are.
+    pub fn read(files: &Files) -> Result<Self> {
+        let manifest: Manifest = parse_json("pack.json", files.manifest)?;
         if manifest.upstream != UPSTREAM {
             bail!(
                 "the capture pack was built from {}, but this build links {UPSTREAM}; \
@@ -52,20 +80,19 @@ impl Pack {
             );
         }
 
-        let encoded: HashMap<u16, String> = read_json(&dir.join("gi.json"))?;
+        let encoded: HashMap<u16, String> = parse_json("gi.json", files.keys)?;
         let keys = encoded
             .into_iter()
             .map(|(id, key)| Ok((id, BASE64_STANDARD.decode(key)?)))
             .collect::<Result<_>>()
             .context("decoding the dispatch keys")?;
 
-        let path = dir.join("game_data.gz");
-        let file = File::open(&path).with_context(|| format!("opening {}", path.display()))?;
-        let game_data = AnimeGameData::new_from_reader(BufReader::new(GzDecoder::new(file)))
-            .with_context(|| format!("reading {}", path.display()))?;
+        let game_data =
+            AnimeGameData::new_from_reader(BufReader::new(GzDecoder::new(files.game_data)))
+                .context("reading game_data.gz")?;
         // A file holding JSON `null` reads as a database with nothing in it.
         if !game_data.has_data() {
-            bail!("{} holds no game data", path.display());
+            bail!("game_data.gz holds no game data");
         }
 
         Ok(Self {
@@ -76,14 +103,12 @@ impl Pack {
     }
 }
 
-fn read_json<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T> {
-    let text = fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+fn parse_json<T: serde::de::DeserializeOwned>(name: &str, bytes: &[u8]) -> Result<T> {
     // Not serde's own message for a parse error: it can quote the file, and
     // one of these files holds keys.
-    serde_json::from_str(&text).map_err(|err| {
+    serde_json::from_slice(bytes).map_err(|err| {
         anyhow::anyhow!(
-            "{} is not valid (line {}, column {})",
-            path.display(),
+            "{name} is not valid (line {}, column {})",
             err.line(),
             err.column()
         )
@@ -99,52 +124,51 @@ mod tests {
 
     use super::*;
 
-    /// A pack directory with fake keys and whatever `game_data` holds.
-    fn write_pack(name: &str, upstream: &str, game_data: &str) -> std::path::PathBuf {
-        let dir =
-            std::env::temp_dir().join(format!("moongazer-pack-{name}-{}", std::process::id()));
-        fs::create_dir_all(&dir).unwrap();
-        fs::write(
-            dir.join("pack.json"),
-            format!(
-                r#"{{"upstream":"{upstream}","dataId":"{}"}}"#,
-                "0".repeat(40)
-            ),
-        )
-        .unwrap();
-        fs::write(dir.join("gi.json"), r#"{"1":"AAEC","2":"AwQF"}"#).unwrap();
+    /// Reads a pack with fake keys and whatever `game_data` holds.
+    fn read_error(manifest: &str, keys: &str, game_data: &str) -> String {
         let mut gz = GzEncoder::new(Vec::new(), Compression::fast());
         gz.write_all(game_data.as_bytes()).unwrap();
-        fs::write(dir.join("game_data.gz"), gz.finish().unwrap()).unwrap();
-        dir
+        let game_data = gz.finish().unwrap();
+        let files = Files {
+            manifest: manifest.as_bytes(),
+            keys: keys.as_bytes(),
+            game_data: &game_data,
+        };
+        format!(
+            "{:#}",
+            Pack::read(&files).err().expect("the pack is refused")
+        )
     }
 
-    fn load_error(dir: &Path) -> String {
-        let error = Pack::load(dir).err().expect("the pack is refused");
-        fs::remove_dir_all(dir).unwrap();
-        format!("{error:#}")
+    fn manifest(upstream: &str) -> String {
+        format!(
+            r#"{{"upstream":"{upstream}","dataId":"{}"}}"#,
+            "0".repeat(40)
+        )
     }
+
+    const KEYS: &str = r#"{"1":"AAEC","2":"AwQF"}"#;
 
     #[test]
     fn a_pack_from_another_upstream_version_is_refused() {
-        let dir = write_pack(
-            "version",
-            "git+https://example.invalid/other?tag=v0#0",
+        let error = read_error(
+            &manifest("git+https://example.invalid/other?tag=v0#0"),
+            KEYS,
             "null",
         );
-        assert!(load_error(&dir).contains("cargo xtask pack"));
+        assert!(error.contains("cargo xtask pack"));
     }
 
     #[test]
     fn a_pack_without_game_data_is_refused() {
-        let dir = write_pack("empty", UPSTREAM, "null");
-        assert!(load_error(&dir).contains("holds no game data"));
+        let error = read_error(&manifest(UPSTREAM), KEYS, "null");
+        assert!(error.contains("holds no game data"));
     }
 
     #[test]
-    fn a_missing_pack_says_which_file_is_missing() {
-        let dir = std::env::temp_dir().join("moongazer-pack-missing");
-        let error = format!("{:#}", Pack::load(&dir).err().expect("nothing to load"));
-        assert!(error.contains("pack.json"));
+    fn a_broken_file_is_named_but_not_quoted() {
+        let error = read_error(&manifest(UPSTREAM), r#"{"1":"SECRETKEY""#, "null");
+        assert!(error.contains("gi.json is not valid"));
+        assert!(!error.contains("SECRETKEY"));
     }
 }

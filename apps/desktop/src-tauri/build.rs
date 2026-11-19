@@ -8,8 +8,10 @@ fn main() {
     // tauri.conf.json or the capabilities change, so new icons from
     // `cargo xtask icons` would otherwise keep the old ones in local builds.
     println!("cargo:rerun-if-changed=icons");
+    println!("cargo::rustc-check-cfg=cfg(capture_pack)");
     if std::env::var_os("CARGO_FEATURE_CAPTURE").is_some() {
         upstream_source();
+        capture_pack();
         // The exe's own imports load from System32 only, not from the folder
         // it sits in: it also runs elevated, as auto sync's capture mode.
         // Dynamic loads are covered at run time (`win::capture`).
@@ -33,4 +35,18 @@ fn upstream_source() {
         .and_then(|rest| rest.split('"').next())
         .expect("Cargo.lock names the source of teyvatme-core");
     println!("cargo:rustc-env=CAPTURE_UPSTREAM={source}");
+}
+
+/// Builds the capture pack `cargo xtask pack` wrote into the exe. Without it
+/// the build still compiles (as in CI), and auto sync says the pack is
+/// missing. A folder that does not exist yet reruns this on every build.
+fn capture_pack() {
+    let dir = Path::new("capture-pack");
+    println!("cargo:rerun-if-changed={}", dir.display());
+    if ["pack.json", "gi.json", "game_data.gz"]
+        .iter()
+        .all(|file| dir.join(file).is_file())
+    {
+        println!("cargo:rustc-cfg=capture_pack");
+    }
 }

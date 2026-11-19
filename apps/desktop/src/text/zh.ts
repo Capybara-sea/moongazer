@@ -4,7 +4,7 @@
 /**
  * Every user-facing string of the web UI. Besides this directory, the
  * repository guard allows Chinese text only in src-tauri/src/text.rs, the
- * installer hooks, the data generator's hand-written names, the README and
+ * installer hooks, the data generator's hand-written names, the READMEs and
  * CHANGELOG.zh-CN.md.
  */
 
@@ -31,6 +31,18 @@ const stats: Record<string, string> = {
   geo_dmg_: "岩元素伤害加成",
 }
 
+/** The overview empty state's last line, where auto sync exists. */
+const syncStart = "也可以开启侧边栏底部的自动同步：登录游戏时自动读取账号数据、保存快照。"
+
+/** The third-party licenses page's groups, by their id in generated/notices.json. */
+const licenseGroups: Record<string, string> = {
+  crates: "Rust 库",
+  components: "其他组件",
+  adapted: "改编的上游代码",
+  frontend: "前端包",
+  data: "数据和密钥",
+}
+
 export const text = {
   appName: "望月",
   appNameLatin: "Moongazer",
@@ -43,7 +55,7 @@ export const text = {
     characters: "角色",
     weapons: "武器",
     artifacts: "圣遗物",
-    materials: "材料",
+    materials: "背包",
     settings: "设置",
     about: "关于",
   },
@@ -55,18 +67,19 @@ export const text = {
   },
   home: {
     title: "欢迎使用望月",
-    body: "本地、离线查看自己的原神账号数据。现在可以在“总览”导入 Leyline 文件，保存快照历史，查看账号总览、角色、武器、圣遗物和材料。",
-    sync: "也可以开启侧边栏底部的自动同步：登录游戏时自动读取账号数据、保存快照。",
+    importFile: "导入 Leyline 文件",
+    latest: "最新快照",
+    openOverview: "查看总览",
   },
   overview: {
     title: "账号总览",
     source: (label: string, count: number) => `来源：${label} · 已存 ${count} 份快照`,
-    leyline: (source: string) => `${source} 导出`,
-    leylineLong: (source: string) => `${source} 导出（Leyline）`,
+    imported: "文件导入",
     importFile: "导入文件",
     importing: (done: number, total: number) => `正在导入 ${done}/${total}…`,
     emptyTitle: "还没有快照",
-    emptyBody: "导入 Teyvat.me 导出的 Leyline 文件，就能在这里看到账号数据。可以一次选多个文件。",
+    emptyBody: (capture: boolean) =>
+      `在“总览”点“导入文件”，选 Leyline 文件（可以一次选多个），就能看到账号数据。${capture ? syncStart : ""}`,
     loadFailed: "读取快照失败",
     recent: "最近快照",
     showAll: "全部",
@@ -141,6 +154,8 @@ export const text = {
     /** A row of the list: the UID and the newest snapshot's time, "UID 1•••••••• · 实时". */
     meta: (uid: string, at: string) => `UID ${uid} · ${at}`,
     follows: "游戏登录时自动切换",
+    none: "无账号",
+    noneHint: (capture: boolean) => (capture ? "先导入或同步" : "先导入文件"),
   },
   tiles: {
     label: "数量",
@@ -157,7 +172,7 @@ export const text = {
     first: "第一份快照",
     notIncluded: "导出里没有",
     notIncludedHint:
-      "这份导出里一件 4★、3★ 圣遗物都没有，可能是导出时按星级过滤了（Teyvat.me Capture 的导出设置）。",
+      "这份导出里一件 4★、3★ 圣遗物都没有，可能是导出时按星级过滤了，可以看看导出工具的设置。",
   },
   daily: {
     title: "日常",
@@ -186,7 +201,7 @@ export const text = {
     transformerReadySince: "冷却已结束",
     welkin: "空月祝福",
     welkinDays: (n: number) => `${n} 天`,
-    welkinUntil: (date: string) => `${date} 到期，按 30 天一张算`,
+    welkinUntil: (date: string) => `${date} 到期（按剩余天数推算）`,
     welkinNone: "未生效",
     welkinClaimed: "今日已领",
     welkinUnclaimed: "今日未领",
@@ -243,11 +258,13 @@ export const text = {
   anecdotes: {
     title: "游逸旅闻",
     recorded: "已记录逸闻",
-    detail: (inProgress: number, areas: number) =>
-      `另有 ${inProgress} 条进行中 · 已解锁 ${areas} 个地区`,
+    detail: (waiting: number) => (waiting > 0 ? `还有 ${waiting} 条待完成` : "没有待完成的"),
     seals: "逸闻印签",
     sealsDetail: (left: number, claimed: number) =>
-      `再记录 ${left} 条可领原石 ×50 · 已领过 ${claimed} 次`,
+      left > 0
+        ? `再记录 ${left} 条可领原石 ×50 · 已领过 ${claimed} 次`
+        : `可以领取原石 ×50 · 已领过 ${claimed} 次`,
+    claimable: "可领取",
     lastWish: "上次许愿",
     lastWishNote: "快照时的记录",
     never: "还没许过愿",
@@ -403,13 +420,13 @@ export const text = {
     empty: "这份快照里没有圣遗物。",
   },
   materials: {
-    title: "材料",
+    title: "背包",
     summary: (total: string) => `共 ${total} 种`,
     compared: "变化是和上一份快照比",
     notCompared: "没有更早的快照可比",
     onlyChanged: "只看有变化的",
-    search: "搜索材料",
-    byTab: "材料分类",
+    search: "搜索物品",
+    byTab: "物品分类",
     tabs: {
       develop: "养成",
       currency: "货币",
@@ -421,8 +438,8 @@ export const text = {
     },
     kinds: (n: string) => `${n} 种`,
     noType: "其他",
-    none: "没有符合条件的材料",
-    empty: "这份快照里没有材料。",
+    none: "没有符合条件的物品",
+    empty: "这份快照里没有背包数据。",
   },
   characterDetail: {
     where: "位置",
@@ -498,13 +515,13 @@ export const text = {
       characters: "角色",
       weapons: "武器",
       artifactSets: "圣遗物套装",
-      materials: "材料",
+      materials: "物品",
     },
     errors: {
       invalid: "文件内容有误",
       notGood: "不是 Leyline 文件",
       notLeyline: "不支持 GOOD 文件",
-      notLeylineDetail: "只支持 Leyline 文件（Teyvat.me Capture 导出的），GOOD 文件数据不完整。",
+      notLeylineDetail: "只支持 Leyline 文件，GOOD 文件数据不完整。",
       unsupportedVersion: (version: string) => `不支持这个文件版本（${version}）`,
       storage: "保存失败",
       read: "读取文件失败",
@@ -512,14 +529,14 @@ export const text = {
     },
   },
   confirm: {
-    title: "这份数据和上一份差别很大",
+    title: "这份数据里的数量比上一份少",
     body: (file: string) => `${file} 和这个账号之前的那份快照相比：`,
     fewer: {
       characters: (before: number, after: number) => `角色从 ${before} 个变成 ${after} 个`,
       weapons: (before: number, after: number) => `武器从 ${before} 件变成 ${after} 件`,
       artifacts: (before: number, after: number) => `圣遗物从 ${before} 件变成 ${after} 件`,
     },
-    hint: "读取出错时常会这样。确定数据没问题再保存。",
+    hint: "读取出错时常会这样。可以到游戏背包里对一下武器和圣遗物的数量，对得上再保存。",
     save: "仍然保存",
     skip: "跳过这个文件",
     newTitle: "要添加一个新账号吗？",
@@ -529,8 +546,8 @@ export const text = {
   review: {
     badge: "待确认",
     body: (when: string) => `自动同步在 ${when} 保存了这份快照，和它之前的那份相比：`,
-    hint: "读取出错时常会这样。数据没问题就保留，否则删除。",
-    noReason: "按现在的规则，这份不需要确认，可以直接保留。",
+    hint: "读取出错时常会这样。和游戏背包里武器、圣遗物的数量对得上就保留，否则删除。",
+    noReason: "现在和上一份相比没有明显减少，可以直接保留。",
     keep: "保留",
     delete: "删除",
     failed: "操作失败",
@@ -573,11 +590,11 @@ export const text = {
       entered: "已进入提瓦特",
       reading: "正在读取账号数据",
       synced: "账号已同步",
-      updated: (when: string, n: number) => `${when}更新 · +${n} 项`,
+      updated: (when: string, n: number) => `${when}同步 · +${n} 项`,
     },
     servers: { china: "国服", global: "国际服" },
     summary: {
-      off: "开启后，望月会在后台读取游戏的网络数据，登录游戏时自动更新账号。",
+      off: "开启后，望月会在后台读取游戏的网络数据，登录游戏时自动同步账号。",
       starting: "正在开启同步助手，请在系统弹出的窗口里确认。",
       helperStarting: "同步助手正在启动。",
       retrying: "同步助手读不到网络数据，正在自动重试。",
@@ -598,7 +615,7 @@ export const text = {
     notes: {
       declined: "没有获得管理员权限，自动同步没有开启。",
       launchFailed: "同步助手没能启动。可以再试一次，还不行的话请查看日志。",
-      packUnavailable: "缺少自动同步要用的数据文件，可能是安装不完整。重新安装望月后再试。",
+      packUnavailable: "这个版本没带自动同步要用的数据。重新下载安装望月后再试。",
       captureFailed: "同步助手读不到网络数据，正在自动重试。",
       alreadyInGame: "开启自动同步时你已经在游戏里了，这次登录没读到。退回标题界面再进一次。",
       keyLost: "这次登录没读出来。退回标题界面再进一次。",
@@ -614,7 +631,7 @@ export const text = {
       characters: (n: number) => `角色 ${n} 个`,
       weapons: (n: number) => `武器 ${n} 件`,
       artifacts: (n: number) => `圣遗物 ${n} 件`,
-      materials: (n: number) => `材料 ${n} 种`,
+      materials: (n: number) => `物品 ${n} 种`,
       affixes: (n: number) => `圣遗物副词条 ${n} 条`,
       mainStats: (n: number) => `圣遗物主词条 ${n} 条`,
       characterData: (n: number) => `角色数据 ${n} 项`,
@@ -687,7 +704,7 @@ export const text = {
     notifications: "通知",
     notify: "在后台时发系统通知",
     notifyHint:
-      "望月开着、但窗口最小化、收在托盘或被游戏挡住时，树脂回满、连接中断这类消息也发一条 Windows 通知；点通知回到望月。",
+      "望月开着、但窗口最小化、收在托盘或被游戏挡住时，自动同步连接中断这类消息也发一条 Windows 通知；点屏幕上弹出的通知可以回到望月。",
     data: "数据",
     dataDir: "数据位置",
     dataDirHint:
@@ -720,35 +737,78 @@ export const text = {
     movedTo: (to: number) => `→ ${to}`,
   },
   about: {
-    tagline: "本地、离线查看自己的原神账号数据。",
+    tagline: "查看自己的原神账号数据。在本机运行，账号数据只存在这台电脑上。",
     version: "版本",
     mode: "运行方式",
     installed: "安装版",
     portable: "便携版",
     license: "许可证",
-    disclaimer: "非官方工具，与 HoYoverse、米哈游、Teyvat.me 均无关联。",
+    licenseValue: "MIT",
+    disclaimer: "非官方工具，与 HoYoverse、米哈游均无关联。",
+    help: "帮助与反馈",
+    log: "日志",
+    logHint: "遇到问题时，把日志文件夹里最新的文件发给开发者。日志里不记 UID。",
+    openLog: "打开日志文件夹",
+    openLogFailed: "打开日志文件夹失败",
+    homepage: "项目主页",
+    homepageHint: "源码、问题反馈和下载页。",
+    openHomepage: "打开网页",
+    openHomepageFailed: "打开网页失败",
+    credits: "致谢与许可",
+    thirdParty: "第三方许可",
+    creditList: (capture: boolean) => [
+      {
+        name: "Teyvat.me Capture",
+        what: capture ? "Leyline 格式，以及自动同步背后的解码。" : "Leyline 格式。",
+      },
+      { name: "DimbreathBot/AnimeGameData", what: "游戏数据：名称、数值和描述。" },
+      { name: "Snap.Metadata", what: "几个神之眼的叫法，以及幻想真境剧诗和幽境危战的排期。" },
+      { name: "Genshin Optimizer", what: "GOOD 格式。" },
+      { name: "Enka.Network、Project Amber", what: "游戏图标，运行时从这里下载。" },
+    ],
+    // From the Traveler's reply at the end of the Project Moongazer quest.
+    letter: [
+      "星海广阔无垠，我们并不孤单",
+      "是星海与命运的引力，将你我连接在一起",
+      "愿我们有天能在星空下再见",
+    ],
+  },
+  licenses: {
+    title: "第三方许可",
+    where: "位置",
+    back: "关于",
+    own: "望月的许可",
+    ownBody: "望月的代码以 MIT 许可证发布。logo 和应用图标保留所有权利，不在 MIT 许可证范围内。",
+    groups: licenseGroups,
+    count: (n: number) => `${n} 项`,
+    noLicense: "没有许可证",
+    declared: (expression: string) => `包自己声明的许可：${expression}`,
+    frontendDev: "开发模式下没有前端包清单，打包后的程序里才有。",
+    frontendLoading: "正在读取前端包清单…",
+    frontendFailed: "读取前端包清单失败",
   },
   update: {
     title: "更新",
-    hint: "发现新版本会在后台下载好，重启就能用上。便携版放在不能写入的文件夹里时，只提示新版本并打开下载页面。",
+    hint: "发现新版本会在后台下载好，点“重启更新”就能用上。便携版放在不能写入的文件夹里时，只提示新版本并打开下载页面。",
     check: "检查更新",
     checking: "正在检查…",
     upToDate: "已是最新版本",
     available: (version: string) => `发现新版本 ${version}`,
     downloading: (version: string) => `正在下载新版本 ${version}`,
-    ready: (version: string) => `新版本 ${version} 已下载好，重启就能用上`,
+    ready: (version: string) => `新版本 ${version} 已下载好，点“重启更新”就能用上`,
     restarting: "正在重启…",
     restart: "重启更新",
     openPage: "打开下载页面",
     disabled: "这个版本没有启用自动更新，请手动下载新版本。",
     failed: "更新失败",
+    checkFailed: "检查更新失败，可能是网络问题",
     downloadFailed: "新版本没下载成功",
     loadFailed: "读取程序信息失败",
     autoCheck: "启动时自动检查更新",
     autoCheckHint: "启动时和之后每小时联网查一次有没有新版本。关掉后只在点“检查更新”时才查。",
     readyTitle: "新版本已准备好",
-    readyToast: (version: string) => `${version} 已在后台下载好，重启望月就能用上。`,
-    portableToast: "便携版要手动下载，替换现在的程序。",
+    readyToast: (version: string) => `${version} 已在后台下载好，点“重启更新”就能用上。`,
+    portableToast: "望月所在的文件夹不能写入，没法自动替换。请手动下载新版本，替换现在的程序。",
     openPageShort: "打开下载页",
     failedToast: "可能是网络问题，之后检查更新时会再试。",
     retry: "重试",
@@ -790,8 +850,8 @@ export const text = {
     syncOutdated: "望月需要更新",
     syncReview: "有一份快照需要你确认",
     syncReviewBody: (when: string) =>
-      `自动同步在 ${when} 保存的快照和上一份差别很大，到总览里决定保留还是删除。`,
+      `自动同步在 ${when} 保存的快照里的数量比上一份少，到总览里决定保留还是删除。`,
     stillRunning: "望月还在后台运行",
-    stillRunningBody: "关掉窗口后会继续提醒。要退出，右键托盘图标选“退出望月”。",
+    stillRunningBody: "关掉窗口不会退出。要退出，右键托盘图标选“退出望月”。",
   },
 } as const

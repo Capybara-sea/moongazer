@@ -2292,7 +2292,7 @@ dependencies = [
 [[package]]
 name = "kcp"
 version = "0.6.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.28#05a3bb8b0f8c02432c307ae43ba68277e2141206"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
 dependencies = [
  "bytes",
  "log",
@@ -3289,7 +3289,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 [[package]]
 name = "pktmon"
 version = "0.6.2"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.28#05a3bb8b0f8c02432c307ae43ba68277e2141206"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
 dependencies = [
  "async-stream",
  "cidr",
@@ -4984,7 +4984,7 @@ dependencies = [
 [[package]]
 name = "teyvatme-core"
 version = "0.0.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.28#05a3bb8b0f8c02432c307ae43ba68277e2141206"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -5004,7 +5004,7 @@ dependencies = [
 [[package]]
 name = "teyvatme-game-data"
 version = "0.1.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.28#05a3bb8b0f8c02432c307ae43ba68277e2141206"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
 dependencies = [
  "anyhow",
  "flate2",
@@ -5016,7 +5016,7 @@ dependencies = [
 [[package]]
 name = "teyvatme-protocol"
 version = "1.4.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.28#05a3bb8b0f8c02432c307ae43ba68277e2141206"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
 dependencies = [
  "base64 0.22.1",
  "etherparse",

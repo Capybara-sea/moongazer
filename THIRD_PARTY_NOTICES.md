@@ -1,10 +1,22 @@
 # Third-party notices
 
-Moongazer's own code is MIT licensed (see [`LICENSE`](LICENSE)). Builds with
-the `capture` feature contain code from the MIT-licensed projects below: some
-of it adapted (each such file says where from), the rest linked through
-Teyvat.me Capture's crates. Their copyright notices follow, then the
+Moongazer's own code is MIT licensed (see [`LICENSE`](LICENSE)). This file
+covers the third-party code adapted into this repository and the data the
+program is built from. The complete list of what ships inside the program,
+every library included, is on the app's About page and in
+`THIRD_PARTY_NOTICES.txt` on each release.
+
+The projects below are MIT licensed. Their copyright notices follow, then the
 permission notice they share.
+
+Every build contains data generated from:
+
+- [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata):
+  Copyright (c) 2022 DGP Studio
+
+Builds with the `capture` feature also contain code from these, some of it
+adapted (each such file says where from), the rest linked through Teyvat.me
+Capture's crates:
 
 - [Teyvat.me Capture](https://github.com/tawan475/teyvat.me-capture):
   Copyright (c) 2026 tawan475
@@ -19,15 +31,15 @@ permission notice they share.
 
 ## Data
 
-Builds with the `capture` feature also ship data that no licence here covers;
-none of it is in this repository:
+No licence here covers the following; none of it is in this repository:
 
-- the game client's keys (`gi.json`, and two RSA keys in
-  `teyvatme-protocol`), which Teyvat.me Capture took from irminsul and
-  auto-artifactarium and does not license;
-- `game_data.gz`, built from the tables of
+- the game data compiled into every build, and `game_data.gz` in builds with
+  the `capture` feature, are generated from the tables of
   [DimbreathBot/AnimeGameData](https://github.com/DimbreathBot/AnimeGameData),
-  which asks for credit.
+  which has no licence and asks for credit;
+- builds with the `capture` feature ship the game client's keys (`gi.json`,
+  and two RSA keys in `teyvatme-protocol`), which Teyvat.me Capture took from
+  irminsul and auto-artifactarium and does not license.
 
 ## The MIT License
 

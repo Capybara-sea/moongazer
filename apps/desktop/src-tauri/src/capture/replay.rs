@@ -2,7 +2,8 @@
 // Copyright (c) 2026 Capybara_sea
 
 //! The regression test: a recorded login must decode to the same export
-//! Teyvat.me Capture makes of it, and must leave no UID in the log.
+//! Teyvat.me Capture makes of it, but for the anecdotes recorded while
+//! playing, and must leave no UID in the log.
 //!
 //! It needs a real login, so it is ignored unless asked for:
 //!
@@ -12,10 +13,11 @@
 //!     -- --ignored --nocapture replay
 //! ```
 //!
-//! `<dir>`, an absolute path, holds `login.pcapng` and `reference.json`,
-//! Capture's own `--replay-export` of that recording. Both are account data:
-//! they stay in the git-ignored `.temp/regression/`, and these tests print
-//! counts and key paths only, never a value.
+//! `<dir>`, an absolute path, holds one folder per recording (or is one):
+//! `login.pcapng`, recorded from before the game starts, and
+//! `reference.json`, Capture's own `--replay-export` of it. Both are account
+//! data: they stay in the git-ignored `.temp/regression/`, and these tests
+//! print counts and key paths only, never a value.
 
 #![expect(clippy::print_stdout, reason = "the counts are the test's report")]
 
@@ -33,17 +35,56 @@ use super::decoder::Decoder;
 use super::pack::Pack;
 use crate::logging;
 
-#[test]
-#[ignore = "needs a recorded login in $MOONGAZER_REGRESSION"]
-fn a_recorded_login_decodes_to_the_export_capture_makes_of_it() {
-    static LOG: Mutex<Vec<u8>> = Mutex::new(Vec::new());
-    static UNFILTERED: Mutex<Vec<u8>> = Mutex::new(Vec::new());
-    let logged = |log: &Mutex<Vec<u8>>| String::from_utf8_lossy(&log.lock().unwrap()).into_owned();
-
+/// The recordings under `$MOONGAZER_REGRESSION`: the folder itself when it
+/// holds a `login.pcapng`, else each folder in it that does, by name.
+fn recordings() -> Vec<PathBuf> {
     let dir = PathBuf::from(
         std::env::var_os("MOONGAZER_REGRESSION").expect("MOONGAZER_REGRESSION names the folder"),
     );
-    let pack = Pack::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("capture-pack")).unwrap();
+    if dir.join("login.pcapng").is_file() {
+        return vec![dir];
+    }
+    let mut found: Vec<PathBuf> = fs::read_dir(&dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.join("login.pcapng").is_file())
+        .collect();
+    found.sort();
+    assert!(!found.is_empty(), "no recording in $MOONGAZER_REGRESSION");
+    found
+}
+
+fn name_of(dir: &Path) -> String {
+    dir.file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_default()
+}
+
+#[test]
+#[ignore = "needs a recorded login in $MOONGAZER_REGRESSION"]
+fn a_recorded_login_decodes_to_the_export_capture_makes_of_it() {
+    let failed: Vec<String> = recordings()
+        .iter()
+        .filter(|dir| !matches_the_reference(dir))
+        .map(|dir| name_of(dir))
+        .collect();
+    assert!(
+        failed.is_empty(),
+        "differs from Capture's export: {failed:?}"
+    );
+}
+
+/// Replays one recording and compares its export with Capture's; false when
+/// they differ beyond what is intended.
+fn matches_the_reference(dir: &Path) -> bool {
+    static LOG: Mutex<Vec<u8>> = Mutex::new(Vec::new());
+    static UNFILTERED: Mutex<Vec<u8>> = Mutex::new(Vec::new());
+    let logged = |log: &Mutex<Vec<u8>>| String::from_utf8_lossy(&log.lock().unwrap()).into_owned();
+    LOG.lock().unwrap().clear();
+    UNFILTERED.lock().unwrap().clear();
+    println!("== {}", name_of(dir));
+
+    let pack = Pack::built_in().unwrap();
     let mut decoder = Decoder::new(pack);
 
     let app_log = logging::subscriber(|| LOG.make_writer());
@@ -82,8 +123,10 @@ fn a_recorded_login_decodes_to_the_export_capture_makes_of_it() {
     let mut reference: Value =
         serde_json::from_slice(&fs::read(dir.join("reference.json")).unwrap()).unwrap();
     let ours: Value = serde_json::from_str(&ours).unwrap();
-    // The two intended differences: who wrote the export, and which data
-    // set its tables came from (upstream's own, or AnimeGameData's).
+    // The intended differences: who wrote the export, which data set its
+    // tables came from (upstream's own, or AnimeGameData's), and the
+    // anecdotes recorded while playing, which Capture does not follow (see
+    // anecdotes.rs).
     reference["source"] = ours["source"].clone();
     reference["gi_player"]["gameData"] = ours["gi_player"]["gameData"].clone();
     let mut differing = BTreeMap::new();
@@ -93,11 +136,33 @@ fn a_recorded_login_decodes_to_the_export_capture_makes_of_it() {
         Some(&sorted(&reference)),
         &mut differing,
     );
+    let live = differing.len();
+    differing.retain(|path, _| !moved_while_playing(path));
+    println!(
+        "anecdote fields moved while playing: {}",
+        live - differing.len()
+    );
     for (path, count) in &differing {
         println!("differs at {path}: {count}");
     }
-    assert!(differing.is_empty(), "the export differs from Capture's");
-    println!("identical to the reference");
+    if differing.is_empty() {
+        println!("identical to the reference otherwise");
+    }
+    differing.is_empty()
+}
+
+/// What a recorded anecdote moves: its state and finish count, and the
+/// reward track.
+fn moved_while_playing(path: &str) -> bool {
+    let entry = path
+        .strip_prefix(".gi_anecdotes.anecdotes.")
+        .is_some_and(|rest| rest.ends_with(".state") || rest.ends_with(".finishCount"));
+    entry
+        || [
+            ".gi_anecdotes.reward.index",
+            ".gi_anecdotes.reward.progress",
+        ]
+        .contains(&path)
 }
 
 /// The chain test's step: after each export it skips 1/`CHAIN_POINTS` of the
@@ -111,21 +176,24 @@ const CHAIN_POINTS: u64 = 12;
 #[test]
 #[ignore = "needs a recorded login in $MOONGAZER_REGRESSION"]
 fn a_chain_of_batches_rebuilds_every_export_along_the_recording() {
-    let dir = PathBuf::from(
-        std::env::var_os("MOONGAZER_REGRESSION").expect("MOONGAZER_REGRESSION names the folder"),
-    );
-    let path = dir.join("login.pcapng");
-    let pack = Pack::load(&Path::new(env!("CARGO_MANIFEST_DIR")).join("capture-pack")).unwrap();
+    for dir in recordings() {
+        println!("== {}", name_of(&dir));
+        chain_rebuilds_every_export(&dir.join("login.pcapng"));
+    }
+}
+
+fn chain_rebuilds_every_export(path: &Path) {
+    let pack = Pack::built_in().unwrap();
     let mut decoder = Decoder::new(pack);
 
     let mut total = 0;
-    let mut recording = Recording::open(&path).unwrap();
+    let mut recording = Recording::open(path).unwrap();
     while recording.next_frame().unwrap().is_some() {
         total += 1;
     }
     let mut chain = Chain::default();
     let (mut frames, mut next_at, mut last_ms) = (0, None, 0);
-    let mut recording = Recording::open(&path).unwrap();
+    let mut recording = Recording::open(path).unwrap();
     while let Some(frame) = recording.next_frame().unwrap() {
         frames += 1;
         let at_ms = frame.timestamp_ns.expect("the recording has timestamps") / 1_000_000;

@@ -21,7 +21,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' data: http://icon.localhost; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost"
+      "csp": "default-src 'self'; img-src 'self' data: http://icon.localhost; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost"
     },
     "withGlobalTauri": true
   },
@@ -44,7 +44,9 @@
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIzNUIyOEIwOUE4QjUzMEMKUldRTVU0dWFzQ2hiSTRpMWJOYzhaL3IxdTdESGlXQzBCU3NWYm5GeFNSU0d2OGd3amZqN1JkWUgK",
-      "endpoints": [],
+      "endpoints": [
+        "https://github.com/Capybara-sea/moongazer/releases/latest/download/latest.json"
+      ],
       "windows": {
         "installMode": "passive"
       },

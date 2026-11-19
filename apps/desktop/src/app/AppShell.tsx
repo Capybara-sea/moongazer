@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import iconUrl from "@logo/icon.svg?url"
-import { Gem, House, Info, LayoutDashboard, Package, Settings, Sword, Users } from "lucide-react"
+import { Backpack, Gem, House, Info, LayoutDashboard, Settings, Sword, Users } from "lucide-react"
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { AccountSwitcher } from "@/features/accounts/AccountSwitcher"
 import { MessageCenter } from "@/features/messages/MessageCenter"
@@ -20,7 +20,7 @@ const NAV_ICONS = {
   characters: Users,
   weapons: Sword,
   artifacts: Gem,
-  materials: Package,
+  materials: Backpack,
   settings: Settings,
   about: Info,
 } as const

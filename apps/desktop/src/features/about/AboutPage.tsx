@@ -1,14 +1,34 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { Alert } from "@heroui/react"
+import { Alert, Button } from "@heroui/react"
+import { ChevronRight, ExternalLink, FolderOpen, type LucideIcon } from "lucide-react"
+import { useState } from "react"
 import { AnimatedLogo } from "@/components/brand/AnimatedLogo"
 import { Panel } from "@/components/Panel"
+import { openHomepage, openLogDir, toBackendError } from "@/lib/backend"
+import { navigate, useRoute } from "@/lib/route"
+import { useCaptureStore } from "@/stores/captureStore"
 import { useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
+import { LicensesPage } from "./LicensesPage"
 import { UpdateCard } from "./UpdateCard"
 
+const LICENSES = "licenses"
+
+/**
+ * About, or the third-party licenses at #/about/licenses. The page stays
+ * mounted while others are shown, so it keeps its own view rather than
+ * reading the route of whatever page is in front.
+ */
 export function AboutPage() {
+  const route = useRoute()
+  const [view, setView] = useState(route.page === "about" ? route.param : undefined)
+  if (route.page === "about" && route.param !== view) setView(route.param)
+  return view === LICENSES ? <LicensesPage /> : <About />
+}
+
+function About() {
   const info = useUpdateStore(s => s.info)
   const loadError = useUpdateStore(s => s.loadError)
 
@@ -44,7 +64,7 @@ export function AboutPage() {
             <dt className="text-muted">{text.about.mode}</dt>
             <dd>{info ? (info.portable ? text.about.portable : text.about.installed) : "-"}</dd>
             <dt className="text-muted">{text.about.license}</dt>
-            <dd>MIT</dd>
+            <dd>{text.about.licenseValue}</dd>
           </dl>
           <p className="glass-inset rounded-[10px] bg-surface-secondary px-3 py-2 text-[12px] text-muted">
             {text.about.disclaimer}
@@ -52,6 +72,97 @@ export function AboutPage() {
         </div>
       </Panel>
       <UpdateCard />
+      <Panel aria-label={text.about.help} className="gap-0 pt-4 pb-1.5">
+        <h2 className="mb-1.5 font-semibold text-[15px]">{text.about.help}</h2>
+        <ActionRow
+          title={text.about.log}
+          hint={text.about.logHint}
+          icon={FolderOpen}
+          label={text.about.openLog}
+          failed={text.about.openLogFailed}
+          run={openLogDir}
+        />
+        <ActionRow
+          title={text.about.homepage}
+          hint={text.about.homepageHint}
+          icon={ExternalLink}
+          label={text.about.openHomepage}
+          failed={text.about.openHomepageFailed}
+          run={openHomepage}
+        />
+      </Panel>
+      <Credits />
+      <p className="pt-2 pb-1 text-center text-[12px] text-muted leading-[2] tracking-[0.12em]">
+        {text.about.letter.map(line => (
+          <span key={line} className="block">
+            {line}
+          </span>
+        ))}
+      </p>
     </div>
+  )
+}
+
+type ActionProps = {
+  title: string
+  hint: string
+  icon: LucideIcon
+  label: string
+  /** Put before the error's message. */
+  failed: string
+  run: () => Promise<void>
+}
+
+function ActionRow({ title, hint, icon: Icon, label, failed, run }: ActionProps) {
+  const [error, setError] = useState<string | null>(null)
+  return (
+    <div className="flex items-center justify-between gap-6 border-(--separator) border-t py-3.5">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="font-medium text-sm">{title}</span>
+        <span className="text-[12px] text-muted">{hint}</span>
+        {error && <span className="select-text text-[12px] text-danger">{error}</span>}
+      </div>
+      <Button
+        variant="secondary"
+        onPress={() => {
+          setError(null)
+          run().catch((e: unknown) => setError(`${failed}: ${toBackendError(e).message}`))
+        }}
+        className="h-9 flex-none gap-1.5 rounded-[9px] border border-border bg-transparent px-3.5 font-normal text-[13px] text-foreground"
+      >
+        <Icon aria-hidden className="m-0 size-[15px]" />
+        {label}
+      </Button>
+    </div>
+  )
+}
+
+function Credits() {
+  const capture = useCaptureStore(s => s.capture)
+  return (
+    <Panel aria-label={text.about.credits}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-semibold text-[15px]">{text.about.credits}</h2>
+        <button
+          type="button"
+          onClick={() => navigate("about", LICENSES)}
+          className="flex h-[30px] cursor-pointer items-center gap-0.5 rounded-[8px] pr-1 pl-2 text-(--accent-text) text-[13px] transition-colors duration-150 hover:bg-default/60 motion-reduce:transition-none"
+        >
+          {text.about.thirdParty}
+          <ChevronRight aria-hidden className="size-4" />
+        </button>
+      </div>
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2 text-[13px]">
+        {text.about.creditList(capture).map(credit => (
+          <li
+            key={credit.name}
+            className="glass-inset flex flex-col gap-px rounded-[10px] bg-surface-secondary px-3 py-2.5"
+          >
+            <span className="break-words font-medium">{credit.name}</span>
+            <span className="text-[12px] text-muted">{credit.what}</span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
   )
 }

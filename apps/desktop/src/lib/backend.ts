@@ -317,6 +317,11 @@ export async function openLogDir() {
   await call("open_log_dir")
 }
 
+/** The project's page in the default browser; its address is fixed on the Rust side. */
+export async function openHomepage() {
+  await call("open_homepage")
+}
+
 /**
  * Best effort: outside the Tauri window (a plain browser on the dev server)
  * `getCurrentWindow` throws synchronously, and the title is not worth a crash.

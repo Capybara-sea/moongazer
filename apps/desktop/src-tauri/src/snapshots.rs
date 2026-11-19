@@ -65,6 +65,7 @@ pub enum SnapshotError {
     NotLeyline,
     Storage(String),
     OpenFolder(String),
+    OpenLink(String),
 }
 
 impl From<ParseError> for SnapshotError {
@@ -426,6 +427,14 @@ pub fn open_log_dir(app: tauri::AppHandle) -> Result<(), SnapshotError> {
 pub fn open_data_dir(storage: State<'_, Storage>) -> Result<(), SnapshotError> {
     tauri_plugin_opener::open_path(&storage.dir, None::<&str>)
         .map_err(|err| SnapshotError::OpenFolder(err.to_string()))
+}
+
+/// The project's page (`repository` in the root Cargo.toml). The web page
+/// passes no address, so this opens nothing else.
+#[tauri::command]
+pub fn open_homepage() -> Result<(), SnapshotError> {
+    tauri_plugin_opener::open_url(env!("CARGO_PKG_REPOSITORY"), None::<&str>)
+        .map_err(|err| SnapshotError::OpenLink(err.to_string()))
 }
 
 fn now_ms() -> i64 {

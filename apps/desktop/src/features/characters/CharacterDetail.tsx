@@ -7,6 +7,7 @@ import { wielderKey } from "@/domain/builds"
 import type { Character } from "@/domain/good"
 import { characterData } from "@/domain/names"
 import { useCurrentAccount, usePreviousAccount } from "@/stores/accountStore"
+import { useCaptureStore } from "@/stores/captureStore"
 import { useCharacterListStore } from "@/stores/characterListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
@@ -30,6 +31,7 @@ import { WeaponCard } from "./WeaponCard"
 export function CharacterDetail({ characterKey }: { characterKey: string }) {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
+  const capture = useCaptureStore(s => s.capture)
   const { snapshot, entry, account } = useCurrentAccount()
   const compared = comparedAccount(usePreviousAccount())
 
@@ -38,7 +40,7 @@ export function CharacterDetail({ characterKey }: { characterKey: string }) {
   if (loadError && !snapshots) {
     notice = { title: text.overview.loadFailed, detail: loadError }
   } else if (snapshots?.length === 0) {
-    notice = { title: text.overview.emptyTitle, detail: text.overview.emptyBody }
+    notice = { title: text.overview.emptyTitle, detail: text.overview.emptyBody(capture) }
   } else if (snapshot && (!snapshot.hasRaw || entry?.status === "summaryOnly")) {
     notice = { title: text.snapshot.summaryOnly }
   } else if (entry?.status === "failed") {

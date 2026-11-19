@@ -47,7 +47,6 @@ export type Tasks = {
 export type Anecdotes = {
   recorded: number
   inProgress: number
-  areas: number
   reward?: { index: number; progress: number; target: number }
   lastWish?: number
 }
@@ -173,14 +172,14 @@ function anecdotes(value: unknown): Anecdotes | undefined {
   for (const entry of Object.values(record(raw.anecdotes) ?? {})) {
     const state = num(record(entry)?.state)
     // As Capture counts them: recorded once, even if it is running again now.
+    // One running again still waits to be finished.
     if (state === 3 || count(record(entry)?.finishCount) > 0) recorded++
-    else if (state === 2) inProgress++
+    if (state === 2) inProgress++
   }
   const reward = record(raw.reward)
   return {
     recorded,
     inProgress,
-    areas: list(raw.unlockedAreas)?.length ?? 0,
     reward: reward && {
       index: count(reward.index),
       progress: count(reward.progress),

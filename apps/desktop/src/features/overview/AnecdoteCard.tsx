@@ -41,9 +41,7 @@ function Recorded({ anecdotes }: { anecdotes: Anecdotes }) {
         </span>
       </div>
       <Bar value={ANECDOTES > 0 ? anecdotes.recorded / ANECDOTES : 0} />
-      <span className="text-[11px] text-muted">
-        {text.anecdotes.detail(anecdotes.inProgress, anecdotes.areas)}
-      </span>
+      <span className="text-[11px] text-muted">{text.anecdotes.detail(anecdotes.inProgress)}</span>
     </div>
   )
 }
@@ -51,10 +49,18 @@ function Recorded({ anecdotes }: { anecdotes: Anecdotes }) {
 type Props = { index: number; progress: number; target: number }
 
 function Seals({ index, progress, target }: Props) {
+  const full = target > 0 && progress >= target
   return (
     <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[13px] text-muted">{text.anecdotes.seals}</span>
+        <span className="flex items-baseline gap-2">
+          <span className="text-[13px] text-muted">{text.anecdotes.seals}</span>
+          {full && (
+            <span className="rounded-[6px] bg-(--gold-bg) px-1.5 py-px text-(--gold-fg) text-[11px]">
+              {text.anecdotes.claimable}
+            </span>
+          )}
+        </span>
         <span className="tabular font-semibold text-[15px]">
           {progress} / {target}
         </span>
@@ -70,7 +76,7 @@ function Seals({ index, progress, target }: Props) {
           />
         ))}
       </span>
-      <span className="text-[11px] text-muted">
+      <span className={cn("text-[11px]", full ? "text-(--gold-fg)" : "text-muted")}>
         {text.anecdotes.sealsDetail(Math.max(target - progress, 0), index)}
       </span>
     </div>

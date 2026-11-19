@@ -8,16 +8,22 @@ import { cn } from "@/lib/cn"
 
 const FADE = "transition-colors duration-300 ease-out motion-reduce:transition-none"
 
-/** The account card's, and the side menu's, whose ring may reach into the padding. */
+/** The account card's, the sync panel's and the side menu's; the last two rings reach into the padding. */
 const SIZES = {
   large: {
     plain: "size-20 border-2 border-border bg-surface-secondary text-[30px]",
     box: "size-28",
     picture: "size-[70px] border-2 bg-surface-secondary text-[26px]",
   },
+  medium: {
+    plain: "size-[42px] border border-border bg-(--overlay) text-[17px]",
+    box: "-m-2 size-[58px]",
+    picture: "size-9 border bg-(--overlay) text-[14px]",
+  },
   small: {
     plain: "size-8 bg-default text-[13px]",
-    box: "-my-1.5 size-11",
+    // Lays out as wide as the plain picture; the ring reaches into the padding.
+    box: "-m-1.5 size-11",
     picture: "size-[27px] border bg-default text-[11px]",
   },
 }

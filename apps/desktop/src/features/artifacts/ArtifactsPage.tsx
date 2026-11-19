@@ -16,6 +16,7 @@ import { formatDateTime, formatNumber } from "@/lib/format"
 import { usePages } from "@/lib/usePages"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { useArtifactListStore } from "@/stores/artifactListStore"
+import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 import { ArtifactCard } from "./ArtifactCard"
@@ -41,6 +42,7 @@ const Card = memo(ArtifactCard)
 export function ArtifactsPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
+  const capture = useCaptureStore(s => s.capture)
   const { snapshot, entry, account } = useCurrentAccount()
   const rows = useMemo(() => account && artifactRows(account.artifacts), [account])
   return (
@@ -53,7 +55,7 @@ export function ArtifactsPage() {
       </div>
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
       {snapshots?.length === 0 && (
-        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody} />
+        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody(capture)} />
       )}
       {snapshot && (!snapshot.hasRaw || entry?.status === "summaryOnly") && (
         <Notice title={text.snapshot.summaryOnly} />
@@ -86,7 +88,6 @@ function Artifacts({ rows }: { rows: readonly ArtifactRow[] }) {
         value: "",
         label: t.allSets,
         hint: formatNumber(rows.length),
-        icon: <span className="size-full bg-surface-secondary" />,
       },
       ...sets.map(({ value, label, count }) => ({
         value,

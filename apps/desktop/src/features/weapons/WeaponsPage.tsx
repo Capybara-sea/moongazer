@@ -13,6 +13,7 @@ import { ViewToggle } from "@/components/ViewToggle"
 import { WEAPON_TYPES } from "@/domain/elements"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
+import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { useWeaponListStore, type WeaponView } from "@/stores/weaponListStore"
 import { text } from "@/text/zh"
@@ -35,6 +36,7 @@ const VIEWS: readonly { value: WeaponView; label: string; icon: LucideIcon }[] =
 export function WeaponsPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
+  const capture = useCaptureStore(s => s.capture)
   const { snapshot, entry, account } = useCurrentAccount()
   const rows = useMemo(() => account && weaponRows(account.weapons), [account])
   return (
@@ -47,7 +49,7 @@ export function WeaponsPage() {
       </div>
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
       {snapshots?.length === 0 && (
-        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody} />
+        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody(capture)} />
       )}
       {snapshot && (!snapshot.hasRaw || entry?.status === "summaryOnly") && (
         <Notice title={text.snapshot.summaryOnly} />

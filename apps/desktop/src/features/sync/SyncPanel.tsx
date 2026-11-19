@@ -4,7 +4,7 @@
 import { Button } from "@heroui/react"
 import { Check, ChevronRight, TriangleAlert, X } from "lucide-react"
 import { LabeledList } from "@/components/Delta"
-import { GameIcon } from "@/components/GameIcon"
+import { ProfileAvatar } from "@/components/ProfileAvatar"
 import { StatusDot, TONE_SOFT } from "@/components/StatusDot"
 import { UidLine } from "@/components/UidLine"
 import { changeRows } from "@/domain/changes"
@@ -12,6 +12,7 @@ import type { CaptureStatus } from "@/lib/backend/sync"
 import { cn } from "@/lib/cn"
 import { formatTime } from "@/lib/format"
 import { navigate } from "@/lib/route"
+import { useAccountStore } from "@/stores/accountStore"
 import { useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
 import { text } from "@/text/zh"
@@ -101,6 +102,11 @@ export function SyncPanel({ now }: { now: number }) {
 function AccountBlock({ status, now }: { status: CaptureStatus; now: number }) {
   const maskUid = useAppearanceStore(s => s.maskUid)
   const { account, server } = status
+  // As the side menu has it: known once one of the account's exports is read.
+  const face = useAccountStore(s => {
+    const group = s.accounts.find(g => account?.uid != null && g.uid === account.uid)
+    return group && s.faces[group.token]
+  })
   if (!account) return null
   const connection = connectionOf(status, now)
   const extras = [
@@ -109,9 +115,11 @@ function AccountBlock({ status, now }: { status: CaptureStatus; now: number }) {
   ].filter(part => typeof part === "string")
   return (
     <div className="glass-inset flex items-center gap-3 rounded-[12px] bg-surface-secondary px-3.5 py-3">
-      <GameIcon
+      <ProfileAvatar
+        picture={face?.picture}
+        frame={face?.frame}
         label={account.nickname ?? ""}
-        className="size-[42px] rounded-full border border-border bg-(--overlay) text-[17px]"
+        size="medium"
       />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate font-semibold text-sm">

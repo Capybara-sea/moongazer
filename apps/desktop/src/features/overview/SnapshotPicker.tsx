@@ -56,7 +56,7 @@ export function SnapshotPicker() {
               className="justify-between gap-4 rounded-[6px] text-[13px]"
             >
               <span className="tabular">{label(item)}</span>
-              <span className="text-[12px] text-muted">{sourceLabel(item, false)}</span>
+              <span className="text-[12px] text-muted">{sourceLabel(item)}</span>
               <ListBox.ItemIndicator />
             </ListBox.Item>
           ))}

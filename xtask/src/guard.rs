@@ -3,15 +3,17 @@
 
 //! Rules every committed file must follow: no secrets, account data, game
 //! data, recordings or game art; UTF-8 text with license headers; English
-//! text; consistent versions. Runs on the staged files (pre-commit) or on all
-//! files (CI).
+//! text; consistent versions. Runs on the staged files (pre-commit), on all
+//! files (CI), or on every commit (`--all-history`, before going public).
 //!
 //! Problems name the file and line only, never the matched text, so the
 //! output itself cannot leak what it found.
 
+use std::collections::BTreeMap;
 use std::fs;
-use std::io::ErrorKind;
+use std::io::{BufRead, BufReader, ErrorKind, Write};
 use std::path::Path;
+use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result, bail};
 use serde_json::Value;
@@ -21,6 +23,7 @@ use crate::{changelog, util};
 pub enum Mode {
     Staged,
     All,
+    AllHistory,
 }
 
 impl Mode {
@@ -28,22 +31,28 @@ impl Mode {
         match args {
             [] | ["--all"] => Ok(Self::All),
             ["--staged"] => Ok(Self::Staged),
-            _ => bail!("usage: cargo xtask guard [--staged|--all]"),
+            ["--all-history"] => Ok(Self::AllHistory),
+            _ => bail!("usage: cargo xtask guard [--staged|--all|--all-history]"),
         }
     }
 }
 
 const MAX_BYTES: usize = 512 * 1024;
 const LARGE_FILE_ALLOWLIST: &[&str] = &["Cargo.lock", "pnpm-lock.yaml"];
-/// Our own logo sources and the app icons generated from them: the only places
-/// for images, and for binary files at all.
-const ASSET_DIRS: &[&str] = &["assets/logo/", "apps/desktop/src-tauri/icons/"];
-/// Where CJK text may appear: the bilingual README, the Chinese changelog, the
-/// Chinese UI strings, the installer hooks' message and the game names the data
-/// generator adds by hand.
+/// Our own logo sources, the app icons generated from them and the README
+/// screenshots: the only places for images, and for binary files at all.
+const ASSET_DIRS: &[&str] = &[
+    "assets/logo/",
+    "assets/screenshots/",
+    "apps/desktop/src-tauri/icons/",
+];
+/// Where CJK text may appear: the Chinese README (and the English one, for the
+/// link to it), the Chinese changelog, the Chinese UI strings, the installer
+/// hooks' message and the game names the data generator adds by hand.
 /// Entries ending in `/` cover a whole directory.
 const CJK_ALLOWLIST: &[&str] = &[
     "README.md",
+    "README.zh-CN.md",
     changelog::FILE_ZH,
     "apps/desktop/src/text/",
     "apps/desktop/src-tauri/src/text.rs",
@@ -54,9 +63,6 @@ const CJK_ALLOWLIST: &[&str] = &[
 const WORDING_FILES: &[&str] = CJK_ALLOWLIST;
 /// Synthetic test data may use account-shaped JSON inside these directories.
 const FIXTURE_DIR: &str = "fixtures";
-/// Update endpoints stay empty until the repository is public: a private
-/// repository's release assets cannot be downloaded anonymously.
-const UPDATES_PUBLIC: bool = false;
 
 const SPDX_EXTENSIONS: &[&str] = &[
     "rs", "ts", "tsx", "js", "mjs", "cjs", "css", "toml", "yml", "yaml",
@@ -100,18 +106,25 @@ impl Report {
 
 pub fn run(root: &Path, mode: Mode) -> Result<()> {
     let mut report = Report::default();
-    let entries = collect(root, &mode, &mut report)?;
-    for entry in &entries {
-        check_entry(entry, &mut report);
-    }
-    if let Mode::All = mode {
-        for file in changelog::FILES {
-            if !entries.iter().any(|e| e.path == file) {
-                report.problem(file, "missing");
+    let checked = match mode {
+        Mode::AllHistory => check_history(root, &mut report)?,
+        Mode::Staged | Mode::All => {
+            let staged = matches!(mode, Mode::Staged);
+            let entries = collect(root, staged, &mut report)?;
+            for entry in &entries {
+                check_entry(&entry.path, &entry.bytes, false, &mut report);
             }
+            if !staged {
+                for file in changelog::FILES {
+                    if !entries.iter().any(|e| e.path == file) {
+                        report.problem(file, "missing");
+                    }
+                }
+                check_versions(root, &mut report)?;
+            }
+            format!("{} file(s)", entries.len())
         }
-        check_versions(root, &mut report)?;
-    }
+    };
     for warning in &report.warnings {
         println!("guard warning: {warning}");
     }
@@ -120,62 +133,189 @@ pub fn run(root: &Path, mode: Mode) -> Result<()> {
     }
     if !report.problems.is_empty() {
         bail!(
-            "guard found {} problem(s) in {} file(s) checked",
-            report.problems.len(),
-            entries.len()
+            "guard found {} problem(s) in {checked} checked",
+            report.problems.len()
         );
     }
-    println!("guard: {} file(s) checked, no problems", entries.len());
+    println!("guard: {checked} checked, no problems");
     Ok(())
 }
 
-fn collect(root: &Path, mode: &Mode, report: &mut Report) -> Result<Vec<Entry>> {
-    let mut entries = Vec::new();
-    match mode {
-        Mode::Staged => {
-            // Everything except deletions, including type changes.
-            let names = util::output_bytes(util::command("git", root).args([
-                "diff",
-                "--cached",
-                "--name-only",
-                "--diff-filter=d",
-                "-z",
-            ]))?;
-            for path in split_nul(&names) {
-                let bytes = util::output_bytes(
-                    util::command("git", root)
-                        .arg("show")
-                        .arg(format!(":{path}")),
-                )
-                .with_context(|| format!("reading staged {path}"))?;
-                entries.push(Entry { path, bytes });
-            }
+/// Every file version, commit message and tag message reachable from any
+/// ref, local ones included. Only the leak checks and the license refusal
+/// run: the whole-tree checks (versions, changelog presence, untracked
+/// directories) and the style checks (SPDX header presence, CJK, wording,
+/// manifests) follow today's rules, which older commits predate.
+fn check_history(root: &Path, report: &mut Report) -> Result<String> {
+    let commits = util::output(history_git(root).args([
+        "rev-list",
+        "--all",
+        "--reverse",
+        "--abbrev-commit",
+    ]))?;
+    // blob -> path -> the oldest commit with that file version.
+    let mut files: BTreeMap<String, BTreeMap<String, &str>> = BTreeMap::new();
+    for commit in commits.lines() {
+        let tree = util::output_bytes(history_git(root).args(["ls-tree", "-r", "-z", commit]))?;
+        for (blob, path) in tree_blobs(&tree) {
+            files.entry(blob).or_default().entry(path).or_insert(commit);
         }
-        Mode::All => {
-            // Untracked but not ignored files count too: they are what the
-            // next commit would add.
-            let names = util::output_bytes(util::command("git", root).args([
-                "ls-files",
-                "-z",
-                "--cached",
-                "--others",
-                "--exclude-standard",
-            ]))?;
-            for path in split_nul(&names) {
-                let full = root.join(&path);
-                if path.ends_with('/') || full.is_dir() {
+    }
+    let mut cat = history_git(root)
+        .args(["cat-file", "--batch"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .context("failed to start `git cat-file --batch`")?;
+    let mut input = cat.stdin.take().context("no stdin for git cat-file")?;
+    let mut output = BufReader::new(cat.stdout.take().context("no stdout for git cat-file")?);
+    let mut versions = 0;
+    for (blob, paths) in &files {
+        let bytes = read_blob(&mut input, &mut output, blob)?;
+        for (path, commit) in paths {
+            let mut found = Report::default();
+            check_entry(path, &bytes, true, &mut found);
+            let found = found.problems.into_iter();
+            report
+                .problems
+                .extend(found.map(|problem| format!("{commit} {problem}")));
+            versions += 1;
+        }
+    }
+    drop(input);
+    let status = cat.wait().context("waiting for git cat-file")?;
+    if !status.success() {
+        bail!("`git cat-file --batch` failed ({status})");
+    }
+    let log =
+        util::output_bytes(history_git(root).args(["log", "--all", "-z", "--format=%h%n%B"]))?;
+    for record in split_nul(&log) {
+        let (commit, message) = record.split_once('\n').unwrap_or((&record, ""));
+        if has_secret_marker(message) || has_key_material(message) {
+            report.problem(
+                commit,
+                "commit message looks like it contains a private key, key material or a wish history link",
+            );
+        }
+    }
+    // `rev-list --all` follows commits only, so a ref must end at a commit,
+    // directly or through one annotated tag. Ref names have no spaces.
+    let refs = util::output(history_git(root).args([
+        "for-each-ref",
+        "--format=%(objecttype) %(*objecttype) %(refname)",
+    ]))?;
+    for line in refs.lines() {
+        let (kinds, name) = line.rsplit_once(' ').unwrap_or(("", line));
+        match kinds {
+            "commit " => {}
+            "tag commit" => {
+                let tag = util::output_bytes(history_git(root).args(["cat-file", "tag", name]))?;
+                let tag = String::from_utf8_lossy(&tag);
+                if has_secret_marker(&tag) || has_key_material(&tag) {
                     report.problem(
-                        &path,
-                        "untracked directory, probably a nested repository; move it under .temp/",
+                        name,
+                        "tag message looks like it contains a private key, key material or a wish history link",
                     );
-                    continue;
                 }
-                match fs::read(&full) {
-                    Ok(bytes) => entries.push(Entry { path, bytes }),
-                    // Deleted in the working tree but still in the index.
-                    Err(err) if err.kind() == ErrorKind::NotFound => {}
-                    Err(err) => return Err(err).with_context(|| format!("reading {path}")),
-                }
+            }
+            _ => report.problem(
+                name,
+                "points at a tree, a blob or another tag instead of a commit, so guard cannot check it",
+            ),
+        }
+    }
+    Ok(format!(
+        "{} commit(s), {} blob(s) at {versions} path(s)",
+        commits.lines().count(),
+        files.len()
+    ))
+}
+
+/// Git for `check_history`. Replacements (`git replace`) are ignored: a push
+/// sends the original objects.
+fn history_git(root: &Path) -> Command {
+    let mut cmd = util::command("git", root);
+    cmd.env("GIT_NO_REPLACE_OBJECTS", "1");
+    cmd
+}
+
+/// `(blob, path)` pairs from `git ls-tree -r -z`. Submodules (type `commit`)
+/// are skipped; symlinks are blobs and are checked like files.
+fn tree_blobs(listing: &[u8]) -> Vec<(String, String)> {
+    split_nul(listing)
+        .into_iter()
+        .filter_map(|record| {
+            let (meta, path) = record.split_once('\t')?;
+            match meta.split(' ').collect::<Vec<_>>()[..] {
+                [_, "blob", blob] => Some((blob.to_owned(), path.to_owned())),
+                _ => None,
+            }
+        })
+        .collect()
+}
+
+/// Asks `git cat-file --batch` for one blob and reads back
+/// `<id> blob <size>\n<content>\n`.
+fn read_blob(input: &mut impl Write, output: &mut impl BufRead, blob: &str) -> Result<Vec<u8>> {
+    writeln!(input, "{blob}")?;
+    input.flush()?;
+    let mut header = String::new();
+    output.read_line(&mut header)?;
+    let size = match header.split_whitespace().collect::<Vec<_>>()[..] {
+        [_, "blob", size] => size.parse::<usize>().ok(),
+        _ => None,
+    }
+    .with_context(|| format!("git cat-file could not read blob {blob}"))?;
+    let mut bytes = vec![0; size + 1];
+    output.read_exact(&mut bytes)?;
+    bytes.pop();
+    Ok(bytes)
+}
+
+fn collect(root: &Path, staged: bool, report: &mut Report) -> Result<Vec<Entry>> {
+    let mut entries = Vec::new();
+    if staged {
+        // Everything except deletions, including type changes.
+        let names = util::output_bytes(util::command("git", root).args([
+            "diff",
+            "--cached",
+            "--name-only",
+            "--diff-filter=d",
+            "-z",
+        ]))?;
+        for path in split_nul(&names) {
+            let bytes = util::output_bytes(
+                util::command("git", root)
+                    .arg("show")
+                    .arg(format!(":{path}")),
+            )
+            .with_context(|| format!("reading staged {path}"))?;
+            entries.push(Entry { path, bytes });
+        }
+    } else {
+        // Untracked but not ignored files count too: they are what the
+        // next commit would add.
+        let names = util::output_bytes(util::command("git", root).args([
+            "ls-files",
+            "-z",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+        ]))?;
+        for path in split_nul(&names) {
+            let full = root.join(&path);
+            if path.ends_with('/') || full.is_dir() {
+                report.problem(
+                    &path,
+                    "untracked directory, probably a nested repository; move it under .temp/",
+                );
+                continue;
+            }
+            match fs::read(&full) {
+                Ok(bytes) => entries.push(Entry { path, bytes }),
+                // Deleted in the working tree but still in the index.
+                Err(err) if err.kind() == ErrorKind::NotFound => {}
+                Err(err) => return Err(err).with_context(|| format!("reading {path}")),
             }
         }
     }
@@ -225,14 +365,14 @@ fn decode(bytes: &[u8]) -> Decoded {
     }
 }
 
-fn check_entry(entry: &Entry, report: &mut Report) {
-    let path = entry.path.as_str();
+/// `leaks_only` skips the style and manifest checks (see `check_history`).
+fn check_entry(path: &str, bytes: &[u8], leaks_only: bool, report: &mut Report) {
     let lower = path.to_ascii_lowercase();
     let in_asset_dir = ASSET_DIRS.iter().any(|dir| lower.starts_with(dir));
     if let Some(reason) = forbidden_path(path) {
         report.problem(path, reason);
     }
-    if entry.bytes.len() > MAX_BYTES && !LARGE_FILE_ALLOWLIST.contains(&path) {
+    if bytes.len() > MAX_BYTES && !LARGE_FILE_ALLOWLIST.contains(&path) {
         report.problem(
             path,
             format!(
@@ -241,7 +381,7 @@ fn check_entry(entry: &Entry, report: &mut Report) {
             ),
         );
     }
-    let text = match decode(&entry.bytes) {
+    let text = match decode(bytes) {
         Decoded::Utf8(text) => text,
         Decoded::Utf16(text) => {
             report.problem(path, "UTF-16 text; every text file must be UTF-8");
@@ -257,7 +397,7 @@ fn check_entry(entry: &Entry, report: &mut Report) {
             }
             if secret_markers()
                 .iter()
-                .any(|marker| contains_bytes(&entry.bytes, marker.as_bytes()))
+                .any(|marker| contains_bytes(bytes, marker.as_bytes()))
             {
                 report.problem(
                     path,
@@ -267,16 +407,20 @@ fn check_entry(entry: &Entry, report: &mut Report) {
             return;
         }
     };
-    check_text(path, &lower, in_asset_dir, &text, report);
+    check_text(path, &lower, in_asset_dir, &text, leaks_only, report);
 }
 
-fn check_text(path: &str, lower: &str, in_asset_dir: bool, text: &str, report: &mut Report) {
+fn check_text(
+    path: &str,
+    lower: &str,
+    in_asset_dir: bool,
+    text: &str,
+    leaks_only: bool,
+    report: &mut Report,
+) {
     let name = file_name(lower);
     let ext = extension(lower);
-    if secret_markers()
-        .iter()
-        .any(|marker| text.contains(marker.as_str()))
-    {
+    if has_secret_marker(text) {
         report.problem(
             path,
             "looks like it contains a private key or a wish history link",
@@ -301,6 +445,14 @@ fn check_text(path: &str, lower: &str, in_asset_dir: bool, text: &str, report: &
             "looks like account data; synthetic fixtures go under a fixtures/ directory",
         );
     }
+    let spdx = SPDX_EXTENSIONS.contains(&ext) && !SPDX_EXEMPT.contains(&path);
+    if leaks_only {
+        // A disallowed license goes public with the history too.
+        if spdx && let Some(reason) = disallowed_license(text) {
+            report.problem(path, reason);
+        }
+        return;
+    }
     if matches!(name, "package.json" | "tauri.conf.json") {
         match serde_json::from_str::<Value>(json) {
             Err(_) => report.problem(path, "not valid JSON"),
@@ -311,23 +463,10 @@ fn check_text(path: &str, lower: &str, in_asset_dir: bool, text: &str, report: &
                         "must not set `version`; the only version is in the root Cargo.toml",
                     );
                 }
-                let endpoints = value
-                    .pointer("/plugins/updater/endpoints")
-                    .and_then(Value::as_array)
-                    .is_some_and(|e| !e.is_empty());
-                if endpoints && !UPDATES_PUBLIC {
-                    report.problem(
-                        path,
-                        "update endpoints stay empty until the repository is public",
-                    );
-                }
             }
         }
     }
-    if SPDX_EXTENSIONS.contains(&ext)
-        && !SPDX_EXEMPT.contains(&path)
-        && let Some(reason) = spdx_problem(text)
-    {
+    if spdx && let Some(reason) = spdx_problem(text) {
         report.problem(path, reason);
     }
     if changelog::FILES.contains(&path) {
@@ -429,7 +568,7 @@ fn forbidden_path(path: &str) -> Option<&'static str> {
         && !ASSET_DIRS.iter().any(|dir| lower.starts_with(dir))
     {
         return Some(
-            "image or font outside the allowed logo and icon directories (possible game art)",
+            "image or font outside the allowed logo, icon and screenshot directories (possible game art)",
         );
     }
     None
@@ -449,6 +588,12 @@ fn secret_markers() -> [String; 4] {
         .concat(),
         ["auth", "key="].concat(),
     ]
+}
+
+fn has_secret_marker(text: &str) -> bool {
+    secret_markers()
+        .iter()
+        .any(|marker| text.contains(marker.as_str()))
 }
 
 fn insecure_marker() -> String {
@@ -505,20 +650,29 @@ fn has_account_shape(value: &Value) -> bool {
 
 fn spdx_problem(text: &str) -> Option<String> {
     let first = text.lines().next().unwrap_or_default();
-    let Some((_, id)) = first.split_once("SPDX-License-Identifier:") else {
+    if !first.contains("SPDX-License-Identifier:") {
         return Some("the first line must be an SPDX-License-Identifier comment".to_owned());
-    };
-    let id = id.trim().trim_end_matches("*/").trim();
-    if !SPDX_LICENSES.contains(&id) {
-        return Some(format!(
-            "license `{id}` is not allowed; use one of: {}",
-            SPDX_LICENSES.join(", ")
-        ));
+    }
+    if let Some(problem) = disallowed_license(text) {
+        return Some(problem);
     }
     if !text.lines().take(5).any(|line| line.contains("Copyright")) {
         return Some("needs a Copyright line within the first 5 lines".to_owned());
     }
     None
+}
+
+/// A first-line SPDX id that is not on `SPDX_LICENSES`.
+fn disallowed_license(text: &str) -> Option<String> {
+    let first = text.lines().next().unwrap_or_default();
+    let (_, id) = first.split_once("SPDX-License-Identifier:")?;
+    let id = id.trim().trim_end_matches("*/").trim();
+    (!SPDX_LICENSES.contains(&id)).then(|| {
+        format!(
+            "license `{id}` is not allowed; use one of: {}",
+            SPDX_LICENSES.join(", ")
+        )
+    })
 }
 
 fn cjk_lines(text: &str) -> Vec<usize> {
@@ -623,12 +777,46 @@ mod tests {
 
     fn problems_for(path: &str, bytes: &[u8]) -> Vec<String> {
         let mut report = Report::default();
-        let entry = Entry {
-            path: path.to_owned(),
-            bytes: bytes.to_vec(),
-        };
-        check_entry(&entry, &mut report);
+        check_entry(path, bytes, false, &mut report);
         report.problems
+    }
+
+    #[test]
+    fn history_mode_keeps_leak_checks_and_skips_style_checks() {
+        let mut report = Report::default();
+        check_entry("src/a.rs", "\u{4E2D}\n".as_bytes(), true, &mut report);
+        assert!(report.problems.is_empty());
+        let marker = ["auth", "key=x"].concat();
+        check_entry("src/a.rs", marker.as_bytes(), true, &mut report);
+        check_entry(".temp/a.txt", b"", true, &mut report);
+        assert_eq!(report.problems.len(), 2);
+        let gpl = "// SPDX-License-Identifier: GPL-3.0-only\n";
+        check_entry("src/b.rs", gpl.as_bytes(), true, &mut report);
+        assert!(report.problems[2].contains("not allowed"));
+    }
+
+    #[test]
+    fn tree_listings_yield_blobs_only() {
+        let listing = b"100644 blob aaa\tsrc/a b.rs\0\
+            120000 blob bbb\tlink\0\
+            160000 commit ccc\tvendor/sub\0";
+        assert_eq!(
+            tree_blobs(listing),
+            vec![
+                ("aaa".to_owned(), "src/a b.rs".to_owned()),
+                ("bbb".to_owned(), "link".to_owned()),
+            ]
+        );
+    }
+
+    #[test]
+    fn blobs_are_read_one_at_a_time() -> Result<()> {
+        let mut input = Vec::new();
+        let mut output = std::io::Cursor::new(b"aaa blob 3\nx\ny\nbbb missing\n".to_vec());
+        assert_eq!(read_blob(&mut input, &mut output, "aaa")?, b"x\ny");
+        assert!(read_blob(&mut input, &mut output, "bbb").is_err());
+        assert_eq!(input, b"aaa\nbbb\n");
+        Ok(())
     }
 
     #[test]
@@ -673,6 +861,7 @@ mod tests {
             ".gitignore",
             "apps/desktop/src-tauri/icons/icon.ico",
             "assets/logo/logo.svg",
+            "assets/screenshots/overview.webp",
             "apps/desktop/src/game-database.ts",
             "keyboard.rs",
             "monkey.rs",
@@ -769,15 +958,6 @@ mod tests {
         let code = "// SPDX-License-Identifier: MIT\n// Copyright (c) 2026 X\n\"\u{4E2D}\"\n";
         let problems = problems_for("apps/desktop/src/app/App.tsx", code.as_bytes());
         assert!(problems.iter().any(|p| p.contains("CJK")));
-    }
-
-    #[test]
-    fn update_endpoints_stay_empty_while_the_repository_is_private() {
-        let conf = br#"{"plugins":{"updater":{"pubkey":"","endpoints":["https://example.invalid/latest.json"]}}}"#;
-        let problems = problems_for("apps/desktop/src-tauri/tauri.conf.json", conf);
-        assert!(problems.iter().any(|p| p.contains("endpoints")));
-        let empty = br#"{"plugins":{"updater":{"pubkey":"","endpoints":[]}}}"#;
-        assert!(problems_for("apps/desktop/src-tauri/tauri.conf.json", empty).is_empty());
     }
 
     #[test]

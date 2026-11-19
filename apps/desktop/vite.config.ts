@@ -12,5 +12,12 @@ export default defineConfig({
   resolve: { alias: { "@": "/src", "@logo": "/../../assets/logo" } },
   clearScreen: false,
   server: { port: 5173, strictPort: true },
-  build: { target: "es2023", outDir: "dist", emptyOutDir: true },
+  build: {
+    target: "es2023",
+    outDir: "dist",
+    emptyOutDir: true,
+    // The bundled npm packages and their license texts, at the root of dist/ so that the
+    // About page can fetch it; `cargo xtask notices` reads it too.
+    license: { fileName: "licenses.json" },
+  },
 })

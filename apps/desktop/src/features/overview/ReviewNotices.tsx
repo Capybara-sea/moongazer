@@ -54,10 +54,10 @@ function ReviewNotice({ snapshot, previous, takes }: NoticeProps) {
     }
   }
   return (
-    <Panel aria-label={text.confirm.title} className="flex-row gap-3">
+    <Panel aria-label={text.messages.syncReview} className="flex-row gap-3">
       <TriangleAlert aria-hidden className="mt-0.5 size-[18px] flex-none text-(--warn)" />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 text-[13px]">
-        <h2 className="font-semibold text-[15px]">{text.confirm.title}</h2>
+        <h2 className="font-semibold text-[15px]">{text.messages.syncReview}</h2>
         <p>{text.review.body(when)}</p>
         <ul className="list-disc pl-5">
           {reviewReasons(snapshot, previous).map(reason => (

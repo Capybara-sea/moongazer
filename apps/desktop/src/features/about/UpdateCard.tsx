@@ -22,6 +22,12 @@ const TONE: Record<UpdateStatus, Tone> = {
   error: "bad",
 }
 
+const FAILED = {
+  check: text.update.checkFailed,
+  download: text.update.downloadFailed,
+  install: text.update.failed,
+}
+
 function percent(downloaded: number, total: number | null) {
   return total ? ` ${Math.min(100, Math.round((downloaded / total) * 100))}%` : ""
 }
@@ -46,7 +52,7 @@ export function UpdateCard() {
     ready: text.update.ready(version),
     restarting: text.update.restarting,
     disabled: text.update.disabled,
-    error: `${failed === "download" ? text.update.downloadFailed : text.update.failed}${error ? `: ${error}` : ""}`,
+    error: `${FAILED[failed ?? "install"]}${error ? `: ${error}` : ""}`,
   }[status]
 
   const busy = status === "checking" || status === "downloading" || status === "restarting"

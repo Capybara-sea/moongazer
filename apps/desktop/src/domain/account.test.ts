@@ -54,7 +54,7 @@ describe("parseAccount on a Leyline export", () => {
     expect(leyline({ gi_characters: {} }).maxFriendship).toBe(0)
   })
 
-  it("counts an anecdote as recorded once it is finished, even while it runs again", () => {
+  it("counts an anecdote as recorded once it is finished, and as waiting while it runs again", () => {
     const { anecdotes } = leyline({
       gi_anecdotes: {
         anecdotes: {
@@ -72,8 +72,7 @@ describe("parseAccount on a Leyline export", () => {
       },
     })
     expect(anecdotes?.recorded).toBe(4)
-    expect(anecdotes?.inProgress).toBe(2)
-    expect(anecdotes?.areas).toBe(3)
+    expect(anecdotes?.inProgress).toBe(3)
     expect(anecdotes?.reward).toEqual({ index: 2, progress: 5, target: 0 })
     expect(anecdotes?.lastWish).toBe(1_000_000)
   })

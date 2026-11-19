@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { Button } from "@heroui/react"
-import { Upload } from "lucide-react"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { Notice } from "@/components/Notice"
 import type { Account } from "@/domain/account"
 import { isHead, type Snapshot } from "@/lib/backend"
 import { useCurrentSnapshot } from "@/stores/accountStore"
+import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 import { AccountCard } from "./AccountCard"
@@ -17,6 +16,7 @@ import { CollectionGrid } from "./CollectionGrid"
 import { ConfirmImport } from "./ConfirmImport"
 import { CountTiles } from "./CountTiles"
 import { DailyCard } from "./DailyCard"
+import { ImportButton } from "./ImportButton"
 import { ImportResults } from "./ImportResults"
 import { MonthTable } from "./MonthTable"
 import { RecentSnapshots, sourceLabel } from "./RecentSnapshots"
@@ -33,6 +33,7 @@ import { TrendChart } from "./TrendChart"
 export function OverviewPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
+  const capture = useCaptureStore(s => s.capture)
   const current = useCurrentSnapshot()
   // The page keeps showing the previous snapshot until the next one's export
   // is read, so cards do not vanish and rise again, moving everything below.
@@ -59,7 +60,7 @@ export function OverviewPage() {
       {snapshots && <ReviewNotices snapshots={snapshots} />}
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
       {snapshots?.length === 0 && (
-        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody} />
+        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody(capture)} />
       )}
       {snapshot && list && (
         <>
@@ -88,43 +89,19 @@ export function OverviewPage() {
 
 /** The title, the source and how many snapshots the account has, not counting head rows. */
 function Header({ snapshot, list }: { snapshot?: Snapshot; list?: Snapshot[] }) {
-  const progress = useSnapshotStore(s => s.progress)
-  const input = useRef<HTMLInputElement>(null)
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-col">
         <h1 className="font-semibold text-[20px] leading-[1.3]">{text.overview.title}</h1>
         {snapshot && list && (
           <span className="text-[12px] text-muted">
-            {text.overview.source(sourceLabel(snapshot, true), list.filter(s => !isHead(s)).length)}
+            {text.overview.source(sourceLabel(snapshot), list.filter(s => !isHead(s)).length)}
           </span>
         )}
       </div>
       <div className="flex flex-wrap gap-2">
         <SnapshotPicker />
-        <input
-          ref={input}
-          type="file"
-          accept=".json,application/json"
-          multiple
-          hidden
-          onChange={e => {
-            const files = [...(e.currentTarget.files ?? [])]
-            // Cleared, so choosing the same file again fires another change.
-            e.currentTarget.value = ""
-            void useSnapshotStore.getState().importFiles(files)
-          }}
-        />
-        <Button
-          isDisabled={progress !== null}
-          onPress={() => input.current?.click()}
-          className="h-[38px] gap-2 rounded-[9px] px-3.5 font-medium text-[13px]"
-        >
-          <Upload aria-hidden className="m-0 size-4" />
-          {progress
-            ? text.overview.importing(progress.done, progress.total)
-            : text.overview.importFile}
-        </Button>
+        <ImportButton />
       </div>
     </div>
   )

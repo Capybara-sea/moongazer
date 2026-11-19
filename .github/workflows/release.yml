@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Capybara_sea
 
-# Runs on version tags: checks the tag, builds and signs everything with
-# `cargo xtask dist`, and uploads it to a draft release for a manual look
-# before publishing.
+# Runs on version tags: checks the tag, builds the installer and the portable
+# zip in a job without the signing key, signs them in a job that runs nothing
+# else while it has the key, and uploads everything with a build provenance
+# attestation to a draft release for a manual look before publishing.
 
 name: Release
 
@@ -39,14 +40,27 @@ jobs:
         run: cargo xtask verify-tag "$GITHUB_REF_NAME"
       - name: Check that the release notes exist
         run: cargo xtask changelog "$GITHUB_REF_NAME" > /dev/null
+      # Built here so the sign job compiles nothing: no build script or proc
+      # macro runs next to its tokens. Without `capture`, which only
+      # `xtask pack` needs.
+      - name: Build xtask for the sign job
+        run: cargo build --locked -p xtask
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: xtask
+          path: target/debug/xtask
+          if-no-files-found: error
+          retention-days: 1
       - run: cargo xtask ci no-nightly
 
   build:
     needs: prepare
     runs-on: windows-2025
     timeout-minutes: 60
+    # No secrets here: the build runs scripts from hundreds of npm and Rust
+    # packages.
     permissions:
-      contents: write
+      contents: read
     env:
       # Set explicitly so the upload step knows where `xtask dist` writes.
       CARGO_TARGET_DIR: ${{ github.workspace }}/target
@@ -63,21 +77,78 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Built before the signing secrets are in the environment, so the build
-      # scripts of xtask's dependencies never see them. Through the alias, so
-      # this is the same build the next step runs.
-      - run: cargo xtask help
-      - name: Build, sign and package
+      - name: Build and package, unsigned
+        run: cargo xtask dist --no-sign
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unsigned
+          path: ${{ env.CARGO_TARGET_DIR }}/dist/${{ github.ref_name }}/
+          if-no-files-found: error
+          retention-days: 1
+      - run: cargo xtask ci no-nightly
+
+  sign:
+    needs: build
+    # Signatures do not depend on the platform, and Linux runners cost less.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write # gh release create
+      id-token: write # Sigstore certificate for the attestation
+      attestations: write # stores the attestation
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      # Only the CLI, at the version in pnpm-lock.yaml, and none of its
+      # install scripts. Outside the checkout, so no project npm config applies.
+      - name: Install the Tauri CLI
+        working-directory: ${{ runner.temp }}
+        run: >-
+          npm install --prefix tauri-cli --no-save --ignore-scripts --no-audit --no-fund
+          @tauri-apps/cli@2.12.4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: unsigned
+          path: ${{ runner.temp }}/dist
+      # The key is in this step's environment only. The same command as `sign`
+      # in xtask/src/dist.rs.
+      - name: Sign the installer and the portable zip
+        working-directory: ${{ runner.temp }}/dist
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: cargo xtask dist
+        run: |
+          for file in *_x64-setup.exe *_x64-portable.zip; do
+            "$RUNNER_TEMP/tauri-cli/node_modules/.bin/tauri" signer sign \
+              --app-version "${GITHUB_REF_NAME#v}" "$file"
+          done
+      # Built in `prepare`. It finds the repository by the path it was built
+      # at, which is the same checkout path in every job of this workflow.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: xtask
+          path: ${{ runner.temp }}/xtask
+      - name: Write latest.json and the checksums
+        run: |
+          # Artifacts do not keep the executable bit.
+          chmod +x "$RUNNER_TEMP/xtask/xtask"
+          "$RUNNER_TEMP/xtask/xtask" manifest "$RUNNER_TEMP/dist"
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          # Every file of the release.
+          subject-checksums: ${{ runner.temp }}/dist/SHA256SUMS.txt
       - name: Upload to a draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cargo xtask changelog "$GITHUB_REF_NAME" > release-notes.md
+          "$RUNNER_TEMP/xtask/xtask" changelog "$GITHUB_REF_NAME" > "$RUNNER_TEMP/release-notes.md"
           gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
-            --title "$GITHUB_REF_NAME" --notes-file release-notes.md \
-            "$CARGO_TARGET_DIR/dist/$GITHUB_REF_NAME"/*
-      - run: cargo xtask ci no-nightly
+            --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md" \
+            "$RUNNER_TEMP/dist"/*
+      - run: |
+          "$RUNNER_TEMP/xtask/xtask" ci no-nightly

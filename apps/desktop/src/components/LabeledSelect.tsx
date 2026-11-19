@@ -12,7 +12,8 @@ type Option = {
   /**
    * Shown before the label in the list and, when picked, in the trigger. It
    * fills a rounded box of 24 px in the list and 22 px in the trigger, so give
-   * it size-full.
+   * it size-full. Options without one keep the space in the list when others
+   * have one, so the labels line up.
    */
   icon?: ReactNode
   /** Muted text at the end of the row, such as a count. */
@@ -34,6 +35,7 @@ type Props = {
  */
 export function LabeledSelect({ label, value, options, onChange, className }: Props) {
   const picked = options.find(option => option.value === value)
+  const icons = options.some(option => option.icon)
   return (
     <Select
       aria-label={label}
@@ -72,10 +74,12 @@ export function LabeledSelect({ label, value, options, onChange, className }: Pr
               textValue={option.label}
               className="gap-2.5 rounded-[6px] text-[13px]"
             >
-              {option.icon && (
+              {option.icon ? (
                 <span className="flex size-6 flex-none overflow-hidden rounded-[6px]">
                   {option.icon}
                 </span>
+              ) : (
+                icons && <span aria-hidden className="size-6 flex-none" />
               )}
               <span className="min-w-0 flex-1 truncate">{option.label}</span>
               {option.hint && (

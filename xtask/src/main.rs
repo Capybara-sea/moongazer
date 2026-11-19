@@ -36,7 +36,7 @@ commands:
   commit-msg <file>               check a commit message
   ci <job>                        run one CI job: guard, fmt, clippy, test, frontend, deny, no-nightly
   check                           run every CI job
-  changelog <X.Y.Z|Unreleased>    print one CHANGELOG section
+  changelog <X.Y.Z|Unreleased>    print one version's release notes, English then Chinese
   verify-tag <tag>                check that a tag matches the workspace version
   release <X.Y.Z> [--dry-run]     bump the version, date the changelog, commit and tag
   dist [--config <file>] [--no-capture] [--base-url <url> | --no-sign]

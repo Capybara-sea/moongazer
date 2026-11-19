@@ -258,9 +258,23 @@ pub fn fmt_version((major, minor, patch): Version) -> String {
     format!("{major}.{minor}.{patch}")
 }
 
-/// `cargo xtask changelog <X.Y.Z|Unreleased>`
+/// The release page's notes for one version: the English section, then the
+/// Chinese one, each under the name of its language. None when either file
+/// lacks the section.
+pub fn release_notes(en: &str, zh: &str, wanted: &Heading) -> Option<String> {
+    let en = section(en, wanted)?;
+    let zh = section(zh, wanted)?;
+    // "Simplified Chinese", spelled as escapes like the rest of this file.
+    Some(format!(
+        "## English\n\n{en}\n\n## \u{7B80}\u{4F53}\u{4E2D}\u{6587}\n\n{zh}"
+    ))
+}
+
+/// `cargo xtask changelog <X.Y.Z|Unreleased>`: that version's release notes.
 pub fn print_section(root: &Path, which: &str) -> Result<()> {
-    let text = fs::read_to_string(root.join(FILE)).with_context(|| format!("reading {FILE}"))?;
+    let read =
+        |file: &str| fs::read_to_string(root.join(file)).with_context(|| format!("reading {file}"));
+    let (en, zh) = (read(FILE)?, read(FILE_ZH)?);
     let wanted = if which.eq_ignore_ascii_case(UNRELEASED) {
         Heading::Unreleased
     } else {
@@ -271,8 +285,9 @@ pub fn print_section(root: &Path, which: &str) -> Result<()> {
             date: String::new(),
         }
     };
-    let body = section(&text, &wanted).with_context(|| format!("no section for `{which}`"))?;
-    println!("{body}");
+    let notes = release_notes(&en, &zh, &wanted)
+        .with_context(|| format!("no section for `{which}` in {FILE} and {FILE_ZH}"))?;
+    println!("{notes}");
     Ok(())
 }
 
@@ -344,6 +359,27 @@ mod tests {
             Some("### Added\n\n- First.")
         );
         assert_eq!(section(EMPTY, &Heading::Unreleased).as_deref(), Some(""));
+    }
+
+    #[test]
+    fn release_notes_carry_both_languages() {
+        let zh = ONE_RELEASE
+            .replace("# Changelog", ZH.title)
+            .replace("### Added", &format!("### {}", ZH.sections[0]))
+            .replace("- First.", "- Zh first.");
+        let v010 = Heading::Release {
+            version: (0, 1, 0),
+            date: String::new(),
+        };
+        let notes = release_notes(ONE_RELEASE, &zh, &v010).expect("notes");
+        assert!(notes.starts_with("## English\n\n### Added\n\n- First.\n\n## "));
+        assert!(notes.ends_with(&format!("### {}\n\n- Zh first.", ZH.sections[0])));
+        let v020 = Heading::Release {
+            version: (0, 2, 0),
+            date: String::new(),
+        };
+        assert_eq!(release_notes(ONE_RELEASE, &zh, &v020), None);
+        assert_eq!(release_notes(ONE_RELEASE, EMPTY, &v010), None);
     }
 
     #[test]

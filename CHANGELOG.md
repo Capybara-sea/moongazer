@@ -24,6 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings page, light and dark themes, animations, and game icons that
   download when first shown.
 - About page with help and feedback, acknowledgments and third-party
-  licenses; THIRD_PARTY_NOTICES.txt ships next to the program.
+  licenses.
 
 [unreleased]: https://github.com/Capybara-sea/moongazer/commits/main

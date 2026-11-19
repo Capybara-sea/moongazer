@@ -15,6 +15,6 @@
 - 消息中心（更新和自动同步的消息），自动同步出问题时发 Windows 通知，以及托盘图标。
 - 安装版和便携版 zip；更新在后台下载，在程序里点重启后换上。
 - 设置页、明暗主题、界面动效；游戏图标在第一次显示时下载。
-- 关于页：帮助与反馈、致谢和第三方许可；程序旁边附带 THIRD_PARTY_NOTICES.txt。
+- 关于页：帮助与反馈、致谢和第三方许可。
 
 [unreleased]: https://github.com/Capybara-sea/moongazer/commits/main

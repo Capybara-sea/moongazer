@@ -18,13 +18,13 @@ A Traveler's journal for Windows, in early development. The interface is in Simp
 - Characters, weapons, artifacts and inventory synced automatically and easy to browse.
 - Several accounts.
 - Imports Leyline files (account exports in JSON).
-- Level-up planner (which materials you still need) — _not yet_
-- Artifact optimizer — _not yet_
-- Anecdote checklist — _not yet_
-- Achievement checklist — _not yet_
-- Serenitea Pot set reward checklist — _not yet_
-- Reminders: Original Resin full, expeditions done, commission rewards unclaimed, Spiral Abyss about to reset and more — _not yet_
-- More languages — _not yet_
+- Level-up planner (which materials you still need) — _TODO_
+- Artifact optimizer — _TODO_
+- Anecdote checklist — _TODO_
+- Achievement checklist — _TODO_
+- Serenitea Pot set reward checklist — _TODO_
+- Reminders: Original Resin full, expeditions done, commission rewards unclaimed, Spiral Abyss about to reset and more — _TODO_
+- More languages — _TODO_
 
 Auto sync only receives data: it never sends anything to the game or changes its files. Use it at your own risk.
 

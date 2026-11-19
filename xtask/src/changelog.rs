@@ -258,16 +258,12 @@ pub fn fmt_version((major, minor, patch): Version) -> String {
     format!("{major}.{minor}.{patch}")
 }
 
-/// The release page's notes for one version: the English section, then the
-/// Chinese one, each under the name of its language. None when either file
-/// lacks the section.
+/// The release page's notes for one version: the English section, a rule,
+/// then the Chinese one. None when either file lacks the section.
 pub fn release_notes(en: &str, zh: &str, wanted: &Heading) -> Option<String> {
     let en = section(en, wanted)?;
     let zh = section(zh, wanted)?;
-    // "Simplified Chinese", spelled as escapes like the rest of this file.
-    Some(format!(
-        "## English\n\n{en}\n\n## \u{7B80}\u{4F53}\u{4E2D}\u{6587}\n\n{zh}"
-    ))
+    Some(format!("{en}\n\n---\n\n{zh}"))
 }
 
 /// `cargo xtask changelog <X.Y.Z|Unreleased>`: that version's release notes.
@@ -371,9 +367,11 @@ mod tests {
             version: (0, 1, 0),
             date: String::new(),
         };
-        let notes = release_notes(ONE_RELEASE, &zh, &v010).expect("notes");
-        assert!(notes.starts_with("## English\n\n### Added\n\n- First.\n\n## "));
-        assert!(notes.ends_with(&format!("### {}\n\n- Zh first.", ZH.sections[0])));
+        let both = format!(
+            "### Added\n\n- First.\n\n---\n\n### {}\n\n- Zh first.",
+            ZH.sections[0]
+        );
+        assert_eq!(release_notes(ONE_RELEASE, &zh, &v010), Some(both));
         let v020 = Heading::Release {
             version: (0, 2, 0),
             date: String::new(),

@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-20
+
 ### 新增
 
 - 账号总览、角色、武器、圣遗物、背包五页，列表可以筛选。
@@ -17,4 +19,5 @@
 - 设置页、明暗主题、界面动效；游戏图标在第一次显示时下载。
 - 关于页：帮助与反馈、致谢和第三方许可。
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/commits/main
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Capybara-sea/moongazer/releases/tag/v0.1.0

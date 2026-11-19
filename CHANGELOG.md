@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-20
+
 ### Added
 
 - Account overview, characters, weapons, artifacts and inventory pages; the
@@ -26,4 +28,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - About page with help and feedback, acknowledgments and third-party
   licenses.
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/commits/main
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Capybara-sea/moongazer/releases/tag/v0.1.0

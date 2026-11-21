@@ -268,7 +268,7 @@ pub(super) enum Value<'a> {
 
 #[derive(Clone, Copy, Debug)]
 pub(super) struct Field<'a> {
-    number: u64,
+    pub(super) number: u64,
     pub(super) value: Value<'a>,
 }
 

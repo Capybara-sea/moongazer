@@ -47,9 +47,7 @@ Turning on auto sync shows a UAC prompt. It is yellow and shows an unknown publi
 
 ## Community
 
-QQ group 90376195 ([join](https://qm.qq.com/q/knbjLmXja0), or scan with mobile QQ), in Chinese. The About page in the app links to it too.
-
-<img src="assets/community/qq-group.svg" alt="QR code of QQ group 90376195" width="160">
+QQ group 90376195 ([join](https://qm.qq.com/q/knbjLmXja0)), in Chinese.
 
 ## Development
 

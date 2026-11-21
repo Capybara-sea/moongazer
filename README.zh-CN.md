@@ -47,9 +47,7 @@
 
 ## 交流
 
-QQ 群 90376195，[点击加入](https://qm.qq.com/q/knbjLmXja0)，或用手机 QQ 扫码。程序里“关于”页也有入口。
-
-<img src="assets/community/qq-group.svg" alt="QQ 群 90376195 的二维码" width="160">
+QQ 群 90376195，[点击加入](https://qm.qq.com/q/knbjLmXja0)。
 
 ## 开发
 

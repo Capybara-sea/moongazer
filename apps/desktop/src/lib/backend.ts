@@ -359,6 +359,11 @@ export async function openVideoSearch(keyword: string) {
   await call("open_video_search", { keyword })
 }
 
+/** The Bilibili page the anecdotes guide comes from; its address is fixed on the Rust side. */
+export async function openTravelersTales() {
+  await call("open_travelers_tales")
+}
+
 /**
  * Best effort: outside the Tauri window (a plain browser on the dev server)
  * `getCurrentWindow` throws synchronously, and the title is not worth a crash.

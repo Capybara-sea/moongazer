@@ -3,7 +3,7 @@
 
 import type { Game } from "./agdItems.ts"
 import { download } from "./download.ts"
-import { anecdoteRules } from "./manual.ts"
+import { anecdoteGuide, anecdoteRules } from "./manual.ts"
 import { list, num, plain, type Raw, str } from "./tables.ts"
 
 type Pin = { repo: string; commit: string }
@@ -41,6 +41,15 @@ type Anecdote = {
   after?: number
   /** Only in the day, or only at night. */
   time?: "day" | "night"
+  /** From the hand-written guide (manual.ts): where it is and how it comes. */
+  place?: string
+  trigger?: string
+  /** Anecdotes to record first. */
+  requires?: number[]
+  quest?: { id: number; name: string }
+  owns?: string
+  tip?: string
+  unsure?: string
 }
 export type Collection = {
   /** The goals in the game's order, with the game's icon name. */
@@ -127,7 +136,7 @@ export async function buildCollection(
   return {
     achievementGoals,
     achievements,
-    ...(await anecdotes(g, characters, primogems)),
+    ...(await anecdotes(g, characters, primogems, new Set(quests.map(row => num(row, "id"))))),
     anecdoteRules,
   }
 }
@@ -215,7 +224,12 @@ function questKind(row: Raw, types: Map<unknown, unknown>): QuestKind | undefine
   return ({ WQ: "world", LQ: "hangout", IQ: "commission" } as const)[String(type)]
 }
 
-async function anecdotes(g: Game, characters: Map<string, string>, primogems: Map<number, number>) {
+async function anecdotes(
+  g: Game,
+  characters: Map<string, string>,
+  primogems: Map<number, number>,
+  mainQuests: Set<number>,
+) {
   const [rows, extras, areaRows, constants] = await Promise.all([
     g.table("AnecdoteExcelConfigData.json"),
     g.table("AnecdoteExtraExcelConfigData.json"),
@@ -274,6 +288,24 @@ async function anecdotes(g: Game, characters: Map<string, string>, primogems: Ma
   }
   for (const e of entries) {
     if (!(e.area in anecdoteAreas)) throw new Error(`anecdote ${e.id} is in unknown area ${e.area}`)
+  }
+  const keys = new Set(characters.values())
+  for (const [id, guide] of Object.entries(anecdoteGuide)) {
+    const entry = entries.find(e => e.id === Number(id))
+    if (!entry) throw new Error(`the anecdote guide names ${id}, not an entry`)
+    const { after: requires, ...rest } = guide
+    for (const other of requires ?? []) {
+      if (!ids.has(other))
+        throw new Error(`the guide's anecdote ${id} needs ${other}, not an entry`)
+    }
+    if (guide.quest && !mainQuests.has(guide.quest.id)) {
+      throw new Error(`the guide's anecdote ${id} needs quest ${guide.quest.id}, not a main quest`)
+    }
+    if (guide.owns && !keys.has(guide.owns)) {
+      throw new Error(`the guide's anecdote ${id} needs ${guide.owns}, not a character`)
+    }
+    if (guide.trigger && !entry.hidden) throw new Error(`the guide gives anecdote ${id} a trigger`)
+    Object.assign(entry, rest, requires ? { requires } : {})
   }
   const rules = anecdoteRules
   for (const id of [

@@ -440,6 +440,16 @@ pub fn open_group_chat() -> Result<(), SnapshotError> {
         .map_err(|err| SnapshotError::OpenLink(err.to_string()))
 }
 
+/// The Bilibili page the anecdotes guide is drawn from, credited on the
+/// anecdotes page; fixed here like the homepage.
+const TRAVELERS_TALES: &str = "https://www.bilibili.com/toy/genshin-travelers-tales";
+
+#[tauri::command]
+pub fn open_travelers_tales() -> Result<(), SnapshotError> {
+    tauri_plugin_opener::open_url(TRAVELERS_TALES, None::<&str>)
+        .map_err(|err| SnapshotError::OpenLink(err.to_string()))
+}
+
 /// Bilibili's search: the page passes only what to look for, such as an
 /// achievement's name, so the address stays fixed here.
 const VIDEO_SEARCH: &str = "https://search.bilibili.com/all";

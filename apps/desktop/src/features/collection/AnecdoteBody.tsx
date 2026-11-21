@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { toast } from "@heroui/react"
 import { Check } from "lucide-react"
 import { useMemo, useState } from "react"
 import { EmptyState } from "@/components/EmptyState"
@@ -14,9 +15,11 @@ import {
   byCharacter,
   type CharacterGroup,
   characterName,
+  type Need,
   visibleRows,
 } from "@/domain/anecdotes"
 import { lookup } from "@/domain/names"
+import { openTravelersTales, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { useAnecdoteListStore } from "@/stores/anecdoteListStore"
 import { text } from "@/text/zh"
@@ -58,6 +61,7 @@ export function AnecdoteBody({ view }: { view: AnecdoteView }) {
             />
           ))
         )}
+        <Source />
       </section>
     </div>
   )
@@ -181,21 +185,47 @@ const RING = {
   absent: "border-muted border-dashed",
 } as const
 
+/** A thing to do first, with whether it is done; unknown where the export does not say. */
+function needLine(need: Need) {
+  const what =
+    need.kind === "anecdote"
+      ? t.needAnecdote(anecdoteName(need.id))
+      : need.kind === "quest"
+        ? need.name
+        : t.needCharacter(characterName(need.key))
+  if (need.met === undefined) return { text: t.needUnknown(what), warn: false }
+  if (need.met) return { text: t.needMet(what), warn: false }
+  return { text: need.kind === "character" ? t.needMissing(what) : t.needOpen(what), warn: true }
+}
+
 function Item({ row }: { row: AnecdoteRow }) {
   const [peek, setPeek] = useState(false)
   const { info, status } = row
   const absent = status === "absent"
+  // The place helps while there is anything left to do there; what brings it on and what comes
+  // first only before it has come at all.
+  const showPlace = !absent && (!row.recorded || row.left > 0)
+  const unmet = status === "unmet"
   const line = absent
     ? t.absent
     : row.recorded || peek
       ? info.summary
       : info.hidden
-        ? t.hiddenLine
+        ? unmet && info.trigger
+          ? t.trigger(info.trigger)
+          : t.hiddenLine
         : t.hint(info.hint ?? "")
-  const notes = [
-    ...(info.time ? [t.time[info.time] ?? ""] : []),
-    ...(info.after !== undefined ? [t.after(anecdoteName(info.after))] : []),
-  ].filter(Boolean)
+  const where = [
+    ...(showPlace && info.place ? [t.place(info.place)] : []),
+    ...(unmet && info.hidden && info.trigger ? [t.hiddenRule] : []),
+  ].join(" · ")
+  const notes: { text: string; warn: boolean }[] = [
+    ...(info.time ? [{ text: t.time[info.time] ?? "", warn: false }] : []),
+    ...(info.after !== undefined ? [{ text: t.after(anecdoteName(info.after)), warn: false }] : []),
+    ...(unmet ? row.needs.map(needLine) : []),
+    ...(unmet && info.tip ? [{ text: info.tip, warn: false }] : []),
+    ...(unmet && info.unsure ? [{ text: t.unsure(info.unsure), warn: true }] : []),
+  ].filter(note => note.text)
   return (
     <div
       className={cn(
@@ -233,12 +263,38 @@ function Item({ row }: { row: AnecdoteRow }) {
       ) : (
         <span />
       )}
+      {where && <span className="col-start-2 text-[12px] text-muted">{where}</span>}
       {notes.map(note => (
-        <span key={note} className="col-start-2 text-[12px] text-muted">
-          {note}
+        <span
+          key={note.text}
+          className={cn("col-start-2 text-[12px]", note.warn ? "text-(--warn)" : "text-muted")}
+        >
+          {note.text}
         </span>
       ))}
     </div>
+  )
+}
+
+/** Where the guide's places and triggers come from, with a link to it. */
+function Source() {
+  return (
+    <p className="flex flex-wrap items-center gap-x-2 text-[12px] text-muted">
+      {t.source}
+      <button
+        type="button"
+        aria-label={t.openSourceLabel}
+        title={t.openSourceLabel}
+        onClick={() => {
+          openTravelersTales().catch((error: unknown) => {
+            toast(t.openFailed, { description: toBackendError(error).message })
+          })
+        }}
+        className="cursor-pointer text-(--accent-text) hover:underline"
+      >
+        {t.openSource}
+      </button>
+    </p>
   )
 }
 

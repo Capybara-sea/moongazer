@@ -250,9 +250,11 @@ describe("parseAccount on a Leyline export", () => {
           101402: { endings: { 4: "locked", 5: "claimed" }, pictures: [] },
         },
         archive: { livingBeings: [1, 2, 3, 4, 5] },
+        quests: { finished: [6020, 76117], active: [6021] },
       },
       gi_wardrobe: { outfits: { owned: [1, 2] }, gliders: { owned: [1, 2, 3] } },
     })
+    expect(collections?.quests).toEqual(new Set([6020, 76117]))
     expect(collections?.tcgCards).toBe(3)
     expect(collections?.recipes).toBe(2)
     expect(collections?.blueprints).toBe(4)
@@ -266,6 +268,7 @@ describe("parseAccount on a Leyline export", () => {
     const { collections } = leyline({ gi_wardrobe: { outfits: { owned: [1] } } })
     expect(collections?.outfits).toBe(1)
     expect(collections?.gliders).toBeUndefined()
+    expect(collections?.quests).toBeUndefined()
     expect(collections?.hangouts).toBeUndefined()
     expect(collections?.recipes).toBeUndefined()
   })

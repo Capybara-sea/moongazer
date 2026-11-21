@@ -67,6 +67,7 @@ pnpm --filter @moongazer/desktop tauri dev
 - [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata): game data.
 - [Genshin Optimizer](https://github.com/frzyc/genshin-optimizer): the GOOD format, which Leyline builds on. Data generation checks item keys against it; the program includes none of its data.
 - [Enka.Network](https://enka.network) and [Project Amber](https://gi.yatta.moe): game icons.
+- [原神游逸旅闻](https://www.bilibili.com/toy/genshin-travelers-tales) by Bilibili creator 栖霆杨: where each anecdote is met, what brings the hidden ones on and what comes first; drawn on with the author's permission.
 ## License
 
 The code is released under the [MIT](LICENSE) license. The logo and app icons are not; all rights are reserved. That covers `assets/logo/`, the icons generated from it in `apps/desktop/src-tauri/icons/` and the logo shown inside the app. Forks that publish builds must replace them with their own.

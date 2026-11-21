@@ -81,6 +81,17 @@ describe("anecdoteView", () => {
     expect(view({ [lauma.farewell]: { state: 3 } }, false).hasLauma).toBe(true)
   })
 
+  it("gives the choice its days' seals when they were all done before Lauma came", () => {
+    const usual = view({ [lauma.choice]: { state: 3, finishCount: 1 } })
+    expect(row(usual, lauma.choice)?.seals).toBe(1)
+    expect(row(usual, lauma.farewell)?.seals).toBe(lauma.seals)
+    const late = view({ [lauma.choice]: { state: 3, finishCount: lauma.days } })
+    expect(row(late, lauma.choice)).toMatchObject({ seals: lauma.days, left: 0 })
+    // The pair gives the same seals either way.
+    expect(row(late, lauma.farewell)?.seals).toBe(lauma.seals + 1 - lauma.days)
+    expect(late.seals.total).toBe(usual.seals.total)
+  })
+
   it("totals the seals with the two special pairs", () => {
     expect(view({}).seals.total).toBe(ANECDOTE_TOTALS.withLauma.seals)
     expect(view({}, false).seals.total).toBe(ANECDOTE_TOTALS.withoutLauma.seals)
@@ -102,6 +113,42 @@ describe("anecdoteView", () => {
     // Leyline leaves a zero target out; the game's 10 stands in.
     expect(view({}, true, { index: 1, progress: 2 }).seals.reward?.target).toBe(10)
     expect(view({}).seals.earned).toBeUndefined()
+  })
+
+  it("says which of the guide's prerequisites the account has done", () => {
+    const needing = all.find(a => a.requires?.length)
+    const questing = all.find(a => a.quest && a.owns)
+    const required = needing?.requires?.[0]
+    if (!needing || !questing?.quest || !questing.owns || required === undefined) {
+      throw new Error("the guide has no prerequisites")
+    }
+    const read = (quests?: number[]) => {
+      const v = anecdoteView(
+        parseAccount({
+          format: "GOOD",
+          version: 3,
+          leyline: 1,
+          characters: [{ key: questing.owns, level: 1 }],
+          gi_anecdotes: { anecdotes: { [required]: { state: 3, finishCount: 1 } } },
+          ...(quests ? { gi_collections: { quests: { finished: quests } } } : {}),
+        }),
+      )
+      if (!v) throw new Error("no anecdotes read")
+      return v
+    }
+    const done = read([questing.quest.id])
+    expect(row(done, needing.id)?.needs).toEqual([{ kind: "anecdote", id: required, met: true }])
+    expect(row(done, questing.id)?.needs).toEqual([
+      { kind: "quest", name: questing.quest.name, met: true },
+      { kind: "character", key: questing.owns, met: true },
+    ])
+    // Without the list of finished quests, the quest's state is unknown, not "not done".
+    expect(row(read(), questing.id)?.needs[0]).toEqual({
+      kind: "quest",
+      name: questing.quest.name,
+      met: undefined,
+    })
+    expect(row(read([]), questing.id)?.needs[0]?.met).toBe(false)
   })
 })
 

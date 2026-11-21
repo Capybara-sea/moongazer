@@ -97,6 +97,8 @@ export type Collections = {
   blueprints?: number
   hangouts?: { claimed: number; total: number }
   livingBeings?: number
+  /** Finished main quests by id; missing when the export has no list. */
+  quests?: ReadonlySet<number>
 }
 
 export type Account = {
@@ -292,6 +294,7 @@ function collections(raw: Json): Collections | undefined {
       if (ending === "claimed") hangouts.claimed++
     }
   }
+  const finished = list(record(items?.quests)?.finished)
   return {
     outfits: size(record(wardrobe?.outfits)?.owned),
     gliders: size(record(wardrobe?.gliders)?.owned),
@@ -300,6 +303,7 @@ function collections(raw: Json): Collections | undefined {
     blueprints: size(items?.blueprints),
     hangouts,
     livingBeings: size(record(items?.archive)?.livingBeings),
+    quests: finished && new Set(finished.filter((id): id is number => typeof id === "number")),
   }
 }
 

@@ -23,7 +23,28 @@ export type AnecdoteInfo = {
   after?: number
   /** "day" or "night" where it comes only then. */
   time?: string
+  /** From the hand-written guide: where it is met and, for a hidden one, what brings it on. */
+  place?: string
+  trigger?: string
+  /** Anecdotes to record first. */
+  requires?: number[]
+  /** A main quest to finish first, by its last quest's id. */
+  quest?: { id: number; name: string }
+  /** A character to have, by GOOD key. */
+  owns?: string
+  tip?: string
+  /** What the guide's author has not confirmed. */
+  unsure?: string
 }
+
+/**
+ * Something to do before an anecdote can come, and whether the account has
+ * done it; unknown where the export does not say (finished quests).
+ */
+export type Need =
+  | { kind: "anecdote"; id: number; met: boolean }
+  | { kind: "quest"; name: string; met?: boolean }
+  | { kind: "character"; key: string; met: boolean }
 
 type Rules = {
   daily: { id: number; last: number; total: number }
@@ -83,6 +104,8 @@ export type AnecdoteRow = {
   seals?: number
   /** Times it still has to be done: more than one for Aino's choice without Lauma. */
   left: number
+  /** What the guide says to do first; empty for most. */
+  needs: Need[]
 }
 
 export type AnecdoteView = {
@@ -136,21 +159,50 @@ export function anecdoteView(account: Account): AnecdoteView | undefined {
   const hasLauma =
     account.characters.some(c => c.key === lauma.character) || byMain.has(lauma.farewell)
   const waitDays = byMain.get(daily.id)?.finishCount ?? 0
+  const choiceDays = byMain.get(lauma.choice)?.finishCount ?? 0
+  // Aino's choice done on all its days before Lauma came: the farewell gives the rest of the
+  // pair's seals instead.
+  const lateLauma = hasLauma && choiceDays >= lauma.days
+  const isRecorded = (id: number) => {
+    const entry = byMain.get(id)
+    return entry !== undefined && (entry.state === 3 || entry.finishCount > 0)
+  }
+  const quests = account.collections?.quests
+  const owned = new Set(account.characters.map(c => c.key))
+  const needsOf = (info: AnecdoteInfo): Need[] => [
+    ...(info.requires ?? []).map(id => ({ kind: "anecdote" as const, id, met: isRecorded(id) })),
+    ...(info.quest
+      ? [{ kind: "quest" as const, name: info.quest.name, met: quests?.has(info.quest.id) }]
+      : []),
+    ...(info.owns
+      ? [{ kind: "character" as const, key: info.owns, met: owned.has(info.owns) }]
+      : []),
+  ]
   const rows = table.anecdotes.map((info): AnecdoteRow => {
     const entry = byMain.get(info.id)
-    const recorded = entry !== undefined && (entry.state === 3 || entry.finishCount > 0)
+    const recorded = isRecorded(info.id)
+    const needs = needsOf(info)
     if (info.id === lauma.farewell && !hasLauma) {
-      return { info, status: "absent", recorded: false, seals: lauma.seals, left: 0 }
+      return { info, status: "absent", recorded: false, seals: lauma.seals, left: 0, needs }
     }
     const status = entry?.state === 2 ? "waiting" : recorded ? "recorded" : "unmet"
-    const row: AnecdoteRow = { info, status, recorded, left: recorded ? 0 : 1 }
+    const row: AnecdoteRow = { info, status, recorded, left: recorded ? 0 : 1, needs }
     if (info.id === daily.id) return { ...row, days: waitDays }
     if (info.id === daily.last)
       return waitDays > 0 ? { ...row, seals: daily.total - waitDays } : row
-    if (info.id === lauma.farewell) return { ...row, seals: lauma.seals }
+    if (info.id === lauma.farewell) {
+      return { ...row, seals: lateLauma ? lauma.seals + 1 - lauma.days : lauma.seals }
+    }
+    if (info.id === lauma.choice && lateLauma) {
+      return { ...row, days: choiceDays, seals: lauma.days }
+    }
     if (info.id === lauma.choice && !hasLauma) {
-      const days = entry?.finishCount ?? 0
-      return { ...row, days, seals: lauma.days, left: Math.max(lauma.days - days, 0) }
+      return {
+        ...row,
+        days: choiceDays,
+        seals: lauma.days,
+        left: Math.max(lauma.days - choiceDays, 0),
+      }
     }
     return { ...row, seals: 1 }
   })

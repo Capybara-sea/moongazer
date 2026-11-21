@@ -440,10 +440,40 @@ pub fn open_group_chat() -> Result<(), SnapshotError> {
         .map_err(|err| SnapshotError::OpenLink(err.to_string()))
 }
 
+/// Bilibili's search: the page passes only what to look for, such as an
+/// achievement's name, so the address stays fixed here.
+const VIDEO_SEARCH: &str = "https://search.bilibili.com/all";
+
+#[tauri::command]
+pub fn open_video_search(keyword: String) -> Result<(), SnapshotError> {
+    tauri_plugin_opener::open_url(video_search_url(&keyword)?.as_str(), None::<&str>)
+        .map_err(|err| SnapshotError::OpenLink(err.to_string()))
+}
+
+fn video_search_url(keyword: &str) -> Result<reqwest::Url, SnapshotError> {
+    reqwest::Url::parse_with_params(VIDEO_SEARCH, [("keyword", keyword)])
+        .map_err(|err| SnapshotError::OpenLink(err.to_string()))
+}
+
 fn now_ms() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |elapsed| {
             i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX)
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_search_keyword_stays_inside_the_query() {
+        let url = video_search_url("a&b=c #d").expect("a fixed address parses");
+        assert_eq!(url.host_str(), Some("search.bilibili.com"));
+        assert_eq!(url.path(), "/all");
+        let pairs: Vec<_> = url.query_pairs().into_owned().collect();
+        assert_eq!(pairs, [("keyword".to_owned(), "a&b=c #d".to_owned())]);
+        assert_eq!(url.fragment(), None);
+    }
 }

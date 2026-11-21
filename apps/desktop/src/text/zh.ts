@@ -8,6 +8,8 @@
  * CHANGELOG.zh-CN.md.
  */
 
+import { achievementPage, anecdotePage, collection } from "./collection"
+
 /** Stat names by GOOD stat key; percentage and flat stats share a name. */
 const stats: Record<string, string> = {
   hp: "生命值",
@@ -56,11 +58,11 @@ export const text = {
     weapons: "武器",
     artifacts: "圣遗物",
     materials: "背包",
+    collection: "收集",
     settings: "设置",
     about: "关于",
   },
   theme: {
-    toggle: "切换主题",
     light: "明亮模式",
     dark: "暗黑模式",
     system: "跟随系统",
@@ -150,12 +152,15 @@ export const text = {
     birthdayValue: (month: number, day: number) => `${month}月${day}日`,
   },
   accounts: {
+    title: "账号",
     pick: "选择账号",
+    panel: "账号和自动同步",
+    syncing: "同步中",
     unnamed: (n: number) => `账号 ${n}`,
     uid: (uid: string) => `UID ${uid}`,
     /** A row of the list: the UID and the newest snapshot's time, "UID 1•••••••• · 实时". */
     meta: (uid: string, at: string) => `UID ${uid} · ${at}`,
-    follows: "游戏登录时自动切换",
+    follows: "游戏登录时自动切换账号",
     none: "无账号",
     noneHint: (capture: boolean) => (capture ? "先导入或同步" : "先导入文件"),
   },
@@ -262,15 +267,18 @@ export const text = {
     recorded: "已记录逸闻",
     detail: (waiting: number) => (waiting > 0 ? `还有 ${waiting} 条待完成` : "没有待完成的"),
     seals: "逸闻印签",
-    sealsDetail: (left: number, claimed: number) =>
+    sealsDetail: (left: number, claimed: number, primogems: number) =>
       left > 0
-        ? `再记录 ${left} 条可领原石 ×50 · 已领过 ${claimed} 次`
-        : `可以领取原石 ×50 · 已领过 ${claimed} 次`,
+        ? `再记录 ${left} 条可领原石 ×${primogems} · 已领过 ${claimed} 次`
+        : `可以领取原石 ×${primogems}，不领不刷新新旅闻 · 已领过 ${claimed} 次`,
     claimable: "可领取",
     lastWish: "上次许愿",
     lastWishNote: "快照时的记录",
     never: "还没许过愿",
   },
+  collection,
+  achievementPage,
+  anecdotePage,
   collections: {
     title: "收集",
     outfits: "衣装",
@@ -572,8 +580,8 @@ export const text = {
       connected: "已连接",
       interrupted: "连接中断",
     },
-    cardLabel: (phase: string, lines: readonly string[]) =>
-      `自动同步：${phase}。${lines.join("。")}。`,
+    panelLabel: (name: string, phase: string | undefined) =>
+      phase ? `${name}，自动同步${phase}。切换账号或查看自动同步` : `${name}。切换账号`,
     loadFailed: "读取失败",
     card: {
       off: ["自动同步没有开启", "点这里开启"],
@@ -593,6 +601,7 @@ export const text = {
       reading: "正在读取账号数据",
       synced: "账号已同步",
       updated: (when: string, n: number) => `${when}同步 · +${n} 项`,
+      syncingOther: (name: string) => `正在同步 ${name}`,
     },
     servers: { china: "国服", global: "国际服" },
     summary: {
@@ -695,7 +704,7 @@ export const text = {
     autoStartHint:
       "每次开启都会弹出系统的管理员权限确认。需要管理员权限的只是望月另开的一个同步进程（同步助手），它只接收网络数据，不解析内容。",
     status: "连接状态",
-    statusHint: "也可以点侧边栏底部的状态卡打开。",
+    statusHint: "也可以点侧边栏左下角的账号打开。",
     view: "查看",
     viewStatus: "查看连接状态",
     syncLoadFailed: "读取自动同步的状态和设置失败",

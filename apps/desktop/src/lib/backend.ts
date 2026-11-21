@@ -354,6 +354,11 @@ export async function openGroupChat() {
   await call("open_group_chat")
 }
 
+/** Bilibili's video search for `keyword`; the address is fixed on the Rust side. */
+export async function openVideoSearch(keyword: string) {
+  await call("open_video_search", { keyword })
+}
+
 /**
  * Best effort: outside the Tauri window (a plain browser on the dev server)
  * `getCurrentWindow` throws synchronously, and the title is not worth a crash.

@@ -144,6 +144,7 @@ fn main() {
             snapshots::open_log_dir,
             snapshots::open_homepage,
             snapshots::open_group_chat,
+            snapshots::open_video_search,
             update::app_info,
             update::check_update,
             update::download_update,

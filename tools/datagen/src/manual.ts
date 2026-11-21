@@ -128,3 +128,21 @@ export const materialTabs: Record<string, string[]> = {
   ],
   other: ["Quest Item", "Very Special Item"],
 }
+
+// Anecdotes that do not give one seal each, checked against two accounts' exports and a capture
+// (2026-11-21). The game's table says none of this.
+export const anecdoteRules = {
+  // Heizou's "静待…" can come back on 1-5 days, a seal each day; "破案日" then tops the two up to
+  // `total`.
+  daily: { id: 101604, last: 101605, total: 6 },
+  // Aino's "时间足够你道别" comes only for an account with Lauma, after "选择…", and gives `seals`.
+  // Without her, "选择…" comes back on `days` days instead, a seal each day.
+  lauma: { character: "Lauma", choice: 103702, farewell: 103703, seals: 5, days: 5 },
+  // Entries that come one after another, a day apart at least: Heizou's and Sayu's, Aino's, and
+  // Ineffa's and Jahoda's.
+  chains: [
+    [101604, 101701, 101605],
+    [103702, 103703],
+    [103602, 103604],
+  ],
+}

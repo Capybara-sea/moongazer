@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { useMemo } from "react"
 import { Bar } from "@/components/Bar"
 import { Panel } from "@/components/Panel"
-import type { Account, Anecdotes } from "@/domain/account"
-import { ANECDOTES } from "@/domain/overviewData"
+import type { Account } from "@/domain/account"
+import { ANECDOTE_REWARD, type AnecdoteView, anecdoteView } from "@/domain/anecdotes"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
 import { text } from "@/text/zh"
@@ -12,14 +13,15 @@ import { text } from "@/text/zh"
 /** Recorded anecdotes, the seal reward's progress and the last wish, side by side in one card. */
 export function AnecdoteCard({ account }: { account: Account }) {
   const anecdotes = account.anecdotes
+  const view = useMemo(() => anecdoteView(account), [account])
   return (
     <section aria-label={text.anecdotes.title} className="flex flex-col gap-2.5">
       <h2 className="font-semibold text-base">{text.anecdotes.title}</h2>
       <Panel className="flex-row flex-wrap items-center gap-7 px-4.5 py-3.5">
-        {anecdotes ? (
+        {anecdotes && view ? (
           <>
-            <Recorded anecdotes={anecdotes} />
-            {anecdotes.reward && <Seals {...anecdotes.reward} />}
+            <Recorded view={view} />
+            {view.seals.reward && <Seals {...view.seals.reward} />}
             <LastWish at={anecdotes.lastWish} />
           </>
         ) : (
@@ -30,26 +32,25 @@ export function AnecdoteCard({ account }: { account: Account }) {
   )
 }
 
-function Recorded({ anecdotes }: { anecdotes: Anecdotes }) {
+function Recorded({ view }: { view: AnecdoteView }) {
   return (
     <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-[13px] text-muted">{text.anecdotes.recorded}</span>
         <span className="tabular">
-          <span className="font-semibold text-[20px]">{formatNumber(anecdotes.recorded)}</span>
-          <span className="text-[13px] text-muted"> / {formatNumber(ANECDOTES)}</span>
+          <span className="font-semibold text-[20px]">{formatNumber(view.recorded)}</span>
+          <span className="text-[13px] text-muted"> / {formatNumber(view.total)}</span>
         </span>
       </div>
-      <Bar value={ANECDOTES > 0 ? anecdotes.recorded / ANECDOTES : 0} />
-      <span className="text-[11px] text-muted">{text.anecdotes.detail(anecdotes.inProgress)}</span>
+      <Bar value={view.total > 0 ? view.recorded / view.total : 0} />
+      <span className="text-[11px] text-muted">{text.anecdotes.detail(view.waiting)}</span>
     </div>
   )
 }
 
-type Props = { index: number; progress: number; target: number }
+type Props = { claimed: number; progress: number; target: number; full: boolean }
 
-function Seals({ index, progress, target }: Props) {
-  const full = target > 0 && progress >= target
+function Seals({ claimed, progress, target, full }: Props) {
   return (
     <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
@@ -77,7 +78,11 @@ function Seals({ index, progress, target }: Props) {
         ))}
       </span>
       <span className={cn("text-[11px]", full ? "text-(--gold-fg)" : "text-muted")}>
-        {text.anecdotes.sealsDetail(Math.max(target - progress, 0), index)}
+        {text.anecdotes.sealsDetail(
+          Math.max(target - progress, 0),
+          claimed,
+          ANECDOTE_REWARD.primogems,
+        )}
       </span>
     </div>
   )

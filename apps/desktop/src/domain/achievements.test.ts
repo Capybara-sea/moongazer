@@ -1,0 +1,133 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Capybara_sea
+
+import { describe, expect, it } from "vitest"
+import data from "@/generated/collection.json"
+import type { Achievements } from "./account"
+import {
+  type AchievementInfo,
+  achievementView,
+  descShown,
+  filterCounts,
+  visibleSeries,
+} from "./achievements"
+
+const all: AchievementInfo[] = data.achievements
+
+/** A three-tier series with counts, from the bundled table: its tiers in order. */
+const tiers = (() => {
+  const next = new Map(all.flatMap(a => (a.previous ? [[a.previous, a]] : [])))
+  for (const first of all) {
+    if (first.previous || first.count || first.target <= 1) continue
+    const second = next.get(first.id)
+    const third = second && next.get(second.id)
+    if (second && third) return [first, second, third] as const
+  }
+  throw new Error("no three-tier series in the table")
+})()
+const [one, two, three] = tiers
+const hidden = all.find(a => a.hidden && !a.previous && !next(a.id))
+function next(id: number) {
+  return all.some(a => a.previous === id)
+}
+
+/** Every bundled achievement unfinished at count 0, then the given ones finished or counted. */
+function state(done: number[], counts: Record<number, number> = {}): Achievements {
+  const progress = new Map<number, { current: number; total: number }>()
+  for (const a of all) {
+    if (!done.includes(a.id)) progress.set(a.id, { current: counts[a.id] ?? 0, total: a.target })
+  }
+  return { done: new Map(done.map(id => [id, 1_000])), progress }
+}
+
+const seriesOf = (view: ReturnType<typeof achievementView>, id: number) =>
+  view.series.find(s => s.rows.some(r => r.info.id === id))
+
+describe("achievementView", () => {
+  it("puts a series' tiers in one card, in order", () => {
+    const view = achievementView(state([]))
+    expect(seriesOf(view, two.id)?.rows.map(r => r.info.id)).toEqual([one.id, two.id, three.id])
+    expect(view.total).toBe(all.length)
+    expect(view.done).toBe(0)
+  })
+
+  it("shows a finished tier's count only from the next tier while that is unfinished", () => {
+    const view = achievementView(state([one.id], { [two.id]: 7 }))
+    const rows = seriesOf(view, one.id)?.rows ?? []
+    expect(rows.map(r => [r.done, r.current, r.at])).toEqual([
+      [true, 7, 1_000],
+      [false, 7, undefined],
+      [false, 0, undefined],
+    ])
+    const finished = achievementView(state([one.id, two.id, three.id]))
+    expect(seriesOf(finished, one.id)?.rows.map(r => r.current)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ])
+  })
+
+  it("leaves out tiers the snapshot lists as neither finished nor unfinished", () => {
+    const older = state([one.id])
+    older.progress?.delete(three.id)
+    const view = achievementView(older)
+    expect(seriesOf(view, one.id)?.rows.map(r => r.info.id)).toEqual([one.id, two.id])
+    expect(view.total).toBe(all.length - 1)
+    // Without the list of unfinished ones every tier counts.
+    expect(achievementView({ done: new Map(), progress: null }).total).toBe(all.length)
+  })
+
+  it("counts ids the bundled table lacks as newer, and the primogems earned", () => {
+    const withNew = state([one.id, 9_999_999])
+    withNew.progress?.set(9_999_998, { current: 0, total: 1 })
+    const view = achievementView(withNew)
+    expect(view.newer).toBe(2)
+    expect(view.done).toBe(1)
+    expect(view.primogems.earned).toBe(one.primogems)
+    expect(view.primogems.total).toBe(all.reduce((sum, a) => sum + a.primogems, 0))
+  })
+})
+
+describe("visibleSeries", () => {
+  const view = achievementView(state([one.id], { [two.id]: 7 }))
+  const base = { goal: null, filter: "all" as const, query: "", showHidden: false }
+
+  it("keeps only the tiers that pass the filter", () => {
+    const todo = visibleSeries(view, { ...base, filter: "todo" })
+    expect(todo.find(s => s.rows.some(r => r.info.id === two.id))?.rows.length).toBe(2)
+    const done = visibleSeries(view, { ...base, filter: "done" })
+    expect(done.map(s => s.rows.map(r => r.info.id))).toEqual([[one.id]])
+  })
+
+  it("searches titles, and a hidden one's description only once it shows", () => {
+    expect(visibleSeries(view, { ...base, query: one.title }).length).toBeGreaterThan(0)
+    if (!hidden) throw new Error("no hidden one-tier achievement")
+    const byDesc = { ...base, query: hidden.desc }
+    const found = (shown: boolean) =>
+      visibleSeries(view, { ...byDesc, showHidden: shown }).some(s =>
+        s.rows.some(r => r.info.id === hidden.id),
+      )
+    expect(found(true)).toBe(true)
+    expect(found(false)).toBe(hidden.title.includes(hidden.desc))
+  })
+
+  it("lists only the goal picked, and counts by it", () => {
+    const goal = one.goal
+    const shown = visibleSeries(view, { ...base, goal })
+    expect(shown.every(s => s.goal === goal)).toBe(true)
+    expect(filterCounts(view, goal)).toEqual({
+      all: view.goals.get(goal)?.total,
+      done: 1,
+      todo: (view.goals.get(goal)?.total ?? 0) - 1,
+    })
+  })
+})
+
+describe("descShown", () => {
+  it("hides an unfinished hidden description unless asked", () => {
+    const info = { ...one, hidden: true }
+    expect(descShown({ info, done: false }, false)).toBe(false)
+    expect(descShown({ info, done: false }, true)).toBe(true)
+    expect(descShown({ info, done: true }, false)).toBe(true)
+  })
+})

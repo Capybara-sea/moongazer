@@ -20,7 +20,6 @@ export type Overview = {
   abyss: Record<string, number>
   abyssBlessings: Record<string, Blessing>
   areas: Record<string, Area>
-  anecdotes: number
 }
 
 /** The game's element type ids, as the theater schedule lists them. */
@@ -36,7 +35,7 @@ const ELEMENT_IDS = new Map([
 
 /**
  * AnimeGameData's obfuscated field names change between game versions, so only plain field names
- * are read, and the anecdote table, which has no plain ones, is only counted. The theater's end
+ * are read. The theater's end
  * times and casts are in such fields, and AnimeGameData has no Stygian Onslaught seasons, so these
  * come from Snap.Metadata.
  */
@@ -47,7 +46,7 @@ export async function buildOverview(
 ): Promise<Overview> {
   const load = async (path: string): Promise<Raw[]> =>
     list(JSON.parse(await download(snap.repo, snap.commit, path)), path)
-  const [theater, stygian, pictures, abyss, entities, totals, cities, anecdotes, materials] =
+  const [theater, stygian, pictures, abyss, entities, totals, cities, materials] =
     await Promise.all([
       load("Genshin/CHS/RoleCombatSchedule.json"),
       load("Genshin/CHS/HardChallengeSchedule.json"),
@@ -56,7 +55,6 @@ export async function buildOverview(
       g.table("DungeonLevelEntityConfigData.json"),
       g.table("ExploreAreaTotalExpExcelConfigData.json"),
       g.table("CityConfigData.json"),
-      g.table("AnecdoteExcelConfigData.json"),
       g.table("MaterialExcelConfigData.json"),
     ])
   return {
@@ -71,7 +69,6 @@ export async function buildOverview(
     abyss: Object.fromEntries(abyss.map(row => [num(row, "scheduleId"), abyssOpens(row)])),
     abyssBlessings: blessings(g, abyss, entities),
     areas: areas(totals, cities),
-    anecdotes: anecdotes.length,
   }
 }
 

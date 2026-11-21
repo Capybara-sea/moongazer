@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A Collection page in the side menu.
+- Achievements: by category and series, with counts, primogems and versions, and a Bilibili
+  video search for each.
+- Anecdotes: by character and area, with seals, the fewest days the rest take, and a note when
+  the seal reward waits to be claimed.
+
+### Changed
+
+- The account and auto sync share one block at the bottom of the side menu; the theme is set
+  in Settings.
+
+### Fixed
+
+- The overview counts 156 anecdotes (155 without Lauma) instead of 161, and says new ones wait
+  until the seal reward is claimed.
+
 ## [0.1.1] - 2026-11-21
 
 ### Added

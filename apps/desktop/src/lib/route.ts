@@ -3,7 +3,7 @@
 
 import { useSyncExternalStore } from "react"
 
-/** The page lives in the URL hash: #/home, #/overview, #/characters/<key>. */
+/** The page lives in the URL hash: #/home, #/overview, #/characters/<key>, #/collection/<part>. */
 export const PAGE_KEYS = [
   "home",
   "overview",
@@ -11,6 +11,7 @@ export const PAGE_KEYS = [
   "weapons",
   "artifacts",
   "materials",
+  "collection",
   "settings",
   "about",
 ] as const

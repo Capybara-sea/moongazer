@@ -44,11 +44,22 @@ export type Tasks = {
   abyss?: { start: number; end: number; stars: number; maxStars: number }
 }
 
+export type AnecdoteEntry = { state: number; finishCount: number }
+
 export type Anecdotes = {
-  recorded: number
-  inProgress: number
+  /** By the id the export has, which is a variant's own where the player met a variant. */
+  entries: Map<number, AnecdoteEntry>
+  /** The areas whose page the player has unlocked. */
+  unlockedAreas: Set<number>
   reward?: { index: number; progress: number; target: number }
   lastWish?: number
+}
+
+export type Achievements = {
+  /** Finished ones, with when where the game kept the time. */
+  done: Map<number, number | undefined>
+  /** Every unfinished one with its count; null when the export has no such list. */
+  progress: Map<number, { current: number; total: number }> | null
 }
 
 export type Exploration = {
@@ -92,7 +103,7 @@ export type Account = {
   player?: Player
   /** Characters at friendship 10. */
   maxFriendship?: number
-  achievements?: number
+  achievements?: Achievements
   anecdotes?: Anecdotes
   tasks?: Tasks
   exploration?: Exploration
@@ -167,19 +178,18 @@ function tasks(value: unknown): Tasks | undefined {
 function anecdotes(value: unknown): Anecdotes | undefined {
   const raw = record(value)
   if (!raw) return undefined
-  let recorded = 0
-  let inProgress = 0
-  for (const entry of Object.values(record(raw.anecdotes) ?? {})) {
-    const state = num(record(entry)?.state)
-    // As Capture counts them: recorded once, even if it is running again now.
-    // One running again still waits to be finished.
-    if (state === 3 || count(record(entry)?.finishCount) > 0) recorded++
-    if (state === 2) inProgress++
+  const entries = new Map<number, AnecdoteEntry>()
+  for (const [key, entry] of Object.entries(record(raw.anecdotes) ?? {})) {
+    const id = Number(key)
+    const fields = record(entry)
+    if (!Number.isInteger(id) || !fields) continue
+    entries.set(id, { state: count(fields.state), finishCount: count(fields.finishCount) })
   }
+  const unlocked = (list(raw.unlockedAreas) ?? []).map(num)
   const reward = record(raw.reward)
   return {
-    recorded,
-    inProgress,
+    entries,
+    unlockedAreas: new Set(unlocked.filter((id): id is number => id !== undefined)),
     reward: reward && {
       index: count(reward.index),
       progress: count(reward.progress),
@@ -187,6 +197,28 @@ function anecdotes(value: unknown): Anecdotes | undefined {
     },
     lastWish: ms(record(raw.wish)?.lastWishTime),
   }
+}
+
+function achievements(raw: Json): Achievements | undefined {
+  const ids = list(raw.gi_achievements)
+  if (!ids) return undefined
+  const times = record(raw.gi_achievement_times)
+  const done = new Map<number, number | undefined>()
+  for (const id of ids) {
+    if (typeof id === "number") done.set(id, ms(times?.[String(id)]))
+  }
+  const counts = record(raw.gi_achievement_progress)
+  let progress: Achievements["progress"] = null
+  if (counts) {
+    progress = new Map()
+    for (const [key, entry] of Object.entries(counts)) {
+      const id = Number(key)
+      const fields = record(entry)
+      if (!Number.isInteger(id) || !fields) continue
+      progress.set(id, { current: count(fields.progress), total: count(fields.total) })
+    }
+  }
+  return { done, progress }
 }
 
 function exploration(value: unknown): Exploration | undefined {
@@ -279,7 +311,7 @@ export function parseAccount(value: unknown): Account {
     maxFriendship: record(raw.gi_characters)
       ? [...info.values()].filter(c => c.friendship === 10).length
       : undefined,
-    achievements: list(raw.gi_achievements)?.length,
+    achievements: achievements(raw),
     anecdotes: anecdotes(raw.gi_anecdotes),
     tasks: tasks(raw.gi_tasks),
     exploration: exploration(raw.gi_exploration),

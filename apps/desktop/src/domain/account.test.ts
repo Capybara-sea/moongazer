@@ -50,29 +50,41 @@ describe("parseAccount on a Leyline export", () => {
       gi_achievements: [1, 2, 3],
     })
     expect(account.maxFriendship).toBe(2)
-    expect(account.achievements).toBe(3)
+    expect(account.achievements?.done.size).toBe(3)
     expect(leyline({ gi_characters: {} }).maxFriendship).toBe(0)
   })
 
-  it("counts an anecdote as recorded once it is finished, and as waiting while it runs again", () => {
+  it("reads the achievements with their times and the unfinished ones' counts", () => {
+    const { achievements } = leyline({
+      gi_achievements: [1, 2, "3"],
+      gi_achievement_times: { 1: 1_000 },
+      gi_achievement_progress: { 4: { progress: 3, total: 10 }, 5: { total: 1 }, x: {} },
+    })
+    expect([...(achievements?.done ?? [])]).toEqual([
+      [1, 1_000_000],
+      [2, undefined],
+    ])
+    expect([...(achievements?.progress ?? [])]).toEqual([
+      [4, { current: 3, total: 10 }],
+      [5, { current: 0, total: 1 }],
+    ])
+    expect(leyline({ gi_achievements: [] }).achievements?.progress).toBeNull()
+  })
+
+  it("reads each anecdote's state, the unlocked areas, the seals and the last wish", () => {
     const { anecdotes } = leyline({
       gi_anecdotes: {
-        anecdotes: {
-          1: { state: 3, finishCount: 1 },
-          2: { state: 2, finishCount: 1 },
-          3: { state: 0, finishCount: 2 },
-          4: { state: 3 },
-          5: { state: 2 },
-          6: { state: 2, finishCount: 0 },
-          7: { state: 0 },
-        },
-        unlockedAreas: [1, 2, 3],
+        anecdotes: { 1: { state: 3, finishCount: 1 }, 2: { state: 2 }, x: { state: 3 } },
+        unlockedAreas: [1, 2, "3"],
         reward: { index: 2, progress: 5 },
         wish: { lastWishTime: 1_000 },
       },
     })
-    expect(anecdotes?.recorded).toBe(4)
-    expect(anecdotes?.inProgress).toBe(3)
+    expect([...(anecdotes?.entries ?? [])]).toEqual([
+      [1, { state: 3, finishCount: 1 }],
+      [2, { state: 2, finishCount: 0 }],
+    ])
+    expect([...(anecdotes?.unlockedAreas ?? [])]).toEqual([1, 2])
     expect(anecdotes?.reward).toEqual({ index: 2, progress: 5, target: 0 })
     expect(anecdotes?.lastWish).toBe(1_000_000)
   })

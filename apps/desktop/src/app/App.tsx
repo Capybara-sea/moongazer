@@ -7,6 +7,7 @@ import { AboutPage } from "@/features/about/AboutPage"
 import { UpdateToasts } from "@/features/about/UpdateToasts"
 import { ArtifactsPage } from "@/features/artifacts/ArtifactsPage"
 import { CharactersPage } from "@/features/characters/CharactersPage"
+import { CollectionPage } from "@/features/collection/CollectionPage"
 import { HomePage } from "@/features/home/HomePage"
 import { MaterialsPage } from "@/features/materials/MaterialsPage"
 import { BackgroundEvents } from "@/features/messages/BackgroundEvents"
@@ -28,6 +29,7 @@ export function App() {
           weapons: <WeaponsPage />,
           artifacts: <ArtifactsPage />,
           materials: <MaterialsPage />,
+          collection: <CollectionPage />,
           settings: <SettingsPage />,
           about: <AboutPage />,
         }}

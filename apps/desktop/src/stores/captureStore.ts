@@ -29,6 +29,7 @@ type CaptureState = {
   loadError: string | null
   /** Every batch of changes since the login, oldest first. */
   batches: Batch[]
+  /** The side menu's account and sync panel; it opens without a status too, for the accounts. */
   panelOpen: boolean
   /** A start, stop or restart was sent and its status has not come yet. */
   busy: boolean
@@ -170,7 +171,6 @@ export const useCaptureStore = create<CaptureState>((set, get) => {
     openLog: () => run(openLogDir),
 
     setPanelOpen(open) {
-      if (open && get().status === null) return
       if (open !== get().panelOpen) set({ panelOpen: open })
     },
 

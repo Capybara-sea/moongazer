@@ -27,7 +27,6 @@ type Table = {
   cities: Record<string, { name: string; offerings: number[] }>
   offerings: Record<string, string>
   theaterLevels: Record<string, string>
-  anecdotes: number
 }
 
 const table: Table = data
@@ -81,9 +80,6 @@ export function abyssStart(season: number) {
 export function theaterLevelName(level: number) {
   return table.theaterLevels[String(level)]
 }
-
-/** Anecdotes in the game. */
-export const ANECDOTES = table.anecdotes
 
 export type City = { id: number; name: string; offerings: { id: number; name: string }[] }
 

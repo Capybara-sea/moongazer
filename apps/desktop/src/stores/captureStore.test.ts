@@ -136,12 +136,11 @@ describe("load", () => {
 })
 
 describe("the panel and the changes", () => {
-  it("opens only once there is a status to show", () => {
-    store().setPanelOpen(true)
-    expect(store().panelOpen).toBe(false)
-    store().setStatus(off)
+  it("opens without a status too, for the accounts", () => {
     store().setPanelOpen(true)
     expect(store().panelOpen).toBe(true)
+    store().setPanelOpen(false)
+    expect(store().panelOpen).toBe(false)
   })
 
   it("keeps each batch once, in the order it was read, until they are cleared", () => {

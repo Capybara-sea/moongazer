@@ -15,12 +15,18 @@ const lists = {
   characterInfo: new Map(),
 }
 
+/** `n` finished achievements. */
+const finished = (n: number) => ({
+  done: new Map(Array.from({ length: n }, (_, i) => [i, undefined])),
+  progress: null,
+})
+
 describe("accountStats", () => {
   it("formats every row of a complete account", () => {
     const account: Account = {
       ...lists,
       player: { ar: 60, wl: 9, birthday: { month: 6, day: 1 } },
-      achievements: 1412,
+      achievements: finished(1412),
       maxFriendship: 72,
       tasks: { abyss: { start: 0, end: 1, stars: 36, maxStars: 36 } },
     }
@@ -47,7 +53,7 @@ describe("accountStats", () => {
   })
 
   it("shows zero counts as numbers, not as missing", () => {
-    const stats = accountStats({ ...lists, achievements: 0, maxFriendship: 0 })
+    const stats = accountStats({ ...lists, achievements: finished(0), maxFriendship: 0 })
     expect(stats.achievements).toBe("0")
     expect(stats.maxFriendship).toBe("0")
   })

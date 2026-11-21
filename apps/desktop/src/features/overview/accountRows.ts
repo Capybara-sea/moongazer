@@ -15,7 +15,7 @@ export function accountStats(account: Account) {
   return {
     ar: shown(player?.ar),
     wl: shown(player?.wl),
-    achievements: shown(account.achievements),
+    achievements: shown(account.achievements?.done.size),
     maxFriendship: shown(account.maxFriendship),
     abyss: stars === undefined ? text.number.missing : text.account.abyssStars(stars),
     birthday: birthday

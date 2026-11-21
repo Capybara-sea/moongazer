@@ -1,173 +1,178 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { ListBox, Select } from "@heroui/react"
-import { ChevronDown, UserRound } from "lucide-react"
-import { useId } from "react"
+import { Check, UserRound } from "lucide-react"
+import type { ReactNode } from "react"
 import { ProfileAvatar } from "@/components/ProfileAvatar"
+import type { Tone } from "@/components/StatusDot"
 import { type AccountGroup, liveUid, timeLabel } from "@/domain/accounts"
 import { cn } from "@/lib/cn"
-import { maskUid } from "@/lib/format"
+import { formatDateTime, maskUid } from "@/lib/format"
 import { accountName, useAccountStore } from "@/stores/accountStore"
 import { useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
 import { text } from "@/text/zh"
 
 const t = text.accounts
-const BLOCK =
-  "glass-inset flex h-[52px] w-full items-center gap-2.5 rounded-[10px] border border-border bg-surface-secondary px-2.5 py-2 text-left text-foreground shadow-none"
-const NAME = "truncate font-semibold text-[13px] leading-[1.35]"
+
+const DOT: Record<Tone, string> = {
+  ok: "bg-(--ok)",
+  warn: "bg-(--warn)",
+  bad: "bg-danger",
+  idle: "bg-(--off)",
+}
+
+function useUidText() {
+  const masked = useAppearanceStore(s => s.maskUid)
+  return (g: AccountGroup) =>
+    g.uid === null ? text.number.missing : masked ? maskUid(g.uid) : String(g.uid)
+}
+
+/** The account the pages show: its name, and its UID for a line under it. */
+export function useShownAccount() {
+  const accounts = useAccountStore(s => s.accounts)
+  const group = useAccountStore(s => s.group)
+  const names = useAccountStore(s => s.names)
+  const uidText = useUidText()
+  if (!group) return null
+  return {
+    group,
+    name: accountName(accounts, names, group.token) ?? "",
+    uid: t.uid(uidText(group)),
+  }
+}
+
+type FaceProps = {
+  /** Auto sync's state as a dot on the picture; none without auto sync. */
+  tone: Tone | null
+  /** The line under the name; the account's UID, or before the first snapshot what to do. */
+  line?: ReactNode
+  /** Shows the open arrow. */
+  trailing?: ReactNode
+}
 
 /**
- * The account the account pages show, at the top of the side menu: its
- * profile picture in its frame, the name and the UID, masked as the setting
- * says. With two or more accounts it opens a list to the right to choose
- * another; before the first snapshot it says there is no account yet.
+ * The shown account's picture in its frame, with auto sync's dot in its
+ * corner, the name and a line; before the first snapshot, a placeholder that
+ * says there is no account yet.
  */
-export function AccountSwitcher() {
+export function AccountFace({ tone, line, trailing }: FaceProps) {
+  const shown = useShownAccount()
+  const faces = useAccountStore(s => s.faces)
+  const capture = useCaptureStore(s => s.capture)
+  const face = shown ? faces[shown.group.token] : undefined
+  return (
+    <span className="flex min-w-0 items-center gap-2.5">
+      <span aria-hidden className="relative flex flex-none">
+        {shown ? (
+          <ProfileAvatar
+            picture={face?.picture}
+            frame={face?.frame}
+            label={shown.name}
+            size="small"
+          />
+        ) : (
+          <span className="flex size-8 items-center justify-center rounded-full bg-default text-muted">
+            <UserRound className="size-4" />
+          </span>
+        )}
+        {tone && (
+          <span
+            className={cn(
+              "absolute -right-px -bottom-px size-2.5 rounded-full shadow-[0_0_0_2px_var(--surface-secondary)] transition-colors duration-200 motion-reduce:transition-none",
+              DOT[tone],
+            )}
+          />
+        )}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span title={shown?.name} className="truncate font-semibold text-[13px] leading-[1.35]">
+          {shown ? shown.name : t.none}
+        </span>
+        <span className="truncate text-[11px] text-muted leading-[1.4] tabular">
+          {line ?? (shown ? shown.uid : t.noneHint(capture))}
+        </span>
+      </span>
+      {trailing}
+    </span>
+  )
+}
+
+/**
+ * Every account, the shown one in bold with a check and the one auto sync
+ * reads tagged; picking one shows it and closes the panel.
+ */
+export function AccountList() {
   const accounts = useAccountStore(s => s.accounts)
   const group = useAccountStore(s => s.group)
   const names = useAccountStore(s => s.names)
   const faces = useAccountStore(s => s.faces)
-  const masked = useAppearanceStore(s => s.maskUid)
   const capture = useCaptureStore(s => s.capture)
   const live = useCaptureStore(s => liveUid(s.status))
-  const noteId = useId()
-  if (!group) {
-    return (
-      <div data-rise className="flex flex-col">
-        <div className={BLOCK}>
-          <span
-            aria-hidden
-            className="flex size-8 flex-none items-center justify-center rounded-full bg-default text-muted"
-          >
-            <UserRound className="size-4" />
-          </span>
-          <span className="flex min-w-0 flex-1 flex-col">
-            <span className={NAME}>{t.none}</span>
-            <span className="truncate text-[11px] text-muted leading-[1.4]">
-              {t.noneHint(capture)}
-            </span>
-          </span>
-        </div>
-        <span aria-hidden className="mx-3 my-2 h-px bg-(--separator)" />
-      </div>
-    )
-  }
-  const nameOf = (g: AccountGroup) => accountName(accounts, names, g.token) ?? ""
-  const uidOf = (g: AccountGroup) =>
-    g.uid === null ? text.number.missing : masked ? maskUid(g.uid) : String(g.uid)
-  const timeOf = (g: AccountGroup) => {
-    const newest = g.snapshots[0]
-    return newest ? timeLabel(newest, g.uid !== null && g.uid === live) : text.number.missing
-  }
-  const name = nameOf(group)
-  const face = faces[group.token]
-  const avatar = (
-    <span aria-hidden className="flex">
-      <ProfileAvatar picture={face?.picture} frame={face?.frame} label={name} size="small" />
-    </span>
-  )
-  const uid = (
-    <span className="truncate text-[11px] text-muted leading-[1.4] tabular">
-      {t.uid(uidOf(group))}
-    </span>
-  )
-
+  const uidText = useUidText()
   return (
-    <div data-rise className="flex flex-col">
-      {accounts.length < 2 ? (
-        <div className={BLOCK}>
-          {avatar}
-          <span className="flex min-w-0 flex-1 flex-col">
-            <span title={name} className={NAME}>
-              {name}
-            </span>
-            {uid}
-          </span>
-        </div>
-      ) : (
-        <Select
-          aria-label={t.pick}
-          value={group.token}
-          onChange={key => {
-            if (key !== null) useAccountStore.getState().selectAccount(Number(key))
-          }}
-          className="group"
-        >
-          <Select.Trigger
-            className={cn(
-              BLOCK,
-              "cursor-pointer transition-colors duration-150 ease-out hover:bg-default/60 group-data-open:border-accent motion-reduce:transition-none",
-            )}
-          >
-            {avatar}
-            <span className="flex min-w-0 flex-1 flex-col">
-              <Select.Value title={name} className={NAME}>
-                {name}
-              </Select.Value>
-              {uid}
-            </span>
-            <ChevronDown
-              aria-hidden
-              className="size-3.5 flex-none text-muted transition-transform duration-150 ease-out group-data-open:rotate-180 motion-reduce:transition-none"
-            />
-          </Select.Trigger>
-          {/* Beside the side menu, level with the block; blurred under glass. */}
-          <Select.Popover
-            placement="right top"
-            offset={16}
-            maxHeight={360}
-            className="glass w-[360px] rounded-[12px] border border-border bg-(--overlay-glass,var(--overlay)) shadow-(--pop-shadow) motion-reduce:animate-none"
-          >
-            <ListBox aria-describedby={capture ? noteId : undefined}>
-              {accounts.map(item => {
-                const itemName = nameOf(item)
-                const itemFace = faces[item.token]
-                return (
-                  <ListBox.Item
-                    key={item.token}
-                    id={item.token}
-                    textValue={itemName}
-                    className="min-h-12 gap-2.5 rounded-[8px] text-[13px]"
-                  >
-                    <span aria-hidden className="flex">
-                      <ProfileAvatar
-                        picture={itemFace?.picture}
-                        frame={itemFace?.frame}
-                        label={itemName}
-                        size="small"
-                      />
+    <div className="flex flex-col gap-0.5 p-3 pb-1.5">
+      <span className="px-2.5 pb-1 text-[11px] text-muted tracking-[0.08em]">{t.title}</span>
+      <ul aria-label={t.pick} className="flex flex-col gap-0.5">
+        {accounts.map(item => {
+          const name = accountName(accounts, names, item.token) ?? ""
+          const face = faces[item.token]
+          const current = item.token === group?.token
+          const syncing = item.uid !== null && item.uid === live
+          const newest = item.snapshots[0]
+          return (
+            <li key={item.token}>
+              <button
+                type="button"
+                aria-current={current ? "true" : undefined}
+                onClick={() => {
+                  useAccountStore.getState().selectAccount(item.token)
+                  useCaptureStore.getState().setPanelOpen(false)
+                }}
+                className={cn(
+                  "flex min-h-12 w-full cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 text-left text-[13px] transition-colors duration-150 motion-reduce:transition-none",
+                  current ? "bg-(--accent-soft)" : "hover:bg-default/60",
+                )}
+              >
+                <span aria-hidden className="flex">
+                  <ProfileAvatar
+                    picture={face?.picture}
+                    frame={face?.frame}
+                    label={name}
+                    size="small"
+                  />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span title={name} className={cn("truncate", current && "font-semibold")}>
+                      {name}
                     </span>
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span
-                        title={itemName}
-                        className={cn("truncate", item.token === group.token && "font-semibold")}
-                      >
-                        {itemName}
+                    {syncing && (
+                      <span className="flex-none rounded-full bg-[color-mix(in_srgb,var(--ok)_20%,transparent)] px-1.5 text-(--ok) text-[10px] leading-4">
+                        {t.syncing}
                       </span>
-                      <span className="truncate text-[12px] text-muted tabular">
-                        {t.meta(uidOf(item), timeOf(item))}
-                      </span>
-                    </span>
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
-                )
-              })}
-            </ListBox>
-            {/* Only auto sync follows the login. */}
-            {capture && (
-              <>
-                <span aria-hidden className="mx-2.5 mb-1.5 block h-px bg-(--separator)" />
-                <p id={noteId} className="px-4 pb-3 text-[12px] text-muted leading-[1.6]">
-                  {t.follows}
-                </p>
-              </>
-            )}
-          </Select.Popover>
-        </Select>
-      )}
-      <span aria-hidden className="mx-3 my-2 h-px bg-(--separator)" />
+                    )}
+                  </span>
+                  <span className="truncate text-[11px] text-muted tabular">
+                    {t.meta(
+                      uidText(item),
+                      // The tag says it is read live; the time stays a time.
+                      !newest
+                        ? text.number.missing
+                        : syncing
+                          ? formatDateTime(newest.takenAt)
+                          : timeLabel(newest),
+                    )}
+                  </span>
+                </span>
+                {current && <Check aria-hidden className="size-4 flex-none text-(--accent-text)" />}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      {/* Only auto sync follows the login. */}
+      {capture && <p className="px-2.5 pt-1 text-[11px] text-muted">{t.follows}</p>}
     </div>
   )
 }

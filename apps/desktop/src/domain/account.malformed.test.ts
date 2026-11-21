@@ -39,7 +39,7 @@ describe("parseAccount on malformed input", () => {
     expect(account.player?.birthday).toBeUndefined()
     expect(account.maxFriendship).toBeUndefined()
     expect(account.achievements).toBeUndefined()
-    expect(account.anecdotes?.recorded).toBe(0)
+    expect(account.anecdotes?.entries.size).toBe(0)
     expect(account.anecdotes?.reward).toBeUndefined()
     expect(account.anecdotes?.lastWish).toBeUndefined()
     const friends = leyline({ gi_characters: { A: null, B: "10", C: { friendship: "10" } } })

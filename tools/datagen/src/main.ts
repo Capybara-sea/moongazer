@@ -3,15 +3,17 @@
 
 // Writes apps/desktop/src/generated/names.json, the Chinese names, rarities, icons, set effects,
 // material types, constellations and weapon passives of game items by GOOD key; overview.json, the
-// game data the overview page needs; and builds.json, constellation talent boosts, artifact main
-// stat values and what character stats are computed from; from the commits pinned in
-// sources.json. `--update` first moves the pins to the latest commits.
+// game data the overview page needs; builds.json, constellation talent boosts, artifact main stat
+// values and what character stats are computed from; and collection.json, the achievements and
+// anecdotes; from the commits pinned in sources.json. `--update` first moves the pins to the
+// latest commits.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { join, relative } from "node:path"
 import { characters, game, manualCharacters, materials, sets, weapons } from "./agdItems.ts"
 import { buildProfiles, LANGUAGE, textMap } from "./animeGameData.ts"
 import { type Builds, buildBuilds } from "./builds.ts"
+import { buildCollection } from "./collection.ts"
 import { latestCommit } from "./download.ts"
 import { cities, offerings, theaterLevels, travelerNames } from "./manual.ts"
 import { crossCheck } from "./optimizer.ts"
@@ -42,6 +44,10 @@ const BUILDS_MINIMUM: Record<keyof Builds, number> = {
   weaponCurves: 10,
   setBonuses: 30,
 }
+const COLLECTION_MINIMUM: Record<string, number> = {
+  achievementGoals: 70,
+  achievements: 1800,
+}
 const OVERVIEW_MINIMUM: Record<keyof Overview, number> = {
   profilePictures: 150,
   nameCards: 250,
@@ -52,7 +58,6 @@ const OVERVIEW_MINIMUM: Record<keyof Overview, number> = {
   abyss: 100,
   abyssBlessings: 100,
   areas: 60,
-  anecdotes: 100,
 }
 
 const args = process.argv.slice(2)
@@ -85,6 +90,7 @@ const { tables, ids } = buildTables({
 })
 const optimizer = sources.genshinOptimizer
 await crossCheck(optimizer.repo, optimizer.commit, tables)
+const collection = await buildCollection(sources.snapMetadata, agd, characterKeys(tables))
 for (const [key, entry] of Object.entries(await manualCharacters(agd, profiles, travelerNames))) {
   if (key in tables.characters) throw new Error(`manual character ${key} is also in the game's`)
   tables.characters[key] = entry
@@ -95,6 +101,7 @@ const builds = await buildBuilds(agd, ids)
 const namesCounts = count(tables, MINIMUM)
 const overviewCounts = count(overview, OVERVIEW_MINIMUM)
 const buildsCounts = count(builds, BUILDS_MINIMUM)
+const collectionCounts = count(collection, COLLECTION_MINIMUM)
 
 await mkdir(OUTPUT, { recursive: true })
 await write("names.json", namesCounts, {
@@ -113,6 +120,25 @@ await write("overview.json", overviewCounts, {
   theaterLevels,
 })
 await write("builds.json", buildsCounts, builds)
+await write("collection.json", collectionCounts, {
+  sources: {
+    snapMetadata: sources.snapMetadata.commit,
+    animeGameData: sources.animeGameData.commit,
+  },
+  ...collection,
+})
+
+/** GOOD keys by Chinese name, of the game's characters; a name two share is left out. */
+function characterKeys(tables: Tables): Map<string, string> {
+  const keys = new Map<string, string>()
+  const shared = new Set<string>()
+  for (const [key, entry] of Object.entries(tables.characters)) {
+    if (keys.has(entry.name)) shared.add(entry.name)
+    keys.set(entry.name, key)
+  }
+  for (const name of shared) keys.delete(name)
+  return keys
+}
 
 function count(output: object, minimum: Record<string, number>): string {
   return Object.entries(output)

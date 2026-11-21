@@ -31,7 +31,6 @@ export const achievementPage = {
   allGoals: "全部分类",
   goalInfo: (done: number, total: number) => `${n(done)} / ${n(total)} 已完成`,
   hidden: "隐藏",
-  hiddenDesc: "隐藏成就：完成后才显示描述",
   done: "已完成",
   notDone: "未完成",
   primogems: (count: number) => `原石 ${count}`,

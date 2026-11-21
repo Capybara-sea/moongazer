@@ -4,7 +4,7 @@
 import { toast } from "@heroui/react"
 import { Check, Search } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
-import { type AchievementRow, type AchievementSeries, descShown } from "@/domain/achievements"
+import type { AchievementRow, AchievementSeries } from "@/domain/achievements"
 import { lookup } from "@/domain/names"
 import { openVideoSearch, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
@@ -107,17 +107,7 @@ function Tier({ row, lead, quest, goalName, version }: TierProps) {
           )}
           {lead && <SearchButton title={info.title} />}
         </span>
-        {descShown(row) ? (
-          <span className="text-[13px] text-muted">{info.desc}</span>
-        ) : (
-          // Blurred in place, so the row keeps its look; screen readers get the note instead.
-          <span title={t.hiddenDesc} className="text-[13px] text-muted">
-            <span aria-hidden className="pointer-events-none select-none blur-[5px]">
-              {info.desc}
-            </span>
-            <span className="sr-only">{t.hiddenDesc}</span>
-          </span>
-        )}
+        <span className="text-[13px] text-muted">{info.desc}</span>
       </span>
       <span className="flex flex-col items-end gap-0.5 text-right text-[12px] text-muted tabular">
         {count && <span>{count}</span>}

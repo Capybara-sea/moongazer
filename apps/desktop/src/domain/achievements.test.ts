@@ -4,13 +4,7 @@
 import { describe, expect, it } from "vitest"
 import data from "@/generated/collection.json"
 import type { Achievements } from "./account"
-import {
-  type AchievementInfo,
-  achievementView,
-  descShown,
-  filterCounts,
-  visibleSeries,
-} from "./achievements"
+import { type AchievementInfo, achievementView, filterCounts, visibleSeries } from "./achievements"
 
 const all: AchievementInfo[] = data.achievements
 
@@ -99,7 +93,7 @@ describe("visibleSeries", () => {
     expect(done.map(s => s.rows.map(r => r.info.id))).toEqual([[one.id]])
   })
 
-  it("searches titles, and a hidden one's description only once it is done", () => {
+  it("searches titles and descriptions, a hidden one's too", () => {
     expect(visibleSeries(view, { ...base, query: one.title }).length).toBeGreaterThan(0)
     if (!hidden) throw new Error("no hidden one-tier achievement")
     const found = (done: boolean) =>
@@ -108,7 +102,7 @@ describe("visibleSeries", () => {
         query: hidden.desc,
       }).some(s => s.rows.some(r => r.info.id === hidden.id))
     expect(found(true)).toBe(true)
-    expect(found(false)).toBe(hidden.title.includes(hidden.desc))
+    expect(found(false)).toBe(true)
   })
 
   it("leaves out unfinished hidden tiers when asked, not finished ones", () => {
@@ -132,14 +126,5 @@ describe("visibleSeries", () => {
       done: 1,
       todo: (view.goals.get(goal)?.total ?? 0) - 1,
     })
-  })
-})
-
-describe("descShown", () => {
-  it("covers an unfinished hidden description only", () => {
-    const info = { ...one, hidden: true }
-    expect(descShown({ info, done: false })).toBe(false)
-    expect(descShown({ info, done: true })).toBe(true)
-    expect(descShown({ info: one, done: false })).toBe(true)
   })
 })

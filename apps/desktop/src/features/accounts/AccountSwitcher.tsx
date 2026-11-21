@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn"
 import { formatDateTime, maskUid } from "@/lib/format"
 import { accountName, useAccountStore } from "@/stores/accountStore"
 import { useAppearanceStore } from "@/stores/appearanceStore"
-import { useCaptureStore } from "@/stores/captureStore"
+import { syncOn, useCaptureStore } from "@/stores/captureStore"
 import { text } from "@/text/zh"
 
 const t = text.accounts
@@ -60,6 +60,7 @@ export function AccountFace({ tone, line, trailing }: FaceProps) {
   const shown = useShownAccount()
   const faces = useAccountStore(s => s.faces)
   const capture = useCaptureStore(s => s.capture)
+  const on = useCaptureStore(syncOn)
   const face = shown ? faces[shown.group.token] : undefined
   return (
     <span className="flex min-w-0 items-center gap-2.5">
@@ -90,7 +91,7 @@ export function AccountFace({ tone, line, trailing }: FaceProps) {
           {shown ? shown.name : t.none}
         </span>
         <span className="truncate text-[11px] text-muted leading-[1.4] tabular">
-          {line ?? (shown ? shown.uid : t.noneHint(capture))}
+          {line ?? (shown ? shown.uid : t.noneHint(capture, on))}
         </span>
       </span>
       {trailing}

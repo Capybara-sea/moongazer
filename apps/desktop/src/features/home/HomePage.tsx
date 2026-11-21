@@ -12,6 +12,7 @@ import { type AccountGroup, liveUid } from "@/domain/accounts"
 import { ImportButton } from "@/features/overview/ImportButton"
 import { describeChange, sourceLabel } from "@/features/overview/RecentSnapshots"
 import { historyItems } from "@/features/overview/sessions"
+import { useSyncSide } from "@/features/sync/SyncCard"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatWhen } from "@/lib/format"
@@ -60,26 +61,30 @@ function Next() {
 }
 
 function FirstSteps() {
-  const capture = useCaptureStore(s => s.capture)
-  const off = useCaptureStore(s => s.status?.phase === "off")
-  // Auto sync comes first where it can start; importing a file is the way round.
-  const sync = capture && off
+  const phase = useCaptureStore(s => s.status?.phase ?? null)
+  // Auto sync comes first where it can start, and stays first once it is on;
+  // importing a file is the way round.
+  const sync = phase !== null
   return (
     <div className="first-steps flex flex-col items-center gap-3">
       {sync && (
         <>
-          <Button
-            variant="primary"
-            onPress={() => {
-              const store = useCaptureStore.getState()
-              store.setPanelOpen(true)
-              void store.start()
-            }}
-            className="h-[38px] gap-2 rounded-[9px] px-4 font-medium text-[13px]"
-          >
-            <RefreshCw aria-hidden className="m-0 size-4" />
-            {t.startSync}
-          </Button>
+          {phase === "off" ? (
+            <Button
+              variant="primary"
+              onPress={() => {
+                const store = useCaptureStore.getState()
+                store.setPanelOpen(true)
+                void store.start()
+              }}
+              className="h-[38px] gap-2 rounded-[9px] px-4 font-medium text-[13px]"
+            >
+              <RefreshCw aria-hidden className="m-0 size-4" />
+              {t.startSync}
+            </Button>
+          ) : (
+            <SyncStage />
+          )}
           <div className="flex w-56 items-center gap-3 text-[12px] text-muted">
             <span aria-hidden className="h-px flex-1 bg-(--separator)" />
             {t.or}
@@ -89,6 +94,31 @@ function FirstSteps() {
       )}
       <ImportButton label={t.importFile} quiet={sync} />
     </div>
+  )
+}
+
+/**
+ * Where the start button was, once auto sync is on: its stage, and what comes
+ * next or what is wrong. It opens the sync panel.
+ */
+function SyncStage() {
+  const status = useCaptureStore(s => s.status)
+  const { side } = useSyncSide(null)
+  if (!status || !side) return null
+  const waiting =
+    (status.phase === "waitingGame" || status.phase === "waitingLogin") && status.problem === null
+  return (
+    <button
+      type="button"
+      title={t.openSync}
+      onClick={() => useCaptureStore.getState().setPanelOpen(true)}
+      className="flex max-w-full cursor-pointer flex-col items-center gap-1 rounded-[10px] px-4 py-2 transition-colors duration-150 hover:bg-default/60 motion-reduce:transition-none"
+    >
+      <StatusDot tone={side.tone} halo className="font-medium">
+        {t.syncStage(side.label)}
+      </StatusDot>
+      <span className="text-[12px] text-muted">{waiting ? t.firstSnapshot : side.line}</span>
+    </button>
   )
 }
 

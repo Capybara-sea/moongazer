@@ -14,9 +14,9 @@ import { ViewToggle } from "@/components/ViewToggle"
 import type { Account } from "@/domain/account"
 import { ELEMENT_ICONS, ELEMENTS } from "@/domain/elements"
 import { characterData } from "@/domain/names"
+import { useEmptyBody } from "@/features/overview/emptyBody"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
-import { useCaptureStore } from "@/stores/captureStore"
 import {
   type CharacterSort,
   type CharacterView,
@@ -45,7 +45,7 @@ const VIEWS: readonly { value: CharacterView; label: string; icon: LucideIcon }[
 export function CharacterList() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
-  const capture = useCaptureStore(s => s.capture)
+  const emptyBody = useEmptyBody()
   const { snapshot, entry, account } = useCurrentAccount()
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-4 p-6">
@@ -58,9 +58,7 @@ export function CharacterList() {
         )}
       </div>
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
-      {snapshots?.length === 0 && (
-        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody(capture)} />
-      )}
+      {snapshots?.length === 0 && <Notice title={text.overview.emptyTitle} detail={emptyBody} />}
       {snapshot && (!snapshot.hasRaw || entry?.status === "summaryOnly") && (
         <Notice title={text.snapshot.summaryOnly} />
       )}

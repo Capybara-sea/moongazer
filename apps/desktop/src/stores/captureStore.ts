@@ -57,6 +57,10 @@ type CaptureState = {
   setAutoStart: (on: boolean) => Promise<void>
 }
 
+/** Whether auto sync is on: started and not stopped, whatever stage it is at. */
+export const syncOn = (s: { status: CaptureStatus | null }) =>
+  s.status !== null && s.status.phase !== "off"
+
 type Outcome = (status: CaptureStatus) => boolean
 
 /**

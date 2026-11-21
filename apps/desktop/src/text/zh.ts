@@ -33,8 +33,8 @@ const stats: Record<string, string> = {
   geo_dmg_: "岩元素伤害加成",
 }
 
-/** The overview empty state's last line, where auto sync exists. */
-const syncStart = "也可以开启侧边栏底部的自动同步：登录游戏时自动读取账号数据、保存快照。"
+/** How to import, in the pages' line before the first snapshot. */
+const importHint = "在“总览”点“导入文件”，选 Leyline 文件（可以一次选多个）"
 
 /** The third-party licenses page's groups, by their id in generated/notices.json. */
 const licenseGroups: Record<string, string> = {
@@ -70,6 +70,10 @@ export const text = {
   home: {
     title: "欢迎使用望月",
     startSync: "开始同步",
+    /** In place of the start button once auto sync is on, with its stage. */
+    syncStage: (stage: string) => `自动同步 · ${stage}`,
+    firstSnapshot: "进入提瓦特后会自动存下第一份快照",
+    openSync: "查看自动同步",
     or: "或",
     importFile: "导入 Leyline 文件",
     latest: "最新快照",
@@ -82,8 +86,12 @@ export const text = {
     importFile: "导入文件",
     importing: (done: number, total: number) => `正在导入 ${done}/${total}…`,
     emptyTitle: "还没有快照",
-    emptyBody: (capture: boolean) =>
-      `在“总览”点“导入文件”，选 Leyline 文件（可以一次选多个），就能看到账号数据。${capture ? syncStart : ""}`,
+    emptyBody: (capture: boolean, syncOn: boolean) =>
+      !capture
+        ? `${importHint}，就能看到账号数据。`
+        : syncOn
+          ? `自动同步已开启，进入提瓦特后会自动保存第一份快照。也可以${importHint}。`
+          : `在首页点“开始同步”，登录游戏时会自动读取账号数据、保存快照；也可以${importHint}。`,
     loadFailed: "读取快照失败",
     recent: "最近快照",
     showAll: "全部",
@@ -162,7 +170,8 @@ export const text = {
     meta: (uid: string, at: string) => `UID ${uid} · ${at}`,
     follows: "游戏登录时自动切换账号",
     none: "无账号",
-    noneHint: (capture: boolean) => (capture ? "先导入或同步" : "先导入文件"),
+    noneHint: (capture: boolean, syncOn: boolean) =>
+      !capture ? "先导入文件" : syncOn ? "等第一次同步" : "先导入或同步",
   },
   tiles: {
     label: "数量",

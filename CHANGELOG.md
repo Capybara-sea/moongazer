@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The overview counts 156 anecdotes (155 without Lauma) instead of 161, and says new ones wait
   until the seal reward is claimed.
+- Before the first snapshot, the home page shows auto sync's stage once it is on, and the pages
+  no longer suggest turning it on again.
 
 ## [0.1.1] - 2026-11-21
 

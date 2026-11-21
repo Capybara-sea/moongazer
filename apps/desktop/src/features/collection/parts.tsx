@@ -4,9 +4,9 @@
 import { Button, Popover } from "@heroui/react"
 import type { ReactNode } from "react"
 import { Notice } from "@/components/Notice"
+import { useEmptyBody } from "@/features/overview/emptyBody"
 import { navigate } from "@/lib/route"
 import { useCurrentAccount } from "@/stores/accountStore"
-import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 
@@ -34,14 +34,12 @@ export function BackLink() {
 export function AccountNotices() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
-  const capture = useCaptureStore(s => s.capture)
+  const emptyBody = useEmptyBody()
   const { snapshot, entry } = useCurrentAccount()
   return (
     <>
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
-      {snapshots?.length === 0 && (
-        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody(capture)} />
-      )}
+      {snapshots?.length === 0 && <Notice title={text.overview.emptyTitle} detail={emptyBody} />}
       {snapshot && (!snapshot.hasRaw || entry?.status === "summaryOnly") && (
         <Notice title={text.snapshot.summaryOnly} />
       )}

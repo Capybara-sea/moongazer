@@ -6,7 +6,6 @@ import { Notice } from "@/components/Notice"
 import type { Account } from "@/domain/account"
 import { isHead, type Snapshot } from "@/lib/backend"
 import { useCurrentSnapshot } from "@/stores/accountStore"
-import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 import { AccountCard } from "./AccountCard"
@@ -16,6 +15,7 @@ import { CollectionGrid } from "./CollectionGrid"
 import { ConfirmImport } from "./ConfirmImport"
 import { CountTiles } from "./CountTiles"
 import { DailyCard } from "./DailyCard"
+import { useEmptyBody } from "./emptyBody"
 import { ImportButton } from "./ImportButton"
 import { ImportResults } from "./ImportResults"
 import { MonthTable } from "./MonthTable"
@@ -33,7 +33,7 @@ import { TrendChart } from "./TrendChart"
 export function OverviewPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
-  const capture = useCaptureStore(s => s.capture)
+  const emptyBody = useEmptyBody()
   const current = useCurrentSnapshot()
   // The page keeps showing the previous snapshot until the next one's export
   // is read, so cards do not vanish and rise again, moving everything below.
@@ -59,9 +59,7 @@ export function OverviewPage() {
       <ImportResults />
       {snapshots && <ReviewNotices snapshots={snapshots} />}
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
-      {snapshots?.length === 0 && (
-        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody(capture)} />
-      )}
+      {snapshots?.length === 0 && <Notice title={text.overview.emptyTitle} detail={emptyBody} />}
       {snapshot && list && (
         <>
           {/*

@@ -8,11 +8,11 @@ import { FilterChip } from "@/components/FilterChip"
 import { Notice } from "@/components/Notice"
 import { SearchBox } from "@/components/SearchBox"
 import { MATERIAL_TABS, type MaterialTab } from "@/domain/names"
+import { useEmptyBody } from "@/features/overview/emptyBody"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { useBatches } from "@/lib/useBatches"
 import { useCurrentAccount, usePreviousAccount } from "@/stores/accountStore"
-import { useCaptureStore } from "@/stores/captureStore"
 import { useMaterialListStore } from "@/stores/materialListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
@@ -39,7 +39,7 @@ const Card = memo(MaterialCard)
 export function MaterialsPage() {
   const snapshots = useSnapshotStore(s => s.snapshots)
   const loadError = useSnapshotStore(s => s.loadError)
-  const capture = useCaptureStore(s => s.capture)
+  const emptyBody = useEmptyBody()
   const { snapshot, entry, account } = useCurrentAccount()
   const previous = usePreviousAccount()
   // An older export without materials has nothing to compare with.
@@ -68,9 +68,7 @@ export function MaterialsPage() {
         {rows && rows.length > 0 && <Toolbar hasCompared={hasCompared} />}
       </div>
       {loadError && !snapshots && <Notice title={text.overview.loadFailed} detail={loadError} />}
-      {snapshots?.length === 0 && (
-        <Notice title={text.overview.emptyTitle} detail={text.overview.emptyBody(capture)} />
-      )}
+      {snapshots?.length === 0 && <Notice title={text.overview.emptyTitle} detail={emptyBody} />}
       {snapshot && (!snapshot.hasRaw || entry?.status === "summaryOnly") && (
         <Notice title={text.snapshot.summaryOnly} />
       )}

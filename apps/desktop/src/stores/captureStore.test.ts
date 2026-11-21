@@ -10,7 +10,7 @@ import {
   getSyncSettings,
   startCapture,
 } from "@/lib/backend/sync"
-import { useCaptureStore } from "./captureStore"
+import { syncOn, useCaptureStore } from "./captureStore"
 
 vi.mock("@/lib/backend", async importOriginal => ({
   ...(await importOriginal<object>()),
@@ -132,6 +132,25 @@ describe("load", () => {
     await store().load()
     store().setStatus(waitingGame)
     expect(store()).toMatchObject({ autoStart: null, loadError: "gone" })
+  })
+})
+
+describe("syncOn", () => {
+  it("is on from the start until it is off again, whatever the stage or problem", () => {
+    for (const status of [
+      starting,
+      waitingGame,
+      connected,
+      { ...connected, phase: "interrupted" as const },
+    ]) {
+      expect(syncOn({ status })).toBe(true)
+    }
+  })
+
+  it("is off before the status is read, and when off with or without a problem", () => {
+    expect(syncOn({ status: null })).toBe(false)
+    expect(syncOn({ status: off })).toBe(false)
+    expect(syncOn({ status: declined })).toBe(false)
   })
 })
 

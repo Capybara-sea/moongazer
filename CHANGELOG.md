@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hover tips use the app's own popup instead of the system's.
 - Icons sit on the game's rarity colors, easier to tell apart.
 
+### Fixed
+
+- The overview's daily card no longer says "not read" for full resin, or for commissions on
+  days the sync could not tell the count from the region.
+
 ## [0.2.0] - 2026-11-21
 
 ### Added

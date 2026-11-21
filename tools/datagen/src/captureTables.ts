@@ -13,6 +13,9 @@
 // Which tables to fetch is read from upstream's own pinned set, so the list follows the upstream
 // version that is linked. Its scene point files are not taken from there: which scenes exist
 // depends on the game version, so they are worked out from this data set as the crate does.
+//
+// Beside them it writes `<out>/commission-cities.json`, the city of every daily commission by id,
+// for Moongazer's own decoder (`capture/commissions.rs`); upstream's crate does not read it.
 
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
@@ -22,6 +25,9 @@ import { list, record } from "./tables.ts"
 
 const POINTS = "BinOutput/Scene/Point/"
 const AREAS = "ExcelBinOutput/WorldAreaConfigData.json"
+const COMMISSIONS = "ExcelBinOutput/DailyTaskExcelConfigData.json"
+/** About half of the 692 commissions 7.2 has: fewer means a field was renamed. */
+const MIN_COMMISSIONS = 300
 
 const [upstreamManifest, out] = process.argv.slice(2)
 if (!upstreamManifest || !out || process.argv.length !== 4) {
@@ -58,8 +64,18 @@ const points = await Promise.all(
   }),
 )
 
+const cities: Record<number, number> = {}
+for (const row of list(JSON.parse(await download(repo, commit, COMMISSIONS)), COMMISSIONS)) {
+  if (typeof row.id === "number" && typeof row.cityId === "number") cities[row.id] = row.cityId
+}
+const commissions = Object.keys(cities).length
+if (commissions < MIN_COMMISSIONS)
+  throw new Error(`${COMMISSIONS}: only ${commissions} cities read`)
+await writeFile(join(out, "commission-cities.json"), `${JSON.stringify(cities)}\n`)
+
 // The crate takes the id for the data set's name and requires 40 hex digits, as a commit id is.
 await writeFile(join(out, "manifest.json"), `${JSON.stringify({ id: commit })}\n`)
 console.log(
-  `${tables.length} tables and ${points.filter(Boolean).length} scene point files of ${repo}@${commit}`,
+  `${tables.length} tables, ${points.filter(Boolean).length} scene point files and ` +
+    `${commissions} commission cities of ${repo}@${commit}`,
 )

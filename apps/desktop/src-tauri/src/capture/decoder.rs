@@ -8,6 +8,8 @@
 
 //! The decoder: Ethernet frames in, the account as a Leyline export out.
 
+use std::collections::HashMap;
+
 use anyhow::Result;
 use teyvatme_core::decode::{
     self, DataReplacement, DataVerdict, KeyReport, SnifferEvent, SnifferStats,
@@ -19,6 +21,7 @@ use teyvatme_protocol::{CommandMatch, ConnectionPacket, GamePacket, GameSniffer,
 use tokio::sync::mpsc;
 
 use super::anecdotes::Book;
+use super::commissions;
 use super::pack::Pack;
 
 /// What the export names as its source, in place of upstream's own name.
@@ -39,6 +42,7 @@ pub struct Decoder {
     player_data: PlayerData,
     /// The login's Travel Accounts book, kept up to date while playing.
     book: Option<Book>,
+    commission_cities: HashMap<u32, u32>,
 }
 
 /// What one frame did.
@@ -101,6 +105,7 @@ impl Decoder {
             replacement: DataReplacement::default(),
             player_data: PlayerData::new(pack.game_data).with_game_data_sha(Some(&pack.data_id)),
             book: None,
+            commission_cities: pack.commission_cities,
         }
     }
 
@@ -156,6 +161,7 @@ impl Decoder {
             fed.session_traffic = true;
         }
         let mut classified = decode::classify_commands(&commands);
+        commissions::fill_in(&mut classified, &commands, &self.commission_cities);
         // Wish history messages are not account data, and the wish key among
         // them is as good as a password: dropped unread. Only the client's
         // version is looked at, for which server this is.
@@ -260,8 +266,6 @@ impl Decoder {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     use teyvatme_game_data::AnimeGameData;
 
     use super::*;
@@ -272,6 +276,7 @@ mod tests {
             keys: HashMap::new(),
             game_data: AnimeGameData::new(),
             data_id: String::new(),
+            commission_cities: HashMap::new(),
         });
         let fed = decoder.feed(vec![0; 64], 0);
         assert!(!fed.data && !fed.connection && !fed.one_way);

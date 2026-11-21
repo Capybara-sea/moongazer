@@ -8,6 +8,7 @@
  * Times are converted from unix seconds to milliseconds.
  */
 
+import { RESIN_CAP } from "./daily"
 import {
   type Artifact,
   artifacts,
@@ -141,7 +142,8 @@ function player(value: unknown): Player | undefined {
   }
 }
 
-function tasks(value: unknown): Tasks | undefined {
+/** `heldResin` is the player's resin, as at login or the last change. */
+function tasks(value: unknown, heldResin: number | undefined): Tasks | undefined {
   const raw = record(value)
   if (!raw) return undefined
   const resin = record(raw.resin)
@@ -156,7 +158,13 @@ function tasks(value: unknown): Tasks | undefined {
   const start = ms(abyss?.start)
   const end = ms(abyss?.end)
   return {
-    resin: resin && { value: count(resin.value), nextAt: ms(resin.nextAt) },
+    // At the cap no next point comes, so the game sends no time and Capture
+    // leaves the clock out; full resin stays full until spent.
+    resin: resin
+      ? { value: count(resin.value), nextAt: ms(resin.nextAt) }
+      : heldResin !== undefined && heldResin >= RESIN_CAP
+        ? { value: heldResin }
+        : undefined,
     commissions: commissions && {
       finished: count(commissions.finished),
       total: count(commissions.total),
@@ -317,7 +325,7 @@ export function parseAccount(value: unknown): Account {
       : undefined,
     achievements: achievements(raw),
     anecdotes: anecdotes(raw.gi_anecdotes),
-    tasks: tasks(raw.gi_tasks),
+    tasks: tasks(raw.gi_tasks, num(record(raw.gi_player)?.resin)),
     exploration: exploration(raw.gi_exploration),
     endgame: endgame(raw.gi_endgame),
     collections: collections(raw),

@@ -10,6 +10,8 @@
 //!   AnimeGameData's tables at the commit pinned in
 //!   `tools/datagen/sources.json`, so a new game version does not wait for an
 //!   upstream release.
+//! - `commission-cities.json`: the city of every daily commission, from the
+//!   same data set, which upstream's crate has no table for.
 //! - `pack.json`: the upstream source, the data set's id (that commit) and
 //!   the SHA-256 of the keys. The database is written from hash maps and
 //!   differs byte for byte on every run, so it has no checksum of its own.
@@ -116,6 +118,10 @@ pub fn run(root: &Path) -> Result<()> {
     std::io::Write::write_all(&mut gz, &json)?;
     gz.finish()?;
     fs::write(out.join("gi.json"), &keys)?;
+    fs::copy(
+        tables.join("commission-cities.json"),
+        out.join("commission-cities.json"),
+    )?;
     let pack = json!({
         "upstream": upstream,
         "dataId": pinned.id(),

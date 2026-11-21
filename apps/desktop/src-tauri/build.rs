@@ -43,9 +43,14 @@ fn upstream_source() {
 fn capture_pack() {
     let dir = Path::new("capture-pack");
     println!("cargo:rerun-if-changed={}", dir.display());
-    if ["pack.json", "gi.json", "game_data.gz"]
-        .iter()
-        .all(|file| dir.join(file).is_file())
+    if [
+        "pack.json",
+        "gi.json",
+        "game_data.gz",
+        "commission-cities.json",
+    ]
+    .iter()
+    .all(|file| dir.join(file).is_file())
     {
         println!("cargo:rustc-cfg=capture_pack");
     }

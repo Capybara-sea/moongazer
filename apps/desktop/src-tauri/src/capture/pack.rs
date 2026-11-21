@@ -7,6 +7,7 @@
 //!
 //! - `gi.json`: the dispatch keys, base64 by key id.
 //! - `game_data.gz`: the game database, gzipped JSON.
+//! - `commission-cities.json`: the city of every daily commission, by id.
 //! - `pack.json`: the upstream source the keys came from, and the id of the
 //!   data set the database was built from.
 
@@ -23,11 +24,12 @@ use teyvatme_game_data::AnimeGameData;
 /// The upstream source this build is linked against (see build.rs).
 const UPSTREAM: &str = env!("CAPTURE_UPSTREAM");
 
-/// The three files' contents.
+/// The four files' contents.
 pub struct Files<'a> {
     pub manifest: &'a [u8],
     pub keys: &'a [u8],
     pub game_data: &'a [u8],
+    pub commission_cities: &'a [u8],
 }
 
 #[cfg(capture_pack)]
@@ -40,6 +42,10 @@ const BUILT_IN: Option<Files<'static>> = Some(Files {
     game_data: include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/capture-pack/game_data.gz"
+    )),
+    commission_cities: include_bytes!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/capture-pack/commission-cities.json"
     )),
 });
 #[cfg(not(capture_pack))]
@@ -57,6 +63,7 @@ pub struct Pack {
     pub(super) game_data: AnimeGameData,
     /// Names the data set in the export (`gi_player.gameData`).
     pub(super) data_id: String,
+    pub(super) commission_cities: HashMap<u32, u32>,
 }
 
 impl Pack {
@@ -99,6 +106,7 @@ impl Pack {
             keys,
             game_data,
             data_id: manifest.data_id,
+            commission_cities: parse_json("commission-cities.json", files.commission_cities)?,
         })
     }
 }
@@ -133,6 +141,7 @@ mod tests {
             manifest: manifest.as_bytes(),
             keys: keys.as_bytes(),
             game_data: &game_data,
+            commission_cities: b"{}",
         };
         format!(
             "{:#}",

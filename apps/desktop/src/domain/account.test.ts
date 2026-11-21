@@ -137,6 +137,18 @@ describe("parseAccount on a Leyline export", () => {
     expect(tasks?.expeditions).toBeUndefined()
   })
 
+  it("takes full resin from the player when the export has no resin clock", () => {
+    const full = leyline({ gi_player: { resin: 200 }, gi_tasks: { welkin: { days: 3 } } })
+    expect(full.tasks?.resin).toEqual({ value: 200 })
+    const short = leyline({ gi_player: { resin: 120 }, gi_tasks: { welkin: { days: 3 } } })
+    expect(short.tasks?.resin).toBeUndefined()
+    const clock = leyline({
+      gi_player: { resin: 200 },
+      gi_tasks: { resin: { value: 120, nextAt: 1_000 } },
+    })
+    expect(clock.tasks?.resin).toEqual({ value: 120, nextAt: 1_000_000 })
+  })
+
   it("needs both times for the transformer and the abyss", () => {
     const { tasks } = leyline({
       gi_tasks: { transformer: { usedAt: 4_000 }, abyss: { end: 7_000, stars: 27 } },

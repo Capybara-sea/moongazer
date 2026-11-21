@@ -260,20 +260,20 @@ fn track_slot(fields: &[Field], data: &AnecdoteData) -> Option<(Vec<u8>, u64)> {
 }
 
 #[derive(Clone, Copy, Debug)]
-enum Value<'a> {
+pub(super) enum Value<'a> {
     Varint(u64),
     Bytes(&'a [u8]),
     Fixed,
 }
 
 #[derive(Clone, Copy, Debug)]
-struct Field<'a> {
+pub(super) struct Field<'a> {
     number: u64,
-    value: Value<'a>,
+    pub(super) value: Value<'a>,
 }
 
 /// A message's fields in order, or None when it is not one.
-fn parse(bytes: &[u8]) -> Option<Vec<Field<'_>>> {
+pub(super) fn parse(bytes: &[u8]) -> Option<Vec<Field<'_>>> {
     let mut fields = Vec::new();
     let mut at = 0;
     while at < bytes.len() {

@@ -22,6 +22,7 @@ mod anecdotes;
 )]
 mod backend;
 mod carry;
+mod commissions;
 mod decoder;
 pub mod helper;
 mod ipc;

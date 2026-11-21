@@ -88,9 +88,9 @@ function Row({ label, value, tip, className, children }: RowProps) {
   )
 }
 
-function Missing({ label }: { label: string }) {
+function Missing({ label, tip }: { label: string; tip?: string }) {
   return (
-    <Row label={label}>
+    <Row label={label} tip={tip}>
       <span className="text-muted">{text.snapshot.notRead}</span>
     </Row>
   )
@@ -126,7 +126,7 @@ function Resin({ resin, now }: { resin: Tasks["resin"]; now: number }) {
 type CommissionsProps = { commissions: Tasks["commissions"]; takenAt: number; now: number }
 
 function Commissions({ commissions, takenAt, now }: CommissionsProps) {
-  if (!commissions) return <Missing label={t.commissions} />
+  if (!commissions) return <Missing label={t.commissions} tip={t.commissionsNotRead} />
   const { finished, total, claimed, reset } = currentCommissions(commissions, takenAt, now)
   const state = claimed ? "claimed" : finished >= total ? "claimable" : "left"
   return (

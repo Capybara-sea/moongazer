@@ -67,11 +67,12 @@ const KEY_RECOVERY_GRACE: Duration = Duration::from_secs(30);
 /// A login seen this long ago and still no key at all: the capture pack has
 /// no dispatch key for this game version.
 const NO_KEY_GRACE: Duration = Duration::from_secs(15);
-/// ...but only once the server sent this many frames since: a login's data
-/// is a few MB in thousands of frames, while a game idling at its title
-/// screen sends almost nothing (that read as "no key" in the first real
-/// test, 2026-11-18).
-const LOGIN_BURST_FRAMES: u64 = 300;
+/// ...but only once the server sent this many frames within one burst window
+/// (see `worker`): a login's data is a few MB in thousands of frames, while a
+/// game idling at its title screen sends almost nothing. Counting all frames
+/// since the connection read as "no key" at the title screen, first right
+/// away (2026-11-18), then after a long idle (2026-11-21).
+pub(super) const LOGIN_BURST_FRAMES: u64 = 300;
 /// How long the capture mode gets to exit after a goodbye.
 const EXIT_WAIT: Duration = Duration::from_secs(5);
 /// How long an export for a snapshot may take (a key search can hold the
@@ -1163,7 +1164,7 @@ impl Supervisor {
                 && self
                     .connection_at
                     .is_some_and(|at| now.saturating_duration_since(at) >= NO_KEY_GRACE)
-                && run.clocks.received_since_reset.load(Ordering::Relaxed) >= LOGIN_BURST_FRAMES;
+                && run.clocks.busiest_window.load(Ordering::Relaxed) >= LOGIN_BURST_FRAMES;
             let found = if key_lost {
                 Some(Problem::KeyLost)
             } else if no_key {

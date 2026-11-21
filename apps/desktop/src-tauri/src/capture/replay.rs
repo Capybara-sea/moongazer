@@ -29,10 +29,13 @@ use std::sync::Mutex;
 use account::delta;
 use serde_json::Value;
 use teyvatme_core::recording::{self, Recording};
+use teyvatme_protocol::KeyState;
 use tracing_subscriber::fmt::MakeWriter;
 
 use super::decoder::Decoder;
 use super::pack::Pack;
+use super::service::LOGIN_BURST_FRAMES;
+use super::worker::Burst;
 use crate::logging;
 
 /// The recordings under `$MOONGAZER_REGRESSION`: the folder itself when it
@@ -72,6 +75,38 @@ fn a_recorded_login_decodes_to_the_export_capture_makes_of_it() {
         failed.is_empty(),
         "differs from Capture's export: {failed:?}"
     );
+}
+
+/// A real login clears the "no key" threshold however the burst windows fall,
+/// and the frames before it (the title screen) do not.
+#[test]
+#[ignore = "needs a recorded login in $MOONGAZER_REGRESSION"]
+fn a_recorded_login_is_a_burst_and_the_title_screen_is_not() {
+    for dir in recordings() {
+        let pack = Pack::built_in().unwrap();
+        let mut decoder = Decoder::new(pack);
+        let mut recording = Recording::open(&dir.join("login.pcapng")).unwrap();
+        let mut burst = Burst::default();
+        let mut before_key = 0;
+        while let Some(frame) = recording.next_frame().unwrap() {
+            let at_ms = frame.timestamp_ns.expect("the recording has timestamps") / 1_000_000;
+            let Some(data) = recording::as_ethernet(frame.link_type, frame.data) else {
+                continue;
+            };
+            decoder.feed(data, at_ms);
+            let most = burst.on_frame(at_ms, decoder.received_since_reset());
+            if decoder.key().state == KeyState::None {
+                before_key = most;
+            }
+        }
+        let name = name_of(&dir);
+        println!(
+            "{name}: busiest window {} frames, {before_key} before any key",
+            burst.most()
+        );
+        assert!(burst.most() >= LOGIN_BURST_FRAMES, "{name}");
+        assert!(before_key < LOGIN_BURST_FRAMES, "{name}");
+    }
 }
 
 /// Replays one recording and compares its export with Capture's; false when

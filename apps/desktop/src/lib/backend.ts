@@ -303,10 +303,37 @@ export async function deleteSnapshot(id: number) {
   await call("delete_snapshot", { id })
 }
 
-export async function getDataDir() {
+/** Where the data is; only the installed build can move it. */
+export type DataDir = { dir: string; isDefault: boolean; movable: boolean }
+/** A folder the data can go to; existing: it already has data of its own, used as it is. */
+export type DataDirPlan = { dir: string; existing: boolean }
+
+export async function getDataDir(): Promise<DataDir> {
   const value = await call("data_dir")
-  if (typeof value !== "string") throw protocolError("data directory")
-  return value
+  if (
+    !isRecord(value) ||
+    typeof value.dir !== "string" ||
+    typeof value.isDefault !== "boolean" ||
+    typeof value.movable !== "boolean"
+  ) {
+    throw protocolError("data directory")
+  }
+  return { dir: value.dir, isDefault: value.isDefault, movable: value.movable }
+}
+
+/** The default folder, or one the user picks in a dialog; null when they cancel. */
+export async function planDataDir(useDefault: boolean): Promise<DataDirPlan | null> {
+  const value = await call("plan_data_dir", { default: useDefault })
+  if (value === null) return null
+  if (!isRecord(value) || typeof value.dir !== "string" || typeof value.existing !== "boolean") {
+    throw protocolError("data directory plan")
+  }
+  return { dir: value.dir, existing: value.existing }
+}
+
+/** Restarts the app, which moves the data to `dir` (from a plan) before it opens. */
+export async function moveDataDir(dir: string) {
+  await call("move_data_dir", { dir })
 }
 
 export async function openDataDir() {

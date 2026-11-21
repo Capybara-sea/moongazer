@@ -15,7 +15,7 @@ use serde::Serialize;
 use storage::{Check, Db, Outcome, Session, Snapshot};
 use tauri::State;
 
-const DB_FILE: &str = "moongazer.db";
+pub const DB_FILE: &str = "moongazer.db";
 
 /// The database, or why it could not be opened. The app starts either way,
 /// so the reason can be shown on the page.
@@ -404,12 +404,6 @@ pub async fn session_timeline(
     json.push(']');
     tracing::info!(batches = batches.len(), bytes = json.len(), "timeline read");
     Ok(json)
-}
-
-/// Where the database, logs and caches are.
-#[tauri::command]
-pub fn data_dir(storage: State<'_, Storage>) -> String {
-    storage.dir.display().to_string()
 }
 
 /// The log folder, under the data folder in both builds (portable: in

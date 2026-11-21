@@ -8,6 +8,7 @@
 mod background;
 #[cfg(feature = "capture")]
 mod capture;
+mod data_location;
 mod icons;
 mod logging;
 mod portable;
@@ -62,10 +63,16 @@ fn main() {
     }
     let portable_dir = portable::detect();
     let mut context = tauri::generate_context!();
-    if let Some(dir) = &portable_dir {
-        portable::apply(&mut context, dir);
-        portable::remove_old_exe();
-    }
+    let location = match &portable_dir {
+        Some(dir) => {
+            portable::apply(&mut context, dir);
+            portable::remove_old_exe();
+            Some(data_location::DataLocation::fixed(
+                dir.join(portable::DATA_DIR),
+            ))
+        }
+        None => data_location::resolve(&mut context),
+    };
     let is_portable = portable_dir.is_some();
     let mode = portable::Mode {
         portable: is_portable,
@@ -78,6 +85,7 @@ fn main() {
             background::show_main(app);
         }))
         .plugin(tauri_plugin_decorum::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -88,7 +96,11 @@ fn main() {
         .setup(move |app| {
             let guard = logging::init(&app.path().app_log_dir()?)?;
             app.manage(guard);
-            app.manage(snapshots::Storage::open(app.path().app_local_data_dir()?));
+            let data = app.path().app_local_data_dir()?;
+            app.manage(
+                location.unwrap_or_else(|| data_location::DataLocation::fixed(data.clone())),
+            );
+            app.manage(snapshots::Storage::open(data));
             let window = app
                 .get_webview_window("main")
                 .context("the main window is missing")?;
@@ -125,7 +137,9 @@ fn main() {
             snapshots::list_snapshots,
             snapshots::snapshot_export,
             snapshots::session_timeline,
-            snapshots::data_dir,
+            data_location::data_dir,
+            data_location::plan_data_dir,
+            data_location::move_data_dir,
             snapshots::open_data_dir,
             snapshots::open_log_dir,
             snapshots::open_homepage,

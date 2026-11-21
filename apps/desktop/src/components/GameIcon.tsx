@@ -20,6 +20,7 @@ type Props = {
  */
 export function GameIcon({ icon, label, className }: Props) {
   const [failed, setFailed] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState<string | null>(null)
   const show = icon !== undefined && failed !== icon
   return (
     <span
@@ -29,7 +30,8 @@ export function GameIcon({ icon, label, className }: Props) {
         className,
       )}
     >
-      <span aria-hidden>{initial(label)}</span>
+      {/* Hidden once loaded: icons with transparent parts would let it show through. */}
+      {!(show && loaded === icon) && <span aria-hidden>{initial(label)}</span>}
       {show && (
         <img
           src={`http://icon.localhost/${icon}`}
@@ -37,6 +39,7 @@ export function GameIcon({ icon, label, className }: Props) {
           loading="lazy"
           decoding="async"
           draggable={false}
+          onLoad={() => setLoaded(icon)}
           onError={() => setFailed(icon)}
           className="absolute inset-0 size-full object-cover"
         />

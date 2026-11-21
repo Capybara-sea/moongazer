@@ -61,10 +61,10 @@ describe("statusMessages", () => {
     expect(messages(null, { ...off, problem: { kind: "declined" } })).toEqual([])
   })
 
-  it("asks for an update as a notification, once per app version or list left out", () => {
+  it("reports a login it could not read and asks for an update, once per app version or list left out", () => {
     const pack = { ...waitingLogin, problem: { kind: "packOutdated" } } as const
     const first = messages(waitingLogin, pack)
-    expect(first).toMatchObject([{ kind: "danger", title: m.syncOutdated }])
+    expect(first).toMatchObject([{ kind: "danger", title: m.syncNoLogin }])
     // Asked again with the same id, so the message center keeps the first only.
     expect(messages(pack, pack)).toEqual(first)
     expect(statusMessages(waitingLogin, pack, NOW, "0.6.1")[0]?.id).not.toBe(first[0]?.id)

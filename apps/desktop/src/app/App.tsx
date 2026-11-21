@@ -15,6 +15,7 @@ import { SettingsPage } from "@/features/settings/SettingsPage"
 import { SyncEvents } from "@/features/sync/SyncEvents"
 import { WeaponsPage } from "@/features/weapons/WeaponsPage"
 import { AppShell } from "./AppShell"
+import { RestartDialog } from "./RestartDialog"
 
 export function App() {
   return (
@@ -33,6 +34,7 @@ export function App() {
       />
       <ToastProvider placement="bottom end" width={360} />
       <UpdateToasts />
+      <RestartDialog />
       {/* Reminders (features/messages/ReminderTimer) stay off until they are confirmed. */}
       <BackgroundEvents />
       <SyncEvents />

@@ -67,6 +67,8 @@ export const text = {
   },
   home: {
     title: "欢迎使用望月",
+    startSync: "开始同步",
+    or: "或",
     importFile: "导入 Leyline 文件",
     latest: "最新快照",
     openOverview: "查看总览",
@@ -585,7 +587,7 @@ export const text = {
       retrying: ["读不到网络数据", "正在重试"],
       waitingLogin: ["游戏已启动", "等待进入提瓦特"],
       relogin: ["没读到这次登录", "退回标题界面再进一次"],
-      outdated: ["望月需要更新", "读不了这个版本的游戏"],
+      outdated: ["还没读到这次登录", "点这里查看原因"],
       look: "点这里查看",
       entered: "已进入提瓦特",
       reading: "正在读取账号数据",
@@ -619,7 +621,8 @@ export const text = {
       captureFailed: "同步助手读不到网络数据，正在自动重试。",
       alreadyInGame: "开启自动同步时你已经在游戏里了，这次登录没读到。退回标题界面再进一次。",
       keyLost: "这次登录没读出来。退回标题界面再进一次。",
-      packOutdated: "游戏更新了，望月还读不了这个版本的登录。请更新望月。",
+      packOutdated:
+        "还没读到这次登录。如果只是在标题界面停了很久、还没进入提瓦特，进入后就会开始同步，不用管这条；如果已经进入提瓦特还是这样，可能是望月还不支持这个版本的游戏，请更新望月。",
       dataOutdated: (list: string) =>
         list
           ? `游戏更新了，有些新内容望月还不认识，快照里少了它们（${list}）。请更新望月。`
@@ -708,9 +711,25 @@ export const text = {
     data: "数据",
     dataDir: "数据位置",
     dataDirHint:
-      "快照和日志都在这里。安装版在本机用户的 AppData 里，便携版在程序旁边的 app-data 文件夹。",
+      "快照、日志、图标缓存和界面设置都在这里。安装版默认在本机用户的 AppData 里，可以改到别处；便携版固定在程序旁边的 app-data 文件夹。",
     openDir: "打开文件夹",
     openFailed: "打开文件夹失败",
+    changeDir: "更改",
+    resetDir: "恢复默认",
+    moveTitle: "更改数据位置",
+    resetTitle: "恢复默认数据位置",
+    moveTo: (dir: string) => `数据会搬到：${dir}`,
+    switchTo: (dir: string) =>
+      `这个文件夹里已经有望月的数据，改用它：${dir}。现在这份数据留在原处，不会合并。`,
+    moveNote: "需要重启望月才能生效。搬到另一个磁盘时要复制，启动会慢一些。",
+    moveFailed: "更改数据位置失败",
+    locationErrors: new Map([
+      ["notMovable", "便携版的数据固定在程序旁边，不能更改。"],
+      ["same", "这就是现在的数据位置。"],
+      ["nested", "新位置不能在现在的数据文件夹里面，也不能包含它。"],
+      ["notEmpty", "这个文件夹不是空的，也没有望月的数据。请选一个空文件夹。"],
+      ["unwritable", "这个文件夹不能写入，请换一个。"],
+    ]),
     snapshots: "快照",
     snapshotsHint:
       "每次导入和自动同步都会保存快照。每个账号最近 100 份保留完整数据；更早的只留时间、数量、摩拉和原石，不会自动删除。",
@@ -721,6 +740,16 @@ export const text = {
     motion: "动效",
     motionHint:
       "页面切换、卡片浮现、主题切换时的过渡动画。关闭可优化性能；Windows 关闭“动画效果”时也会自动停用。",
+  },
+  restart: {
+    cancel: "取消",
+    now: "立即重启",
+    syncAutoStart:
+      "自动同步正在进行，重启会中断它。重启后同步会自动开启，在游戏里退回标题界面再进入一次就能接着同步。",
+    syncManual:
+      "自动同步正在进行，重启会中断它。重启后要接着同步，先开启自动同步，再在游戏里退回标题界面再进入一次。",
+    updateTitle: "重启更新",
+    updateBody: "望月会关闭，装好新版本后自动重新打开。",
   },
   time: {
     justNow: "刚刚",
@@ -761,10 +790,10 @@ export const text = {
         name: "Teyvat.me Capture",
         what: capture ? "Leyline 格式，以及自动同步背后的解码。" : "Leyline 格式。",
       },
-      { name: "DimbreathBot/AnimeGameData", what: "游戏数据：名称、数值和描述。" },
-      { name: "Snap.Metadata", what: "几个神之眼的叫法，以及幻想真境剧诗和幽境危战的排期。" },
+      { name: "DimbreathBot/AnimeGameData", what: "游戏数据。" },
+      { name: "Snap.Metadata", what: "游戏数据。" },
       { name: "Genshin Optimizer", what: "GOOD 格式。" },
-      { name: "Enka.Network、Project Amber", what: "游戏图标，运行时从这里下载。" },
+      { name: "Enka.Network、Project Amber", what: "游戏图标。" },
     ],
     // From the Traveler's reply at the end of the Project Moongazer quest.
     letter: [
@@ -848,6 +877,7 @@ export const text = {
     syncInterrupted: "自动同步连接中断",
     syncRelogin: "需要重新登录游戏",
     syncOutdated: "望月需要更新",
+    syncNoLogin: "还没读到这次登录",
     syncReview: "有一份快照需要你确认",
     syncReviewBody: (when: string) =>
       `自动同步在 ${when} 保存的快照里的数量比上一份少，到总览里决定保留还是删除。`,

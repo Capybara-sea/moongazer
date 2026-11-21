@@ -2,15 +2,23 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { Button } from "@heroui/react"
-import { FolderOpen } from "lucide-react"
+import { FolderInput, FolderOpen, RotateCcw } from "lucide-react"
 import { type ReactNode, useEffect, useState } from "react"
 import { Panel } from "@/components/Panel"
 import { Switch } from "@/components/Switch"
-import { getDataDir, openDataDir, toBackendError } from "@/lib/backend"
+import {
+  type DataDir,
+  getDataDir,
+  moveDataDir,
+  openDataDir,
+  planDataDir,
+  toBackendError,
+} from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { type ThemeMode, useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useMessageStore } from "@/stores/messageStore"
+import { useRestartStore } from "@/stores/restartStore"
 import { text } from "@/text/zh"
 
 const THEMES: { theme: ThemeMode; label: string }[] = [
@@ -115,34 +123,75 @@ function NotificationsPanel() {
   )
 }
 
+const BUTTON =
+  "h-9 flex-none gap-1.5 rounded-[9px] border border-border bg-transparent px-3.5 font-normal text-[13px] text-foreground"
+
+function moveFailed(e: unknown) {
+  const error = toBackendError(e)
+  return `${text.settings.moveFailed}: ${text.settings.locationErrors.get(error.kind) ?? error.message}`
+}
+
 function DataPanel() {
-  const [dir, setDir] = useState<string | null>(null)
+  const [data, setData] = useState<DataDir | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
-    getDataDir().then(setDir, (e: unknown) => setError(toBackendError(e).message))
+    getDataDir().then(setData, (e: unknown) => setError(toBackendError(e).message))
   }, [])
+  // The default folder, or one picked in a dialog; then a restart moves the data there.
+  const change = async (useDefault: boolean) => {
+    setError(null)
+    try {
+      const plan = await planDataDir(useDefault)
+      if (!plan) return
+      const s = text.settings
+      await useRestartStore.getState().ask(
+        {
+          title: useDefault ? s.resetTitle : s.moveTitle,
+          body: [plan.existing ? s.switchTo(plan.dir) : s.moveTo(plan.dir), s.moveNote],
+          run: () => moveDataDir(plan.dir).catch((e: unknown) => setError(moveFailed(e))),
+        },
+        true,
+      )
+    } catch (e) {
+      setError(moveFailed(e))
+    }
+  }
   return (
     <Section title={text.settings.data}>
       <div className="flex items-center justify-between gap-6 border-(--separator) border-t py-3.5">
         <div className="flex min-w-0 flex-col gap-0.5">
           <span className="font-medium text-sm">{text.settings.dataDir}</span>
-          {dir && <span className="select-text break-all font-mono text-[12px]">{dir}</span>}
+          {data && <span className="select-text break-all font-mono text-[12px]">{data.dir}</span>}
           <span className="text-[12px] text-muted">{text.settings.dataDirHint}</span>
           {error && <span className="select-text text-[12px] text-danger">{error}</span>}
         </div>
-        <Button
-          variant="secondary"
-          onPress={() => {
-            setError(null)
-            openDataDir().catch((e: unknown) =>
-              setError(`${text.settings.openFailed}: ${toBackendError(e).message}`),
-            )
-          }}
-          className="h-9 flex-none gap-1.5 rounded-[9px] border border-border bg-transparent px-3.5 font-normal text-[13px] text-foreground"
-        >
-          <FolderOpen aria-hidden className="m-0 size-[15px]" />
-          {text.settings.openDir}
-        </Button>
+        <div className="flex flex-none gap-2">
+          {data?.movable && !data.isDefault && (
+            <Button variant="secondary" onPress={() => void change(true)} className={BUTTON}>
+              <RotateCcw aria-hidden className="m-0 size-[15px]" />
+              {text.settings.resetDir}
+            </Button>
+          )}
+          {data?.movable && (
+            <Button variant="secondary" onPress={() => void change(false)} className={BUTTON}>
+              <FolderInput aria-hidden className="m-0 size-[15px]" />
+              {text.settings.changeDir}
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            onPress={() => {
+              setError(null)
+              openDataDir().catch((e: unknown) =>
+                setError(`${text.settings.openFailed}: ${toBackendError(e).message}`),
+              )
+            }}
+            className={BUTTON}
+          >
+            <FolderOpen aria-hidden className="m-0 size-[15px]" />
+            {text.settings.openDir}
+          </Button>
+        </div>
       </div>
       <Row title={text.settings.snapshots} hint={text.settings.snapshotsHint} />
     </Section>

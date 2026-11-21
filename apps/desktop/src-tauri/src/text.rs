@@ -22,6 +22,9 @@ pub mod sync {
     pub const INTERRUPTED_SHORT: &str = "连接中断";
 }
 
+pub const PICK_DATA_DIR: &str = "选择数据位置";
+pub const MOVE_DATA_FAILED: &str = "没能更改数据位置，这次仍用原来的位置。\n\n错误信息：";
+
 pub const FATAL_ERROR: &str = "程序出错，需要关闭。\n\n\
     可以试试重新打开；如果反复出现，请重新安装或下载最新版本。\n\n错误信息：";
 

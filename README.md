@@ -59,10 +59,10 @@ pnpm --filter @moongazer/desktop tauri dev
 ## Acknowledgments
 
 - [Teyvat.me Capture](https://github.com/tawan475/teyvat.me-capture): the Leyline format and the decoding behind auto sync.
-- [DimbreathBot/AnimeGameData](https://github.com/DimbreathBot/AnimeGameData): all game data in the program is generated from its tables. Thank you.
-- [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata): the Imaginarium Theater and Stygian Onslaught schedules.
+- [DimbreathBot/AnimeGameData](https://github.com/DimbreathBot/AnimeGameData): game data.
+- [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata): game data.
 - [Genshin Optimizer](https://github.com/frzyc/genshin-optimizer): the GOOD format, which Leyline builds on. Data generation checks item keys against it; the program includes none of its data.
-- [Enka.Network](https://enka.network) and [Project Amber](https://gi.yatta.moe): game icons are downloaded from them at runtime.
+- [Enka.Network](https://enka.network) and [Project Amber](https://gi.yatta.moe): game icons.
 ## License
 
 The code is released under the [MIT](LICENSE) license. The logo and app icons are not; all rights are reserved. That covers `assets/logo/`, the icons generated from it in `apps/desktop/src-tauri/icons/` and the logo shown inside the app. Forks that publish builds must replace them with their own.

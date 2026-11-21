@@ -27,6 +27,11 @@ const CHANGES_EVERY: Duration = Duration::from_secs(15);
 /// How long the thread sleeps when nothing is due.
 const IDLE: Duration = Duration::from_secs(1);
 
+/// Server frames are counted per window this long (ms): a login sends
+/// thousands within seconds, a game idling at its title screen a few, however
+/// long it idles.
+const BURST_WINDOW_MS: u64 = 15_000;
+
 pub enum Input {
     Frame(Vec<u8>, u64),
     /// When the game started, when this capture saw it start.
@@ -64,12 +69,51 @@ pub enum Output {
 }
 
 /// Shared with the supervisor: when commands under the session key last
-/// arrived (unix ms), and how many frames the server sent since the
-/// connection began.
+/// arrived (unix ms), and the most frames the server sent within one burst
+/// window since the sniffer last started over.
 #[derive(Default)]
 pub struct Clocks {
     pub session_traffic: AtomicU64,
-    pub received_since_reset: AtomicU64,
+    pub busiest_window: AtomicU64,
+}
+
+/// The busiest burst window since the sniffer last started over. Not since
+/// the last `Output::Connection`: a handshake goes by every 11 s or so while
+/// playing, which would cut a login into pieces (seen in the recordings).
+#[derive(Default)]
+pub(super) struct Burst {
+    start_ms: u64,
+    last: u64,
+    base: u64,
+    most: u64,
+}
+
+impl Burst {
+    #[cfg(test)]
+    pub(super) fn most(&self) -> u64 {
+        self.most
+    }
+
+    /// `received`: the server's frames since the sniffer last started over,
+    /// at `at_ms`.
+    pub(super) fn on_frame(&mut self, at_ms: u64, received: u64) -> u64 {
+        // The counter went back: a new session, so a new count.
+        if received < self.last {
+            *self = Self {
+                start_ms: at_ms,
+                last: 0,
+                base: 0,
+                most: 0,
+            };
+        }
+        if at_ms.saturating_sub(self.start_ms) >= BURST_WINDOW_MS {
+            self.start_ms = at_ms;
+            self.base = received;
+        }
+        self.last = received;
+        self.most = self.most.max(received - self.base);
+        self.most
+    }
 }
 
 pub fn run(
@@ -87,6 +131,7 @@ pub fn run(
     let mut handed_out: Option<Keyed> = None;
     let mut changes_due: Option<Instant> = None;
     let mut changes_at: Option<Instant> = None;
+    let mut burst = Burst::default();
 
     loop {
         let now = Instant::now();
@@ -130,9 +175,8 @@ pub fn run(
                 if fed.session_traffic {
                     clocks.session_traffic.store(at_ms, Ordering::Relaxed);
                 }
-                clocks
-                    .received_since_reset
-                    .store(decoder.received_since_reset(), Ordering::Relaxed);
+                let busiest = burst.on_frame(at_ms, decoder.received_since_reset());
+                clocks.busiest_window.store(busiest, Ordering::Relaxed);
                 if fed.data {
                     settle.on_data(Instant::now(), decoder.login_parts());
                 }
@@ -190,5 +234,50 @@ pub fn run(
                 out(Output::Batch(exported));
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_long_idle_never_adds_up_to_a_burst() {
+        let mut burst = Burst::default();
+        // Two frames a second for an hour at the title screen.
+        let mut most = 0;
+        for second in 0..3600 {
+            most = burst.on_frame(second * 1000, second * 2);
+        }
+        assert!(most <= 2 * BURST_WINDOW_MS / 1000 + 2, "{most}");
+    }
+
+    #[test]
+    fn a_login_is_a_burst_whenever_it_comes() {
+        // After ten idle minutes, a login of 2,000 frames within three
+        // seconds, starting at each second around a window's edge.
+        for start in 595..605 {
+            let mut burst = Burst::default();
+            let mut received = 0;
+            for second in 0..start {
+                received += 1;
+                burst.on_frame(second * 1000, received);
+            }
+            for frame in 0..2000 {
+                received += 1;
+                burst.on_frame(start * 1000 + frame * 3 / 2, received);
+            }
+            // Split by a window's edge, one half still holds 1,000.
+            assert!(burst.most >= 999, "start {start}: {}", burst.most);
+        }
+    }
+
+    #[test]
+    fn a_new_session_counts_afresh() {
+        let mut burst = Burst::default();
+        burst.on_frame(0, 0);
+        assert_eq!(burst.on_frame(1000, 500), 500);
+        assert_eq!(burst.on_frame(2000, 3), 3);
+        assert_eq!(burst.on_frame(20_000, 10), 3);
     }
 }

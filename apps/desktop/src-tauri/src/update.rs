@@ -8,6 +8,7 @@
 //!
 //! A build whose `plugins.updater.endpoints` is empty has updates off.
 
+use std::ffi::OsString;
 use std::process::Command;
 use std::sync::{Mutex, MutexGuard, mpsc};
 
@@ -239,6 +240,20 @@ fn install_portable(app: &AppHandle, package: &[u8]) -> Result<(), UpdateError> 
         .context("finding the program")
         .map_err(failed)?;
     portable::replace_exe(&exe, package).map_err(failed)?;
+    // The new program is in place, so this one exits even if starting it
+    // fails; it then starts the next time the user opens the app, and staying
+    // open would only offer an update that can no longer be applied.
+    if let Err(err) = relaunch(app, &[]) {
+        tracing::error!(error = %err, "starting the new version failed");
+        app.exit(0);
+    }
+    Ok(())
+}
+
+/// Starts the program again with `args` and exits this one; stays when the
+/// new one cannot be started.
+pub fn relaunch(app: &AppHandle, args: &[OsString]) -> std::io::Result<()> {
+    let exe = std::env::current_exe()?;
     // Released first, or the new program finds this one's single-instance
     // lock, hands over its arguments and exits. The lock is a mutex and a
     // window that only the main thread, which made them, can release, and
@@ -252,12 +267,7 @@ fn install_portable(app: &AppHandle, package: &[u8]) -> Result<(), UpdateError> 
     if queued.is_err() || wait.recv().is_err() {
         tracing::warn!("the single-instance lock was not released");
     }
-    // The new program is in place, so this one exits even if starting it
-    // fails; it then starts the next time the user opens the app, and staying
-    // open would only offer an update that can no longer be applied.
-    if let Err(err) = Command::new(&exe).spawn() {
-        tracing::error!(error = %err, "starting the new version failed");
-    }
+    Command::new(&exe).args(args).spawn()?;
     app.exit(0);
     Ok(())
 }

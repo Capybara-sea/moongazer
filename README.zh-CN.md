@@ -59,10 +59,10 @@ pnpm --filter @moongazer/desktop tauri dev
 ## 致谢
 
 - [Teyvat.me Capture](https://github.com/tawan475/teyvat.me-capture)：Leyline 格式，以及自动同步背后的解码。
-- [DimbreathBot/AnimeGameData](https://github.com/DimbreathBot/AnimeGameData)：程序里的游戏数据都由它的表生成，谢谢。
-- [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata)：幻想真境剧诗和幽境危战的排期。
+- [DimbreathBot/AnimeGameData](https://github.com/DimbreathBot/AnimeGameData)：游戏数据。
+- [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata)：游戏数据。
 - [Genshin Optimizer](https://github.com/frzyc/genshin-optimizer)：GOOD 格式，Leyline 在它的基础上扩展。生成数据时用它核对物品键名，程序里不带它的数据。
-- [Enka.Network](https://enka.network) 和 [Project Amber](https://gi.yatta.moe)：运行时从这里下载游戏图标。
+- [Enka.Network](https://enka.network) 和 [Project Amber](https://gi.yatta.moe)：游戏图标。
 ## 许可证
 
 代码以 [MIT](LICENSE) 许可证发布。logo 和应用图标不在 MIT 范围内，保留所有权利。这包括 `assets/logo/`、由它生成的 `apps/desktop/src-tauri/icons/`，以及程序里显示的 logo。fork 如果要发布程序，得换成自己的 logo 和图标。

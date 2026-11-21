@@ -14,6 +14,8 @@ import {
   type UpdateProgress,
 } from "@/lib/backend"
 import { readStored, writeStored } from "@/lib/storage"
+import { useRestartStore } from "@/stores/restartStore"
+import { text } from "@/text/zh"
 
 /**
  * available: a portable build in a read-only folder found a new version, to
@@ -119,14 +121,24 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     }
   },
 
-  /** The app closes, puts the update in place and opens again; or the download page opens. */
+  /**
+   * The app closes, puts the update in place and opens again, after a warning
+   * while auto sync is connected; or the download page opens.
+   */
   async install() {
-    if (get().info?.updatesInPlace) set({ status: "restarting" })
-    try {
-      await installUpdate()
-    } catch (error) {
-      set({ status: "error", failed: "install", error: toBackendError(error).message })
+    const put = async () => {
+      if (get().info?.updatesInPlace) set({ status: "restarting" })
+      try {
+        await installUpdate()
+      } catch (error) {
+        set({ status: "error", failed: "install", error: toBackendError(error).message })
+      }
     }
+    if (!get().info?.updatesInPlace) return put()
+    const { updateTitle, updateBody } = text.restart
+    await useRestartStore
+      .getState()
+      .ask({ title: updateTitle, body: [updateBody], run: put }, false)
   },
 
   setAutoCheck(on) {

@@ -55,19 +55,32 @@ function Next() {
 function FirstSteps() {
   const capture = useCaptureStore(s => s.capture)
   const off = useCaptureStore(s => s.status?.phase === "off")
+  // Auto sync comes first where it can start; importing a file is the way round.
+  const sync = capture && off
   return (
-    <div className="flex flex-wrap justify-center gap-2">
-      <ImportButton label={t.importFile} />
-      {capture && off && (
-        <Button
-          variant="secondary"
-          onPress={() => useCaptureStore.getState().setPanelOpen(true)}
-          className="h-[38px] gap-2 rounded-[9px] border border-border bg-transparent px-3.5 font-normal text-[13px] text-foreground"
-        >
-          <RefreshCw aria-hidden className="m-0 size-4" />
-          {text.sync.start}
-        </Button>
+    <div className="flex flex-col items-center gap-3">
+      {sync && (
+        <>
+          <Button
+            variant="primary"
+            onPress={() => {
+              const store = useCaptureStore.getState()
+              store.setPanelOpen(true)
+              void store.start()
+            }}
+            className="h-[38px] gap-2 rounded-[9px] px-4 font-medium text-[13px]"
+          >
+            <RefreshCw aria-hidden className="m-0 size-4" />
+            {t.startSync}
+          </Button>
+          <div className="flex w-56 items-center gap-3 text-[12px] text-muted">
+            <span aria-hidden className="h-px flex-1 bg-(--separator)" />
+            {t.or}
+            <span aria-hidden className="h-px flex-1 bg-(--separator)" />
+          </div>
+        </>
       )}
+      <ImportButton label={t.importFile} quiet={sync} />
     </div>
   )
 }

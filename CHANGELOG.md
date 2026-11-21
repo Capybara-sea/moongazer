@@ -8,9 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The installed build can move its data to another folder in Settings, and back.
+- Restarting while auto sync is connected asks first: syncing resumes after you
+  return to the title screen and enter again.
+
 ### Changed
 
 - The ascension star no longer shows on a character at level 90/90.
+
+### Fixed
+
+- Icons with transparent parts no longer show a letter behind them.
+- Waiting long at the title screen no longer reads as an outdated Moongazer.
 
 ## [0.1.0] - 2026-11-20
 

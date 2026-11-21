@@ -50,7 +50,7 @@ export function statusMessages(
       messages.push(message(`sync-${problem.kind}:${at}`, m.syncRelogin))
     }
   } else if (problem.kind === "packOutdated" && version !== null) {
-    messages.push(message(`sync-packOutdated:${version}`, m.syncOutdated))
+    messages.push(message(`sync-packOutdated:${version}`, m.syncNoLogin))
   } else if (problem.kind === "dataOutdated") {
     messages.push(message(`sync-dataOutdated:${problem.leftOut}`, m.syncOutdated))
   }

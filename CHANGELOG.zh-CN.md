@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-21
+
 ### 新增
 
 - 安装版可以在设置里把数据搬到别的文件夹，也能搬回默认位置。
@@ -35,5 +37,6 @@
 - 设置页、明暗主题、界面动效；游戏图标在第一次显示时下载。
 - 关于页：帮助与反馈、致谢和第三方许可。
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Capybara-sea/moongazer/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Capybara-sea/moongazer/releases/tag/v0.1.0

@@ -78,11 +78,8 @@ describe("ascended", () => {
     expect(ascended(20, 1)).toBe(true)
   })
 
-  it("counts every character with all six phases", () => {
-    expect(ascended(90, 6)).toBe(true)
-  })
-
-  it("does not count one at a cap waiting to ascend, or one never ascended", () => {
+  it("does not count one at a cap, waiting to ascend or fully ascended, or one never ascended", () => {
+    expect(ascended(90, 6)).toBe(false)
     expect(ascended(80, 5)).toBe(false)
     expect(ascended(20, 0)).toBe(false)
     expect(ascended(15, 0)).toBe(false)

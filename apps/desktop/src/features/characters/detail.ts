@@ -39,11 +39,11 @@ export function neighbors(keys: readonly string[], key: string): Neighbors | und
 }
 
 /**
- * Whether the character has ascended for its level: at least once, and not at a level cap waiting
- * for the next phase. All six phases always count.
+ * Whether the character has ascended for its level: at least once, and below the cap its phases
+ * give. At the cap (including 90/90) there is nothing to tell apart, so no star.
  */
 export function ascended(level: number, ascension: number) {
-  return ascension >= 6 || (ascension > 0 && level < levelCap(ascension))
+  return ascension > 0 && level < levelCap(ascension)
 }
 
 /** "2021-09-01" in local time. */

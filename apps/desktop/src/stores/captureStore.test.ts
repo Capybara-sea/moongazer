@@ -20,6 +20,7 @@ vi.mock("@/lib/backend", async importOriginal => ({
     updatesEnabled: false,
     updatesInPlace: false,
     capture: true,
+    testBuild: false,
   })),
 }))
 vi.mock("@/lib/backend/sync", () => ({

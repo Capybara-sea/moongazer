@@ -48,6 +48,18 @@ pub struct AppInfo {
     updates_in_place: bool,
     /// Whether this build has auto sync.
     capture: bool,
+    /// Whether this is a test build: one made with its own identifier, so
+    /// its data stays apart from the release's.
+    test_build: bool,
+}
+
+/// The release's identifier, as in tauri.conf.json.
+const RELEASE_IDENTIFIER: &str = "io.github.capybara-sea.moongazer";
+
+/// Another identifier than the release's makes a test build, except the dev
+/// branch's (".dev"), which has its own badge.
+fn is_test_build(identifier: &str) -> bool {
+    identifier != RELEASE_IDENTIFIER && !identifier.ends_with(".dev")
 }
 
 #[derive(Serialize)]
@@ -81,6 +93,7 @@ pub fn app_info(app: AppHandle, mode: State<'_, portable::Mode>) -> AppInfo {
         updates_enabled: updates_enabled(&app),
         updates_in_place: !mode.portable || mode.replaceable,
         capture: cfg!(feature = "capture"),
+        test_build: is_test_build(&app.config().identifier),
     }
 }
 
@@ -270,4 +283,16 @@ pub fn relaunch(app: &AppHandle, args: &[OsString]) -> std::io::Result<()> {
     Command::new(&exe).args(args).spawn()?;
     app.exit(0);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_another_identifier_than_the_releases_makes_a_test_build() {
+        assert!(!is_test_build("io.github.capybara-sea.moongazer"));
+        assert!(is_test_build("io.github.capybara-sea.moongazer.v02test"));
+        assert!(!is_test_build("io.github.capybara-sea.moongazer.dev"));
+    }
 }

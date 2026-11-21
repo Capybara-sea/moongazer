@@ -19,6 +19,7 @@ import { SyncShade } from "@/features/sync/SyncCard"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { navigate, type PageKey, usePage } from "@/lib/route"
+import { useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
 import { PAGES } from "./route"
 import { SidePanel } from "./SidePanel"
@@ -190,6 +191,7 @@ function SideMenu({ page }: { page: PageKey }) {
  * z-[101] keeps this bar and its buttons above that strip.
  */
 function TitleBar() {
+  const testBuild = useUpdateStore(s => s.info?.testBuild ?? false)
   return (
     <header
       data-tauri-decorum-tb=""
@@ -206,10 +208,10 @@ function TitleBar() {
         <span className="pointer-events-none font-semibold text-xs tracking-[0.04em]">
           {text.appName}
         </span>
-        {/* Only under the dev server, so a dev window is never taken for a release. */}
-        {import.meta.env.DEV && (
+        {/* Under the dev server, or in a test build, so neither is taken for a release. */}
+        {(import.meta.env.DEV || testBuild) && (
           <span className="pointer-events-none rounded-[5px] border border-(--warn) px-1.5 text-(--warn) text-[11px] leading-4">
-            {text.devBuild}
+            {import.meta.env.DEV ? text.devBuild : text.testBuild}
           </span>
         )}
       </div>

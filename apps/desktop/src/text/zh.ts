@@ -49,6 +49,7 @@ export const text = {
   appName: "望月",
   appNameLatin: "Moongazer",
   devBuild: "开发版",
+  testBuild: "测试版",
   nav: {
     label: "主菜单",
     home: "首页",

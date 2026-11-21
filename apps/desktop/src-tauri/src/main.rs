@@ -143,6 +143,7 @@ fn main() {
             snapshots::open_data_dir,
             snapshots::open_log_dir,
             snapshots::open_homepage,
+            snapshots::open_group_chat,
             update::app_info,
             update::check_update,
             update::download_update,

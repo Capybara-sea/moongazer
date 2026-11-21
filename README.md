@@ -41,9 +41,15 @@ The first time you run the installer or the program, Windows may show "Windows p
 
 To check a download first, run `Get-FileHash <file>` in PowerShell and compare it with `SHA256SUMS.txt` from the release. With the GitHub CLI you can also run `gh attestation verify <file> --repo Capybara-sea/moongazer`.
 
-The installer needs no administrator rights. By default it installs to `%LOCALAPPDATA%\Moongazer`, which you can change during setup, and keeps data in `%LOCALAPPDATA%\io.github.capybara-sea.moongazer`.
+The installer needs no administrator rights. By default it installs to `%LOCALAPPDATA%\Moongazer`, which you can change during setup, and keeps data in `%LOCALAPPDATA%\io.github.capybara-sea.moongazer` unless you move it in Settings.
 
 Turning on auto sync shows a UAC prompt. It is yellow and shows an unknown publisher because the program is not signed. Without auto sync there is no UAC prompt.
+
+## Community
+
+QQ group 90376195 ([join](https://qm.qq.com/q/knbjLmXja0), or scan with mobile QQ), in Chinese. The About page in the app links to it too.
+
+<img src="assets/community/qq-group.svg" alt="QR code of QQ group 90376195" width="160">
 
 ## Development
 

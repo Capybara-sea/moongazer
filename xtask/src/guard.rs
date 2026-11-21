@@ -39,9 +39,11 @@ impl Mode {
 
 const MAX_BYTES: usize = 512 * 1024;
 const LARGE_FILE_ALLOWLIST: &[&str] = &["Cargo.lock", "pnpm-lock.yaml"];
-/// Our own logo sources, the app icons generated from them and the README
-/// screenshots: the only places for images, and for binary files at all.
+/// Our own logo sources, the app icons generated from them, the README
+/// screenshots and the QQ group's QR code: the only places for images, and
+/// for binary files at all.
 const ASSET_DIRS: &[&str] = &[
+    "assets/community/",
     "assets/logo/",
     "assets/screenshots/",
     "apps/desktop/src-tauri/icons/",

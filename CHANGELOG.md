@@ -13,10 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The installed build can move its data to another folder in Settings, and back.
 - Restarting while auto sync is connected asks first: syncing resumes after you
   return to the title screen and enter again.
+- About and the READMEs link to the QQ group (90376195).
 
 ### Changed
 
 - The ascension star no longer shows on a character at level 90/90.
+- The home page opens with three lines from the letter under the welcome, and
+  without data puts "Start sync" first, with importing a file below.
 
 ### Fixed
 

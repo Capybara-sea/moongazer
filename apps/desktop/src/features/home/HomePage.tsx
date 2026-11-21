@@ -36,6 +36,13 @@ export function HomePage() {
       <div className="flex flex-col items-center gap-5">
         <AnimatedLogo className="size-32 flex-none" />
         <h1 className="font-semibold text-2xl leading-[1.3] tracking-[0.04em]">{t.title}</h1>
+        <p className="text-center text-[12px] text-muted leading-[2] tracking-[0.12em]">
+          {text.about.letter.map(line => (
+            <span key={line} className="letter-line block">
+              {line}
+            </span>
+          ))}
+        </p>
       </div>
       <Next />
     </div>
@@ -58,7 +65,7 @@ function FirstSteps() {
   // Auto sync comes first where it can start; importing a file is the way round.
   const sync = capture && off
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="first-steps flex flex-col items-center gap-3">
       {sync && (
         <>
           <Button

@@ -8,8 +8,11 @@ import { defineConfig } from "vite"
 // Tauri opens the dev server on this fixed port and embeds dist/ in release builds.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // A leading "/" resolves from this app's root, so "@logo" reaches the repository's assets/logo.
-  resolve: { alias: { "@": "/src", "@logo": "/../../assets/logo" } },
+  // A leading "/" resolves from this app's root, so "@logo" reaches the repository's assets/logo
+  // (and "@community" its assets/community).
+  resolve: {
+    alias: { "@": "/src", "@logo": "/../../assets/logo", "@community": "/../../assets/community" },
+  },
   clearScreen: false,
   server: { port: 5173, strictPort: true },
   build: {

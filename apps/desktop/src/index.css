@@ -371,6 +371,35 @@ button#decorum-tb-close:hover {
   }
 }
 
+/*
+ * Under the home page's welcome, as the logo's intro settles, the letter's
+ * lines surface one by one, then the first steps: each rises from below,
+ * blurred, into focus, like out of water. The page is hidden, not unmounted,
+ * between visits, so it plays again with the logo on each one.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduce-motion="true"]) :is(.letter-line, .first-steps) {
+    animation: surface 1100ms var(--ease-out-soft) 1600ms backwards;
+  }
+  :root:not([data-reduce-motion="true"]) .letter-line:nth-child(2) {
+    animation-delay: 2050ms;
+  }
+  :root:not([data-reduce-motion="true"]) .letter-line:nth-child(3) {
+    animation-delay: 2500ms;
+  }
+  :root:not([data-reduce-motion="true"]) .first-steps {
+    animation-delay: 3100ms;
+  }
+}
+
+@keyframes surface {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+    filter: blur(8px);
+  }
+}
+
 /* Rows that appear inside a card (a list growing, a new snapshot) fade up. */
 @media (prefers-reduced-motion: no-preference) {
   :root:not([data-reduce-motion="true"]) [data-rise] {

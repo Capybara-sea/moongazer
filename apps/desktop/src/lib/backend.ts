@@ -349,6 +349,11 @@ export async function openHomepage() {
   await call("open_homepage")
 }
 
+/** The QQ group's invite page; its address is fixed on the Rust side. */
+export async function openGroupChat() {
+  await call("open_group_chat")
+}
+
 /**
  * Best effort: outside the Tauri window (a plain browser on the dev server)
  * `getCurrentWindow` throws synchronously, and the title is not worth a crash.

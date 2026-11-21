@@ -2,15 +2,16 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { Alert, Button } from "@heroui/react"
-import { ChevronRight, ExternalLink, FolderOpen, type LucideIcon } from "lucide-react"
-import { useState } from "react"
+import { ChevronRight, ExternalLink, FolderOpen, type LucideIcon, Users } from "lucide-react"
+import { type ReactNode, useState } from "react"
 import { AnimatedLogo } from "@/components/brand/AnimatedLogo"
 import { Panel } from "@/components/Panel"
-import { openHomepage, openLogDir, toBackendError } from "@/lib/backend"
+import { openGroupChat, openHomepage, openLogDir, toBackendError } from "@/lib/backend"
 import { navigate, useRoute } from "@/lib/route"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
+import { GroupChatHint, GroupQrButton } from "./GroupChat"
 import { LicensesPage } from "./LicensesPage"
 import { UpdateCard } from "./UpdateCard"
 
@@ -90,6 +91,15 @@ function About() {
           failed={text.about.openHomepageFailed}
           run={openHomepage}
         />
+        <ActionRow
+          title={text.about.groupChat}
+          hint={<GroupChatHint />}
+          icon={Users}
+          label={text.about.joinGroupChat}
+          failed={text.about.openHomepageFailed}
+          run={openGroupChat}
+          beside={<GroupQrButton />}
+        />
       </Panel>
       <Credits />
       <p className="pt-2 pb-1 text-center text-[12px] text-muted leading-[2] tracking-[0.12em]">
@@ -105,15 +115,17 @@ function About() {
 
 type ActionProps = {
   title: string
-  hint: string
+  hint: ReactNode
   icon: LucideIcon
   label: string
   /** Put before the error's message. */
   failed: string
   run: () => Promise<void>
+  /** Another control, left of the button. */
+  beside?: ReactNode
 }
 
-function ActionRow({ title, hint, icon: Icon, label, failed, run }: ActionProps) {
+function ActionRow({ title, hint, icon: Icon, label, failed, run, beside }: ActionProps) {
   const [error, setError] = useState<string | null>(null)
   return (
     <div className="flex items-center justify-between gap-6 border-(--separator) border-t py-3.5">
@@ -122,17 +134,20 @@ function ActionRow({ title, hint, icon: Icon, label, failed, run }: ActionProps)
         <span className="text-[12px] text-muted">{hint}</span>
         {error && <span className="select-text text-[12px] text-danger">{error}</span>}
       </div>
-      <Button
-        variant="secondary"
-        onPress={() => {
-          setError(null)
-          run().catch((e: unknown) => setError(`${failed}: ${toBackendError(e).message}`))
-        }}
-        className="h-9 flex-none gap-1.5 rounded-[9px] border border-border bg-transparent px-3.5 font-normal text-[13px] text-foreground"
-      >
-        <Icon aria-hidden className="m-0 size-[15px]" />
-        {label}
-      </Button>
+      <div className="flex flex-none gap-2">
+        {beside}
+        <Button
+          variant="secondary"
+          onPress={() => {
+            setError(null)
+            run().catch((e: unknown) => setError(`${failed}: ${toBackendError(e).message}`))
+          }}
+          className="h-9 flex-none gap-1.5 rounded-[9px] border border-border bg-transparent px-3.5 font-normal text-[13px] text-foreground"
+        >
+          <Icon aria-hidden className="m-0 size-[15px]" />
+          {label}
+        </Button>
+      </div>
     </div>
   )
 }

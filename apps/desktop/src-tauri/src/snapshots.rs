@@ -431,6 +431,15 @@ pub fn open_homepage() -> Result<(), SnapshotError> {
         .map_err(|err| SnapshotError::OpenLink(err.to_string()))
 }
 
+/// The QQ group's invite link; fixed here like the homepage.
+const GROUP_CHAT: &str = "https://qm.qq.com/q/knbjLmXja0";
+
+#[tauri::command]
+pub fn open_group_chat() -> Result<(), SnapshotError> {
+    tauri_plugin_opener::open_url(GROUP_CHAT, None::<&str>)
+        .map_err(|err| SnapshotError::OpenLink(err.to_string()))
+}
+
 fn now_ms() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

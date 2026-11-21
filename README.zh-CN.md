@@ -41,9 +41,15 @@
 
 想先核对文件，可以在 PowerShell 里运行 `Get-FileHash <文件>`，和同一版本发布页里的 `SHA256SUMS.txt` 对照；装了 GitHub CLI 的话，也可以运行 `gh attestation verify <文件> --repo Capybara-sea/moongazer`。
 
-安装版不需要管理员权限，默认装在 `%LOCALAPPDATA%\Moongazer`，安装时可以改。数据放在 `%LOCALAPPDATA%\io.github.capybara-sea.moongazer`。
+安装版不需要管理员权限，默认装在 `%LOCALAPPDATA%\Moongazer`，安装时可以改。数据默认放在 `%LOCALAPPDATA%\io.github.capybara-sea.moongazer`，可以在设置里改。
 
 开启自动同步时会弹 UAC 提示，提示是黄色的、发布者显示为未知，因为程序没有签名。不开自动同步就不会弹。
+
+## 交流
+
+QQ 群 90376195，[点击加入](https://qm.qq.com/q/knbjLmXja0)，或用手机 QQ 扫码。程序里“关于”页也有入口。
+
+<img src="assets/community/qq-group.svg" alt="QQ 群 90376195 的二维码" width="160">
 
 ## 开发
 

@@ -4,6 +4,7 @@
 import { Check, Gift } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react"
 import { Bar } from "@/components/Bar"
+import { DoneBadge } from "@/components/DoneBadge"
 import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
 import type { Account, Tasks } from "@/domain/account"
@@ -234,14 +235,10 @@ function Expedition({ character, doneAt, now }: ExpeditionProps) {
           className={cn(
             "size-[30px] rounded-full border-2 bg-surface-secondary text-[12px]",
             FADE,
-            done ? "border-accent" : "border-border",
+            done ? "border-(--ok)" : "border-border",
           )}
         />
-        {done && (
-          <span className="absolute -right-1 -bottom-1 flex size-3.5 items-center justify-center rounded-full bg-accent text-accent-foreground">
-            <Check aria-hidden className="size-[9px]" strokeWidth={3.5} />
-          </span>
-        )}
+        {done && <DoneBadge />}
       </span>
       <span
         title={formatDateTime(doneAt)}

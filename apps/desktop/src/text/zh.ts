@@ -274,6 +274,7 @@ export const text = {
   },
   anecdotes: {
     title: "游逸旅闻",
+    open: "查看详情",
     recorded: "已记录逸闻",
     detail: (waiting: number) => (waiting > 0 ? `还有 ${waiting} 条待完成` : "没有待完成的"),
     seals: "逸闻印签",

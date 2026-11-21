@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- A Collection page in the side menu.
+- A Collection page in the side menu, also opened from the overview's anecdotes card.
 - Achievements: by category and series, with the game's category icons, counts, primogems and
-  versions, and a Bilibili video search for each.
+  versions, and a Bilibili video search for each; unfinished hidden ones keep their description
+  covered and can be left out.
 - Anecdotes: by character and area, with places, how hidden ones come and what comes first,
   seals, the fewest days the rest take, and a note when the seal reward waits to be claimed.
 

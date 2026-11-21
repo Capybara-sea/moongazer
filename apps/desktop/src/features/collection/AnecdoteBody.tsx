@@ -4,6 +4,7 @@
 import { toast } from "@heroui/react"
 import { Check } from "lucide-react"
 import { useMemo, useState } from "react"
+import { DoneBadge } from "@/components/DoneBadge"
 import { EmptyState } from "@/components/EmptyState"
 import { GameIcon } from "@/components/GameIcon"
 import {
@@ -119,16 +120,10 @@ function Characters({ groups }: { groups: CharacterGroup[] }) {
                 on ? "border-accent bg-(--accent-soft)" : "border-transparent hover:bg-default/60",
               )}
             >
-              {g.todo === 0 && (
-                <span
-                  role="img"
-                  aria-label={t.allDone}
-                  className="absolute top-0.5 right-1 text-(--ok)"
-                >
-                  <Check size={11} strokeWidth={3} aria-hidden />
-                </span>
-              )}
-              <Avatar character={g.character} className="size-10 text-[14px]" />
+              <span className="relative">
+                <Avatar character={g.character} className="size-10 text-[14px]" />
+                {g.todo === 0 && <DoneBadge label={t.allDone} />}
+              </span>
               <span className="max-w-full truncate text-[11px]">{name}</span>
               <span className="text-[10px] text-muted tabular">
                 {g.done} / {total}
@@ -194,7 +189,7 @@ function needLine(need: Need) {
         ? need.name
         : t.needCharacter(characterName(need.key))
   if (need.met === undefined) return { text: t.needUnknown(what), warn: false }
-  if (need.met) return { text: t.needMet(what), warn: false }
+  if (need.met) return { text: t.needMet(what), warn: false, done: true }
   return { text: need.kind === "character" ? t.needMissing(what) : t.needOpen(what), warn: true }
 }
 
@@ -202,30 +197,28 @@ function Item({ row }: { row: AnecdoteRow }) {
   const [peek, setPeek] = useState(false)
   const { info, status } = row
   const absent = status === "absent"
-  // The place helps while there is anything left to do there; what brings it on and what comes
-  // first only before it has come at all.
-  const showPlace = !absent && (!row.recorded || row.left > 0)
+  // Our own tips, in a box under the game's text: the place while there is anything left to do
+  // there; what brings it on and what comes first only before it has come at all.
+  const left = !absent && (!row.recorded || row.left > 0)
   const unmet = status === "unmet"
   const line = absent
     ? t.absent
     : row.recorded || peek
       ? info.summary
       : info.hidden
-        ? unmet && info.trigger
-          ? t.trigger(info.trigger)
-          : t.hiddenLine
-        : t.hint(info.hint ?? "")
-  const where = [
-    ...(showPlace && info.place ? [t.place(info.place)] : []),
-    ...(unmet && info.hidden && info.trigger ? [t.hiddenRule] : []),
-  ].join(" · ")
-  const notes: { text: string; warn: boolean }[] = [
-    ...(info.time ? [{ text: t.time[info.time] ?? "", warn: false }] : []),
-    ...(info.after !== undefined ? [{ text: t.after(anecdoteName(info.after)), warn: false }] : []),
+        ? t.hiddenLine
+        : (info.hint ?? "")
+  const tips: { text: string; warn: boolean; done?: boolean }[] = [
+    ...(unmet && info.trigger ? [{ text: t.trigger(info.trigger), warn: false }] : []),
+    ...(left && info.place ? [{ text: t.place(info.place), warn: false }] : []),
+    ...(left && info.time ? [{ text: t.time[info.time] ?? "", warn: false }] : []),
+    ...(left && info.after !== undefined
+      ? [{ text: t.after(anecdoteName(info.after)), warn: false }]
+      : []),
     ...(unmet ? row.needs.map(needLine) : []),
     ...(unmet && info.tip ? [{ text: info.tip, warn: false }] : []),
     ...(unmet && info.unsure ? [{ text: t.unsure(info.unsure), warn: true }] : []),
-  ].filter(note => note.text)
+  ].filter(tip => tip.text)
   return (
     <div
       className={cn(
@@ -263,15 +256,24 @@ function Item({ row }: { row: AnecdoteRow }) {
       ) : (
         <span />
       )}
-      {where && <span className="col-start-2 text-[12px] text-muted">{where}</span>}
-      {notes.map(note => (
-        <span
-          key={note.text}
-          className={cn("col-start-2 text-[12px]", note.warn ? "text-(--warn)" : "text-muted")}
+      {tips.length > 0 && (
+        <ul
+          aria-label={t.tips}
+          className="col-span-2 col-start-2 mt-1 flex flex-col gap-0.5 rounded-[8px] border border-border bg-surface-secondary px-2.5 py-1.5 text-[12px]"
         >
-          {note.text}
-        </span>
-      ))}
+          {tips.map(tip => (
+            <li key={tip.text} className={tip.warn ? "text-(--warn)" : "text-muted"}>
+              {tip.text}
+              {tip.done && (
+                <>
+                  {" "}
+                  <DoneBadge inline label={t.needDone} />
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

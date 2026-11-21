@@ -96,8 +96,8 @@ function Toolbar({ view }: { view: AchievementView }) {
   const goal = useAchievementListStore(s => s.goal)
   const filter = useAchievementListStore(s => s.filter)
   const query = useAchievementListStore(s => s.query)
-  const showHidden = useAchievementListStore(s => s.showHidden)
-  const { setFilter, setQuery, setShowHidden } = useAchievementListStore.getState()
+  const hideHidden = useAchievementListStore(s => s.hideHidden)
+  const { setFilter, setQuery, setHideHidden } = useAchievementListStore.getState()
   const counts = filterCounts(view, goal)
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -118,7 +118,7 @@ function Toolbar({ view }: { view: AchievementView }) {
       </fieldset>
       <div className="flex flex-wrap items-center gap-3">
         <SearchBox value={query} label={t.search} onChange={setQuery} className="w-[180px]" />
-        <CheckboxField checked={showHidden} label={t.showHidden} onChange={setShowHidden} />
+        <CheckboxField checked={hideHidden} label={t.hideHidden} onChange={setHideHidden} />
       </div>
     </div>
   )
@@ -129,10 +129,10 @@ function Body({ view }: { view: AchievementView }) {
   const goal = useAchievementListStore(s => s.goal)
   const filter = useAchievementListStore(s => s.filter)
   const query = useAchievementListStore(s => s.query)
-  const showHidden = useAchievementListStore(s => s.showHidden)
+  const hideHidden = useAchievementListStore(s => s.hideHidden)
   const matched = useMemo(
-    () => visibleSeries(view, { goal: null, filter, query, showHidden }),
-    [view, filter, query, showHidden],
+    () => visibleSeries(view, { goal: null, filter, query, hideHidden }),
+    [view, filter, query, hideHidden],
   )
   // The goals the filter and the search leave something in; the others are not listed.
   const hits = useMemo(() => new Set(matched.map(s => s.goal)), [matched])
@@ -162,7 +162,6 @@ function Body({ view }: { view: AchievementView }) {
             <Card
               key={s.rows[0]?.info.id}
               series={s}
-              showHidden={showHidden}
               goalName={shownGoal === null ? GOAL_NAMES.get(s.goal) : undefined}
             />
           ))

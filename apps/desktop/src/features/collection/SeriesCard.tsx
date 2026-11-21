@@ -16,13 +16,12 @@ const PRIMOGEM = lookup("materials", "Primogem")
 
 type Props = {
   series: AchievementSeries
-  showHidden: boolean
   /** Shown after the first tier's title where every goal is listed. */
   goalName: string | undefined
 }
 
 /** One achievement's tiers, a row each, in a card. */
-export function SeriesCard({ series, showHidden, goalName }: Props) {
+export function SeriesCard({ series, goalName }: Props) {
   const [first] = series.rows
   const quest = first?.info.quest && t.quest[first.info.quest]
   return (
@@ -31,7 +30,6 @@ export function SeriesCard({ series, showHidden, goalName }: Props) {
         <Tier
           key={row.info.id}
           row={row}
-          showHidden={showHidden}
           lead={i === 0}
           quest={i === 0 ? quest : undefined}
           goalName={i === 0 ? goalName : undefined}
@@ -46,7 +44,7 @@ export function SeriesCard({ series, showHidden, goalName }: Props) {
 
 type TierProps = {
   row: AchievementRow
-  showHidden: boolean
+
   lead: boolean
   quest?: string
   goalName?: string
@@ -58,7 +56,7 @@ type TierProps = {
 const TAG = "flex-none rounded-full border px-[7px] text-[11px] leading-[18px]"
 const PLAIN = cn(TAG, "border-border text-muted")
 
-function Tier({ row, showHidden, lead, quest, goalName, version }: TierProps) {
+function Tier({ row, lead, quest, goalName, version }: TierProps) {
   const { info } = row
   const count =
     row.current !== undefined && row.shownTarget !== undefined
@@ -109,9 +107,17 @@ function Tier({ row, showHidden, lead, quest, goalName, version }: TierProps) {
           )}
           {lead && <SearchButton title={info.title} />}
         </span>
-        <span className="text-[13px] text-muted">
-          {descShown(row, showHidden) ? info.desc : t.hiddenDesc}
-        </span>
+        {descShown(row) ? (
+          <span className="text-[13px] text-muted">{info.desc}</span>
+        ) : (
+          // Blurred in place, so the row keeps its look; screen readers get the note instead.
+          <span title={t.hiddenDesc} className="text-[13px] text-muted">
+            <span aria-hidden className="pointer-events-none select-none blur-[5px]">
+              {info.desc}
+            </span>
+            <span className="sr-only">{t.hiddenDesc}</span>
+          </span>
+        )}
       </span>
       <span className="flex flex-col items-end gap-0.5 text-right text-[12px] text-muted tabular">
         {count && <span>{count}</span>}

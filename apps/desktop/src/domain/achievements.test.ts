@@ -90,7 +90,7 @@ describe("achievementView", () => {
 
 describe("visibleSeries", () => {
   const view = achievementView(state([one.id], { [two.id]: 7 }))
-  const base = { goal: null, filter: "all" as const, query: "", showHidden: false }
+  const base = { goal: null, filter: "all" as const, query: "", hideHidden: false }
 
   it("keeps only the tiers that pass the filter", () => {
     const todo = visibleSeries(view, { ...base, filter: "todo" })
@@ -99,16 +99,28 @@ describe("visibleSeries", () => {
     expect(done.map(s => s.rows.map(r => r.info.id))).toEqual([[one.id]])
   })
 
-  it("searches titles, and a hidden one's description only once it shows", () => {
+  it("searches titles, and a hidden one's description only once it is done", () => {
     expect(visibleSeries(view, { ...base, query: one.title }).length).toBeGreaterThan(0)
     if (!hidden) throw new Error("no hidden one-tier achievement")
-    const byDesc = { ...base, query: hidden.desc }
-    const found = (shown: boolean) =>
-      visibleSeries(view, { ...byDesc, showHidden: shown }).some(s =>
-        s.rows.some(r => r.info.id === hidden.id),
-      )
+    const found = (done: boolean) =>
+      visibleSeries(achievementView(state(done ? [hidden.id] : [], {})), {
+        ...base,
+        query: hidden.desc,
+      }).some(s => s.rows.some(r => r.info.id === hidden.id))
     expect(found(true)).toBe(true)
     expect(found(false)).toBe(hidden.title.includes(hidden.desc))
+  })
+
+  it("leaves out unfinished hidden tiers when asked, not finished ones", () => {
+    if (!hidden) throw new Error("no hidden one-tier achievement")
+    const has = (done: boolean, hideHidden: boolean) =>
+      visibleSeries(achievementView(state(done ? [hidden.id] : [], {})), {
+        ...base,
+        hideHidden,
+      }).some(s => s.rows.some(r => r.info.id === hidden.id))
+    expect(has(false, false)).toBe(true)
+    expect(has(false, true)).toBe(false)
+    expect(has(true, true)).toBe(true)
   })
 
   it("lists only the goal picked, and counts by it", () => {
@@ -124,10 +136,10 @@ describe("visibleSeries", () => {
 })
 
 describe("descShown", () => {
-  it("hides an unfinished hidden description unless asked", () => {
+  it("covers an unfinished hidden description only", () => {
     const info = { ...one, hidden: true }
-    expect(descShown({ info, done: false }, false)).toBe(false)
-    expect(descShown({ info, done: false }, true)).toBe(true)
-    expect(descShown({ info, done: true }, false)).toBe(true)
+    expect(descShown({ info, done: false })).toBe(false)
+    expect(descShown({ info, done: true })).toBe(true)
+    expect(descShown({ info: one, done: false })).toBe(true)
   })
 })

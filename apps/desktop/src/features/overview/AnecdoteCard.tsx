@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { ChevronRight } from "lucide-react"
 import { useMemo } from "react"
 import { Bar } from "@/components/Bar"
 import { Panel } from "@/components/Panel"
 import type { Account } from "@/domain/account"
 import { ANECDOTE_REWARD, type AnecdoteView, anecdoteView } from "@/domain/anecdotes"
+import { PARTS } from "@/features/collection/parts"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
+import { navigate } from "@/lib/route"
 import { text } from "@/text/zh"
 
 /** Recorded anecdotes, the seal reward's progress and the last wish, side by side in one card. */
@@ -16,7 +19,17 @@ export function AnecdoteCard({ account }: { account: Account }) {
   const view = useMemo(() => anecdoteView(account), [account])
   return (
     <section aria-label={text.anecdotes.title} className="flex flex-col gap-2.5">
-      <h2 className="font-semibold text-base">{text.anecdotes.title}</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-semibold text-base">{text.anecdotes.title}</h2>
+        <button
+          type="button"
+          onClick={() => navigate("collection", PARTS.anecdotes)}
+          className="flex h-[30px] cursor-pointer items-center gap-0.5 rounded-[8px] pr-1 pl-2 text-(--accent-text) text-[13px] transition-colors duration-150 hover:bg-default/60 motion-reduce:transition-none"
+        >
+          {text.anecdotes.open}
+          <ChevronRight aria-hidden className="size-4" />
+        </button>
+      </div>
       <Panel className="flex-row flex-wrap items-center gap-7 px-4.5 py-3.5">
         {anecdotes && view ? (
           <>

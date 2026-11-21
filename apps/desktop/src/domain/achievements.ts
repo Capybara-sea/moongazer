@@ -147,8 +147,9 @@ export function achievementView(state: Achievements | undefined): AchievementVie
 export type AchievementFilter = "all" | "done" | "todo"
 
 /**
- * The series to show, each with only its tiers that pass. A hidden tier's
- * description is searched only once it shows.
+ * The series to show, each with only its tiers that pass; `hideHidden` leaves
+ * out unfinished hidden tiers. A hidden tier's description is searched only
+ * once it shows.
  */
 export function visibleSeries(
   view: AchievementView,
@@ -156,29 +157,33 @@ export function visibleSeries(
     goal,
     filter,
     query,
-    showHidden,
+    hideHidden,
   }: {
     goal: number | null
     filter: AchievementFilter
     query: string
-    showHidden: boolean
+    hideHidden: boolean
   },
 ): AchievementSeries[] {
   const q = query.trim().toLowerCase()
   const matches = (row: AchievementRow) =>
     row.info.title.toLowerCase().includes(q) ||
-    (descShown(row, showHidden) && row.info.desc.toLowerCase().includes(q))
+    (descShown(row) && row.info.desc.toLowerCase().includes(q))
   return view.series.flatMap(s => {
     if (goal !== null && s.goal !== goal) return []
     if (q && !s.rows.some(matches)) return []
-    const rows = s.rows.filter(r => filter === "all" || r.done === (filter === "done"))
+    const rows = s.rows.filter(
+      r =>
+        (filter === "all" || r.done === (filter === "done")) &&
+        !(hideHidden && r.info.hidden && !r.done),
+    )
     return rows.length > 0 ? [{ goal: s.goal, rows }] : []
   })
 }
 
-/** Whether a tier's description shows: unfinished hidden ones only when asked. */
-export function descShown(row: AchievementRow, showHidden: boolean) {
-  return !row.info.hidden || row.done || showHidden
+/** Whether a tier's description shows: an unfinished hidden one's stays covered. */
+export function descShown(row: AchievementRow) {
+  return !row.info.hidden || row.done
 }
 
 /** Finished, unfinished and all tiers in a goal, or in every goal. */

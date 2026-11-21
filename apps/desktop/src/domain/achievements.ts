@@ -25,7 +25,10 @@ export type AchievementInfo = {
   count?: string
 }
 
-type Table = { achievementGoals: { id: number; name: string }[]; achievements: AchievementInfo[] }
+type Table = {
+  achievementGoals: { id: number; name: string; icon: string }[]
+  achievements: AchievementInfo[]
+}
 
 const table: Table = data
 

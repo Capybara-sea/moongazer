@@ -21,33 +21,44 @@ type Props = {
   goalName: string | undefined
 }
 
-/** One achievement's tiers, a row each, in a card; the quest badge sits in its corner. */
+/** One achievement's tiers, a row each, in a card. */
 export function SeriesCard({ series, showHidden, goalName }: Props) {
   const [first] = series.rows
   const quest = first?.info.quest && t.quest[first.info.quest]
   return (
-    <article className="glass relative flex flex-col rounded-[12px] border border-border bg-surface">
-      {quest && (
-        <span className="absolute top-0 right-0 rounded-tr-[11px] rounded-bl-[8px] bg-(--accent-soft) px-2.5 py-px text-(--accent-text) text-[11px]">
-          {quest}
-        </span>
-      )}
+    <article className="glass flex flex-col rounded-[12px] border border-border bg-surface">
       {series.rows.map((row, i) => (
         <Tier
           key={row.info.id}
           row={row}
           showHidden={showHidden}
           lead={i === 0}
+          quest={i === 0 ? quest : undefined}
           goalName={i === 0 ? goalName : undefined}
+          version={
+            i === 0 || row.info.version !== first?.info.version ? row.info.version : undefined
+          }
         />
       ))}
     </article>
   )
 }
 
-type TierProps = { row: AchievementRow; showHidden: boolean; lead: boolean; goalName?: string }
+type TierProps = {
+  row: AchievementRow
+  showHidden: boolean
+  lead: boolean
+  quest?: string
+  goalName?: string
+  /** On the first tier, and on a later one only where it differs. */
+  version?: string
+}
 
-function Tier({ row, showHidden, lead, goalName }: TierProps) {
+/** The tags after a title, as on the anecdotes page; only the quest's kind is in colour. */
+const TAG = "flex-none rounded-full border px-[7px] text-[11px] leading-[18px]"
+const PLAIN = cn(TAG, "border-border text-muted")
+
+function Tier({ row, showHidden, lead, quest, goalName, version }: TierProps) {
   const { info } = row
   const count =
     row.current !== undefined && row.shownTarget !== undefined
@@ -82,15 +93,20 @@ function Tier({ row, showHidden, lead, goalName }: TierProps) {
         {info.primogems}
       </span>
       <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="flex min-w-0 items-baseline gap-1.5">
-          <b className="truncate text-sm">{info.title}</b>
-          {info.version && (
-            <sup title={t.version(info.version)} className="text-(--accent-text) text-[11px]">
-              {info.version}
-            </sup>
+        <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <b className="text-sm">{info.title}</b>
+          {quest && (
+            <span className={cn(TAG, "border-transparent bg-(--accent-soft) text-(--accent-text)")}>
+              {quest}
+            </span>
           )}
-          {info.hidden && <span className="flex-none text-[11px] text-muted">{t.hidden}</span>}
-          {goalName && <span className="flex-none text-[11px] text-muted">{goalName}</span>}
+          {info.hidden && <span className={PLAIN}>{t.hidden}</span>}
+          {goalName && <span className={PLAIN}>{goalName}</span>}
+          {version && (
+            <span title={t.version(version)} className={cn(PLAIN, "tabular")}>
+              {version}
+            </span>
+          )}
           {lead && <SearchButton title={info.title} />}
         </span>
         <span className="text-[13px] text-muted">

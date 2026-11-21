@@ -137,6 +137,8 @@ impl Host {
                     "reliquary/"
                 } else if name.starts_with("UI_NameCard") {
                     "namecard/"
+                } else if name.starts_with("UI_AchievementIcon_") {
+                    "achievement/"
                 } else {
                     ""
                 };
@@ -146,15 +148,16 @@ impl Host {
     }
 }
 
-/// Item, element and profile frame icons try Project Amber first: Enka is
-/// missing some of them, the Cryo icon among them. So does name card art,
-/// which Enka has only at half size.
+/// Item, element, profile frame and achievement goal icons try Project Amber
+/// first: Enka is missing some of them, the Cryo icon among them and 33 of the
+/// 75 goal icons. So does name card art, which Enka has only at half size.
 fn hosts(name: &str) -> [Host; 2] {
-    const AMBER_FIRST: [&str; 4] = [
+    const AMBER_FIRST: [&str; 5] = [
         "UI_ItemIcon_",
         "UI_Buff_Element_",
         "UI_AvatarFrameIcon_",
         "UI_NameCardPic_",
+        "UI_AchievementIcon_",
     ];
     if AMBER_FIRST.iter().any(|prefix| name.starts_with(prefix)) {
         [Host::Yatta, Host::Enka]
@@ -297,6 +300,7 @@ mod tests {
         assert_eq!(hosts("UI_ItemIcon_202"), [Host::Yatta, Host::Enka]);
         assert_eq!(hosts("UI_AvatarFrameIcon_001"), [Host::Yatta, Host::Enka]);
         assert_eq!(hosts("UI_NameCardPic_Bp1_P"), [Host::Yatta, Host::Enka]);
+        assert_eq!(hosts("UI_AchievementIcon_A016"), [Host::Yatta, Host::Enka]);
         assert_eq!(hosts("UI_AvatarIcon_Shougun"), [Host::Enka, Host::Yatta]);
         assert_eq!(hosts("UI_RelicIcon_15031_4"), [Host::Enka, Host::Yatta]);
     }
@@ -318,6 +322,10 @@ mod tests {
         assert_eq!(
             Host::Yatta.url("UI_Buff_Element_Ice"),
             "https://gi.yatta.moe/assets/UI/UI_Buff_Element_Ice.png"
+        );
+        assert_eq!(
+            Host::Yatta.url("UI_AchievementIcon_A001"),
+            "https://gi.yatta.moe/assets/UI/achievement/UI_AchievementIcon_A001.png"
         );
     }
 

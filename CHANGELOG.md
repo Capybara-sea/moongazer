@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - A Collection page in the side menu.
-- Achievements: by category and series, with counts, primogems and versions, and a Bilibili
-  video search for each.
+- Achievements: by category and series, with the game's category icons, counts, primogems and
+  versions, and a Bilibili video search for each.
 - Anecdotes: by character and area, with seals, the fewest days the rest take, and a note when
   the seal reward waits to be claimed.
 

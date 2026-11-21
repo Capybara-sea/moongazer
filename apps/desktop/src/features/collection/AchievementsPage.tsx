@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { Trophy } from "lucide-react"
 import { memo, useMemo } from "react"
 import { Bar } from "@/components/Bar"
 import { CheckboxField } from "@/components/CheckboxField"
 import { EmptyState } from "@/components/EmptyState"
 import { FilterChip } from "@/components/FilterChip"
+import { GameIcon } from "@/components/GameIcon"
 import { Notice } from "@/components/Notice"
 import { SearchBox } from "@/components/SearchBox"
 import {
@@ -128,18 +130,24 @@ function Body({ view }: { view: AchievementView }) {
   const filter = useAchievementListStore(s => s.filter)
   const query = useAchievementListStore(s => s.query)
   const showHidden = useAchievementListStore(s => s.showHidden)
-  // A goal another account's snapshot has, and this one's not, shows every goal.
-  const shownGoal = goal !== null && view.goals.has(goal) ? goal : null
+  const matched = useMemo(
+    () => visibleSeries(view, { goal: null, filter, query, showHidden }),
+    [view, filter, query, showHidden],
+  )
+  // The goals the filter and the search leave something in; the others are not listed.
+  const hits = useMemo(() => new Set(matched.map(s => s.goal)), [matched])
+  // A goal this snapshot does not have, or one left empty, shows every goal.
+  const shownGoal = goal !== null && view.goals.has(goal) && hits.has(goal) ? goal : null
   const series = useMemo(
-    () => visibleSeries(view, { goal: shownGoal, filter, query, showHidden }),
-    [view, shownGoal, filter, query, showHidden],
+    () => (shownGoal === null ? matched : matched.filter(s => s.goal === shownGoal)),
+    [matched, shownGoal],
   )
   const { visible, more, sentinel } = useBatches(series)
   const counts = filterCounts(view, shownGoal)
   const name = shownGoal === null ? t.allGoals : (GOAL_NAMES.get(shownGoal) ?? "")
   return (
     <div className="flex flex-wrap items-start gap-4">
-      <Goals view={view} goal={shownGoal} />
+      <Goals view={view} goal={shownGoal} hits={hits} />
       <section aria-label={name} className="flex min-w-0 flex-[999_1_520px] flex-col gap-2">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="font-semibold text-[15px]">{name}</h2>
@@ -165,18 +173,20 @@ function Body({ view }: { view: AchievementView }) {
   )
 }
 
-function Goals({ view, goal }: { view: AchievementView; goal: number | null }) {
+type GoalsProps = { view: AchievementView; goal: number | null; hits: Set<number> }
+
+function Goals({ view, goal, hits }: GoalsProps) {
   const { setGoal } = useAchievementListStore.getState()
   // Scrolled to the top again so a long list does not open halfway.
   const scrollTop = () => {
     const page = document.querySelector('section[data-page="collection"]')
     if (page) page.scrollTop = 0
   }
-  const rows = [
+  const rows: { id: number | null; name: string; icon?: string; done: number; total: number }[] = [
     { id: null, name: t.allGoals, done: view.done, total: view.total },
     ...ACHIEVEMENT_GOALS.flatMap(g => {
       const counts = view.goals.get(g.id)
-      return counts ? [{ id: g.id, name: g.name, ...counts }] : []
+      return counts && hits.has(g.id) ? [{ id: g.id, name: g.name, icon: g.icon, ...counts }] : []
     }),
   ]
   return (
@@ -201,12 +211,16 @@ function Goals({ view, goal }: { view: AchievementView; goal: number | null }) {
             )}
           >
             <span className="flex w-full items-center gap-2">
-              <span
-                aria-hidden
-                className="flex size-6 flex-none items-center justify-center rounded-[6px] bg-surface-secondary font-semibold text-[11px] text-muted"
-              >
-                {row.name.slice(0, 1)}
-              </span>
+              {row.icon ? (
+                <GameIcon icon={row.icon} label={row.name} className="size-7 text-[11px]" />
+              ) : (
+                <span
+                  aria-hidden
+                  className="flex size-7 flex-none items-center justify-center text-(--accent-text)"
+                >
+                  <Trophy size={16} />
+                </span>
+              )}
               <span className="min-w-0 flex-1 truncate text-[13px]">{row.name}</span>
               <span className="text-[12px] text-muted tabular">
                 {formatNumber(row.done)} / {formatNumber(row.total)}

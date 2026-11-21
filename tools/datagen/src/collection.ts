@@ -43,7 +43,8 @@ type Anecdote = {
   time?: "day" | "night"
 }
 export type Collection = {
-  achievementGoals: { id: number; name: string }[]
+  /** The goals in the game's order, with the game's icon name. */
+  achievementGoals: { id: number; name: string; icon: string }[]
   achievements: Achievement[]
   anecdoteAreas: Record<string, string>
   anecdotes: Anecdote[]
@@ -109,9 +110,11 @@ export async function buildCollection(
     .map(row => ({ id: Number(row.id ?? 0), name: g.text(row.nameTextMapHash), order: row }))
     .filter(goal => used.has(goal.id))
     .sort((a, b) => num(a.order, "orderId") - num(b.order, "orderId"))
-    .map(({ id, name }, i) => {
+    .map(({ id, name, order }, i) => {
       goalOrder.set(id, i)
-      return { id, name }
+      const icon = order.iconPath
+      if (typeof icon !== "string" || !icon) throw new Error(`achievement goal ${id} has no icon`)
+      return { id, name, icon }
     })
   if (goalOrder.size !== used.size) throw new Error("an achievement's goal is not in the goals")
   const order = new Map(achievementRows.map(row => [row.id, Number(row.orderId ?? 0)]))

@@ -177,6 +177,12 @@ fn matches_the_reference(dir: &Path) -> bool {
         "anecdote fields moved while playing: {}",
         live - differing.len()
     );
+    let kept = differing.len();
+    differing.retain(|path, _| !kept_from_an_earlier_list(path, &reference));
+    println!(
+        "respawn spots kept from an earlier list: {}",
+        kept - differing.len()
+    );
     for (path, count) in &differing {
         println!("differs at {path}: {count}");
     }
@@ -198,6 +204,16 @@ fn moved_while_playing(path: &str) -> bool {
             ".gi_anecdotes.reward.progress",
         ]
         .contains(&path)
+}
+
+/// A respawn spot only we hold. When the game re-sends part of the list,
+/// upstream since 1.18.4 keeps the spots it leaves out, which the reference's
+/// Capture (1.17.32) dropped. Remove once the references come from 1.18.4 or
+/// later.
+fn kept_from_an_earlier_list(path: &str, reference: &Value) -> bool {
+    path.strip_prefix(".gi_tasks.respawns.")
+        .filter(|spot| !spot.contains(['.', '[']))
+        .is_some_and(|spot| reference["gi_tasks"]["respawns"].get(spot).is_none())
 }
 
 /// The chain test's step: after each export it skips 1/`CHAIN_POINTS` of the

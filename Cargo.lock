@@ -2292,7 +2292,7 @@ dependencies = [
 [[package]]
 name = "kcp"
 version = "0.6.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
 dependencies = [
  "bytes",
  "log",
@@ -2535,6 +2535,12 @@ name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
+name = "minisign-verify"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22f9645cb765ea72b8111f36c522475d2daa0d22c957a9826437e97534bc4e9e"
 
 [[package]]
 name = "minisign-verify"
@@ -3290,7 +3296,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 [[package]]
 name = "pktmon"
 version = "0.6.2"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
 dependencies = [
  "async-stream",
  "cidr",
@@ -4898,7 +4904,7 @@ dependencies = [
  "infer",
  "libc",
  "log",
- "minisign-verify",
+ "minisign-verify 0.3.0",
  "osakit",
  "percent-encoding",
  "reqwest",
@@ -5053,13 +5059,14 @@ dependencies = [
 [[package]]
 name = "teyvatme-core"
 version = "0.0.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
  "chrono",
  "getrandom 0.3.4",
  "indexmap 2.14.2",
+ "minisign-verify 0.2.5",
  "protobuf",
  "serde",
  "serde_json",
@@ -5073,7 +5080,7 @@ dependencies = [
 [[package]]
 name = "teyvatme-game-data"
 version = "0.1.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
 dependencies = [
  "anyhow",
  "flate2",
@@ -5085,7 +5092,7 @@ dependencies = [
 [[package]]
 name = "teyvatme-protocol"
 version = "1.4.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.17.32#fc62d8e5fd92da3563a2ff096427ca143cea561d"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
 dependencies = [
  "base64 0.22.1",
  "etherparse",

@@ -246,6 +246,9 @@ impl Decoder {
             tracing::warn!(left_out = %left_out, "the export left entities out");
         }
         good.source = SOURCE.to_owned();
+        // What a tracker upload leaves out (upstream 1.18): a saved export is
+        // not an upload, and upstream's own exports leave it off too.
+        good.gi_off = None;
         let account = good
             .gi_player
             .as_ref()

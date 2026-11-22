@@ -43,6 +43,7 @@ pub struct Decoder {
     /// The login's Travel Accounts book, kept up to date while playing.
     book: Option<Book>,
     commission_cities: HashMap<u32, u32>,
+    progress: commissions::Progress,
 }
 
 /// What one frame did.
@@ -106,6 +107,7 @@ impl Decoder {
             player_data: PlayerData::new(pack.game_data).with_game_data_sha(Some(&pack.data_id)),
             book: None,
             commission_cities: pack.commission_cities,
+            progress: commissions::Progress::new(pack.commission_rewards),
         }
     }
 
@@ -183,6 +185,7 @@ impl Decoder {
                 DataVerdict::ReplaceThenApply => {
                     self.player_data.reset();
                     self.book = None;
+                    self.progress.new_login();
                     fed.new_login = true;
                 }
                 DataVerdict::Hold => return,
@@ -194,6 +197,10 @@ impl Decoder {
                     self.book = Some(Book::new(data.clone(), &command.proto_data));
                 }
             }
+            let player = &self.player_data;
+            self.progress.teach(&mut classified, at_ms, || {
+                player.gi_player().and_then(|player| player.ar)
+            });
             self.player_data.set_clock(at_ms / 1000);
             fed.applied = true;
             fed.data |= decode::apply_commands(&mut self.player_data, classified).any();
@@ -280,6 +287,7 @@ mod tests {
             game_data: AnimeGameData::new(),
             data_id: String::new(),
             commission_cities: HashMap::new(),
+            commission_rewards: Vec::new(),
         });
         let fed = decoder.feed(vec![0; 64], 0);
         assert!(!fed.data && !fed.connection && !fed.one_way);

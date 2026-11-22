@@ -204,8 +204,7 @@ export const text = {
     commissionsLeft: (n: number) => `剩余 ${n} 个`,
     commissionsClaimable: "可领奖励",
     commissionsClaimed: "已领奖励",
-    commissionsNotRead:
-      "完成一个委托后，返回标题界面重新进入即可读取。将“委托任务倾向地域”设为“随机”或枫丹及之后的地区，之后基本不会再出现此情况。",
+    commissionsNotRead: "返回标题界面重新进入即可读取。",
     realm: "洞天宝钱",
     realmRoom: (n: string) => `可再存 ${n}`,
     realmFull: "已存满",

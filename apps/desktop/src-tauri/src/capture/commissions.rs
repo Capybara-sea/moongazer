@@ -14,7 +14,8 @@
 //! table of their cities), so a number that is not that city is the count,
 //! and of two the other one is. With no number none are finished and no city
 //! is fixed. A lone number that is the list's city could be either, and stays
-//! unread.
+//! unread until the day's progress notify, told at the login by [`Progress`],
+//! counts it.
 
 use std::collections::HashMap;
 
@@ -142,9 +143,138 @@ fn varint(value: Value<'_>) -> Option<u64> {
     }
 }
 
+/// How many progress notifies upstream wants to agree with the list it holds
+/// before it believes them (`COMMISSION_AGREEMENTS` in teyvatme-core's
+/// player_data.rs, not public). Should it ask for more, the notify is
+/// learned later, as it was before.
+const AGREEMENTS: usize = 3;
+
+/// How long after a login's list its progress notify is still told by its
+/// reward: the game sends one just before the list and one right after it,
+/// and another message with the same reward only later (7.2: when
+/// Katheryne's reward is taken).
+const BESIDE_THE_LIST_MS: u64 = 1_000;
+
+/// The day's progress notify, told at each login and taught to upstream at
+/// once.
+///
+/// Upstream learns which candidate is the notify only once three agree with
+/// the list it holds, all before the count moves: a list it cannot count, or
+/// a commission done soon after logging in, and it does not that session.
+/// At a login the game sends the notify just before the list and again right
+/// after it, with the day's count and whether Katheryne's reward was taken,
+/// and on it the id of that reward for the player's Adventure Rank, which
+/// nothing else sent then carries. Its count becomes the list's, and it is
+/// handed to upstream as many times as upstream needs to believe it.
+pub struct Progress {
+    /// `[lowest, highest, reward id]` for each range of Adventure Ranks.
+    rewards: Vec<[u32; 3]>,
+    /// This login's list as upstream holds it.
+    list: Option<DailyCommissions>,
+    /// When this login's list first came.
+    listed_at: Option<u64>,
+    /// The command this login's notifies come on.
+    notify: Option<u16>,
+    /// The notify upstream was taught, and its reward: upstream keeps what it
+    /// learned from one login to the next.
+    taught: Option<(u16, u32)>,
+}
+
+impl Progress {
+    pub fn new(rewards: Vec<[u32; 3]>) -> Self {
+        Self {
+            rewards,
+            list: None,
+            listed_at: None,
+            notify: None,
+            taught: None,
+        }
+    }
+
+    /// A new login, whose list and notify are told afresh.
+    pub fn new_login(&mut self) {
+        self.list = None;
+        self.listed_at = None;
+        self.notify = None;
+    }
+
+    /// Goes through what is about to be applied, received at `at_ms`: tells
+    /// the notify, and gives upstream its count as the list's and the notify
+    /// as many times as it needs. `rank` is the player's Adventure Rank, asked
+    /// for only when a candidate carries a reward of the table.
+    pub fn teach(
+        &mut self,
+        classified: &mut Vec<(u16, CommandMatch)>,
+        at_ms: u64,
+        rank: impl Fn() -> Option<u32>,
+    ) {
+        let mut out = Vec::with_capacity(classified.len());
+        for (id, found) in classified.drain(..) {
+            match &found {
+                CommandMatch::Commissions(list) => {
+                    self.list = Some(*list);
+                    self.listed_at.get_or_insert(at_ms);
+                }
+                CommandMatch::CommissionProgress(progress) => {
+                    let reward = progress.reward_id;
+                    if self.notify.is_none()
+                        && self
+                            .listed_at
+                            .is_none_or(|listed| at_ms <= listed + BESIDE_THE_LIST_MS)
+                        && self.rewards.iter().any(|row| row[2] == reward)
+                        && rank().and_then(|rank| self.reward_for(rank)) == Some(reward)
+                    {
+                        self.notify = Some(id);
+                    }
+                    if self.notify == Some(id)
+                        && let Some(list) = self.list
+                        && let Some(finished) = finished(&progress.counts, list.total)
+                    {
+                        let held = DailyCommissions {
+                            finished: Some(finished),
+                            ..list
+                        };
+                        self.list = Some(held);
+                        if self.taught != Some((id, reward)) {
+                            self.taught = Some((id, reward));
+                            if list.finished != held.finished {
+                                out.push((id, CommandMatch::Commissions(held)));
+                            }
+                            for _ in 1..AGREEMENTS {
+                                out.push((id, CommandMatch::CommissionProgress(progress.clone())));
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+            out.push((id, found));
+        }
+        *classified = out;
+    }
+
+    fn reward_for(&self, rank: u32) -> Option<u32> {
+        self.rewards
+            .iter()
+            .find(|[lowest, highest, _]| (*lowest..=*highest).contains(&rank))
+            .map(|row| row[2])
+    }
+}
+
+/// The count a notify says for a list of `total`, read as upstream reads it:
+/// none, the count, or all of them with the reward taken.
+fn finished(counts: &[u32], total: u32) -> Option<u32> {
+    match *counts {
+        [] => Some(0),
+        [count] if count <= total => Some(count),
+        [a, b] if (a, b) == (total, 1) || (a, b) == (1, total) => Some(total),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use teyvatme_protocol::matches_daily_task_notify;
+    use teyvatme_protocol::{CommissionProgress, matches_daily_task_notify};
 
     use super::*;
 
@@ -274,5 +404,125 @@ mod tests {
             after(list(&[]), other(), &mixed),
             CommandMatch::ClientVersion(_)
         ));
+    }
+
+    const REWARDS: [[u32; 3]; 2] = [[31, 35, 2_007], [56, 60, 2_012]];
+
+    fn notify(reward_id: u32, counts: &[u32]) -> CommandMatch {
+        CommandMatch::CommissionProgress(CommissionProgress {
+            reward_id,
+            counts: counts.to_vec(),
+        })
+    }
+
+    fn held(finished: Option<u32>) -> CommandMatch {
+        CommandMatch::Commissions(DailyCommissions { total: 4, finished })
+    }
+
+    /// What `teach` hands upstream for one batch, received at `at_ms`, from a
+    /// player of rank 33.
+    fn teach(progress: &mut Progress, batch: Vec<(u16, CommandMatch)>, at_ms: u64) -> Vec<String> {
+        let mut batch = batch;
+        progress.teach(&mut batch, at_ms, || Some(33));
+        batch
+            .iter()
+            .map(|(id, found)| match found {
+                CommandMatch::Commissions(list) => format!("{id} list {:?}", list.finished),
+                CommandMatch::CommissionProgress(found) => {
+                    format!("{id} notify {} {:?}", found.reward_id, found.counts)
+                }
+                other => format!("{id} {}", other.kind()),
+            })
+            .collect()
+    }
+
+    #[test]
+    fn the_notify_beside_a_login_list_counts_it_and_is_taught() {
+        let mut progress = Progress::new(REWARDS.to_vec());
+        // Before the list: told, with nothing to count yet.
+        assert_eq!(
+            teach(&mut progress, vec![(5, notify(2_007, &[]))], 0),
+            ["5 notify 2007 []"]
+        );
+        // A list upstream could not count, then the notify right after it.
+        assert_eq!(
+            teach(&mut progress, vec![(9, held(None))], 2_000),
+            ["9 list None"]
+        );
+        assert_eq!(
+            teach(&mut progress, vec![(5, notify(2_007, &[]))], 2_100),
+            [
+                "5 list Some(0)",
+                "5 notify 2007 []",
+                "5 notify 2007 []",
+                "5 notify 2007 []"
+            ]
+        );
+        // Once taught, upstream believes it: later ones go through once.
+        assert_eq!(
+            teach(&mut progress, vec![(5, notify(2_007, &[1]))], 90_000),
+            ["5 notify 2007 [1]"]
+        );
+        // So it does at the next login, even with a list it cannot count.
+        progress.new_login();
+        assert_eq!(
+            teach(&mut progress, vec![(9, held(None))], 200_000),
+            ["9 list None"]
+        );
+        assert_eq!(
+            teach(&mut progress, vec![(5, notify(2_007, &[2]))], 200_100),
+            ["5 notify 2007 [2]"]
+        );
+    }
+
+    #[test]
+    fn a_list_already_counted_is_not_given_again() {
+        let mut progress = Progress::new(REWARDS.to_vec());
+        assert_eq!(
+            teach(&mut progress, vec![(9, held(Some(2)))], 0),
+            ["9 list Some(2)"]
+        );
+        assert_eq!(
+            teach(&mut progress, vec![(5, notify(2_007, &[2]))], 100),
+            [
+                "5 notify 2007 [2]",
+                "5 notify 2007 [2]",
+                "5 notify 2007 [2]"
+            ]
+        );
+    }
+
+    #[test]
+    fn another_reward_or_a_later_message_is_not_the_notify() {
+        let mut progress = Progress::new(REWARDS.to_vec());
+        // Another rank's reward (7.2: 25995 with 2005, right after the list).
+        assert_eq!(
+            teach(&mut progress, vec![(9, held(None))], 0),
+            ["9 list None"]
+        );
+        assert_eq!(
+            teach(&mut progress, vec![(7, notify(2_005, &[1]))], 200),
+            ["7 notify 2005 [1]"]
+        );
+        // The player's reward, long after the list (7.2: 26619, when it is taken).
+        assert_eq!(
+            teach(&mut progress, vec![(8, notify(2_007, &[]))], 45_000),
+            ["8 notify 2007 []"]
+        );
+        // Nor without the player's rank.
+        let mut progress = Progress::new(REWARDS.to_vec());
+        let mut batch = vec![(9, held(None)), (5, notify(2_007, &[]))];
+        progress.teach(&mut batch, 0, || None);
+        assert_eq!(batch.len(), 2);
+    }
+
+    #[test]
+    fn a_taken_reward_reads_as_all_done() {
+        assert_eq!(finished(&[], 4), Some(0));
+        assert_eq!(finished(&[3], 4), Some(3));
+        assert_eq!(finished(&[1, 4], 4), Some(4));
+        assert_eq!(finished(&[4, 1], 4), Some(4));
+        assert_eq!(finished(&[5], 4), None);
+        assert_eq!(finished(&[2, 1], 4), None);
     }
 }

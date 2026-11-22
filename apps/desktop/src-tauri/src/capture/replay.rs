@@ -3,7 +3,8 @@
 
 //! The regression test: a recorded login must decode to the same export
 //! Teyvat.me Capture makes of it, but for the anecdotes recorded while
-//! playing, and must leave no UID in the log.
+//! playing and the commissions the progress notify told, and must leave no
+//! UID in the log.
 //!
 //! It needs a real login, so it is ignored unless asked for:
 //!
@@ -183,6 +184,12 @@ fn matches_the_reference(dir: &Path) -> bool {
         "respawn spots kept from an earlier list: {}",
         kept - differing.len()
     );
+    let counted = differing.len();
+    differing.retain(|path, _| !told_by_the_progress_notify(path, &ours, &reference));
+    println!(
+        "commission fields told by the progress notify: {}",
+        counted - differing.len()
+    );
     for (path, count) in &differing {
         println!("differs at {path}: {count}");
     }
@@ -214,6 +221,21 @@ fn kept_from_an_earlier_list(path: &str, reference: &Value) -> bool {
     path.strip_prefix(".gi_tasks.respawns.")
         .filter(|spot| !spot.contains(['.', '[']))
         .is_some_and(|spot| reference["gi_tasks"]["respawns"].get(spot).is_none())
+}
+
+/// What the day's progress notify told and the reference's Capture had not
+/// learned to believe (see `Progress` in commissions.rs): more commissions
+/// done, or Katheryne's reward taken.
+fn told_by_the_progress_notify(path: &str, ours: &Value, reference: &Value) -> bool {
+    let ours = &ours["gi_tasks"]["commissions"];
+    let reference = &reference["gi_tasks"]["commissions"];
+    match path {
+        ".gi_tasks.commissions.finished" => {
+            ours["finished"].as_u64() > reference["finished"].as_u64()
+        }
+        ".gi_tasks.commissions.claimed" => ours["claimed"] == true,
+        _ => false,
+    }
 }
 
 /// The chain test's step: after each export it skips 1/`CHAIN_POINTS` of the

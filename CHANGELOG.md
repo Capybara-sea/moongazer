@@ -22,9 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- The overview's daily card no longer says "not read" for full resin, and reads finished
-  commissions on more days, with or without a fixed commission region; when it still cannot,
-  hovering the row says what to do.
+- The overview's daily card no longer says "not read" for full resin, reads finished commissions
+  on more days, with or without a fixed commission region, and follows them as they are done;
+  when it still cannot, hovering the row says what to do.
 - Auto sync now links Teyvat.me Capture v1.18.4: spending all resin no longer leaves the old count,
   and the UID, weekly boss discounts and the Aranara list are no longer lost in some cases.
 

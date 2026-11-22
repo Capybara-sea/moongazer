@@ -14,8 +14,10 @@
 // version that is linked. Its scene point files are not taken from there: which scenes exist
 // depends on the game version, so they are worked out from this data set as the crate does.
 //
-// Beside them it writes `<out>/commission-cities.json`, the city of every daily commission by id,
-// for Moongazer's own decoder (`capture/commissions.rs`); upstream's crate does not read it.
+// Beside them it writes, for Moongazer's own decoder (`capture/commissions.rs`) and not read by
+// upstream's crate, `<out>/commission-cities.json`, the city of every daily commission by id, and
+// `<out>/commission-rewards.json`, Katheryne's reward for the day's commissions by Adventure Rank
+// (`[lowest, highest, reward id]`).
 
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
@@ -28,6 +30,9 @@ const AREAS = "ExcelBinOutput/WorldAreaConfigData.json"
 const COMMISSIONS = "ExcelBinOutput/DailyTaskExcelConfigData.json"
 /** About half of the 692 commissions 7.2 has: fewer means a field was renamed. */
 const MIN_COMMISSIONS = 300
+const LEVELS = "ExcelBinOutput/DailyTaskLevelExcelConfigData.json"
+/** 7.2 has twelve, one for every five Adventure Ranks. */
+const MIN_LEVELS = 10
 
 const [upstreamManifest, out] = process.argv.slice(2)
 if (!upstreamManifest || !out || process.argv.length !== 4) {
@@ -73,9 +78,18 @@ if (commissions < MIN_COMMISSIONS)
   throw new Error(`${COMMISSIONS}: only ${commissions} cities read`)
 await writeFile(join(out, "commission-cities.json"), `${JSON.stringify(cities)}\n`)
 
+const rewards: [number, number, number][] = []
+for (const row of list(JSON.parse(await download(repo, commit, LEVELS)), LEVELS)) {
+  const { minPlayerLevel: lowest, maxPlayerLevel: highest, scorePreviewRewardId: reward } = row
+  if (typeof lowest === "number" && typeof highest === "number" && typeof reward === "number")
+    rewards.push([lowest, highest, reward])
+}
+if (rewards.length < MIN_LEVELS) throw new Error(`${LEVELS}: only ${rewards.length} rewards read`)
+await writeFile(join(out, "commission-rewards.json"), `${JSON.stringify(rewards)}\n`)
+
 // The crate takes the id for the data set's name and requires 40 hex digits, as a commit id is.
 await writeFile(join(out, "manifest.json"), `${JSON.stringify({ id: commit })}\n`)
 console.log(
-  `${tables.length} tables, ${points.filter(Boolean).length} scene point files and ` +
-    `${commissions} commission cities of ${repo}@${commit}`,
+  `${tables.length} tables, ${points.filter(Boolean).length} scene point files, ` +
+    `${commissions} commission cities and ${rewards.length} commission rewards of ${repo}@${commit}`,
 )

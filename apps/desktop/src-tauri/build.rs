@@ -48,6 +48,7 @@ fn capture_pack() {
         "gi.json",
         "game_data.gz",
         "commission-cities.json",
+        "commission-rewards.json",
     ]
     .iter()
     .all(|file| dir.join(file).is_file())

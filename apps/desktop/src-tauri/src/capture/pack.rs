@@ -8,6 +8,8 @@
 //! - `gi.json`: the dispatch keys, base64 by key id.
 //! - `game_data.gz`: the game database, gzipped JSON.
 //! - `commission-cities.json`: the city of every daily commission, by id.
+//! - `commission-rewards.json`: Katheryne's reward for the day's commissions,
+//!   by Adventure Rank.
 //! - `pack.json`: the upstream source the keys came from, and the id of the
 //!   data set the database was built from.
 
@@ -24,12 +26,13 @@ use teyvatme_game_data::AnimeGameData;
 /// The upstream source this build is linked against (see build.rs).
 const UPSTREAM: &str = env!("CAPTURE_UPSTREAM");
 
-/// The four files' contents.
+/// The five files' contents.
 pub struct Files<'a> {
     pub manifest: &'a [u8],
     pub keys: &'a [u8],
     pub game_data: &'a [u8],
     pub commission_cities: &'a [u8],
+    pub commission_rewards: &'a [u8],
 }
 
 #[cfg(capture_pack)]
@@ -46,6 +49,10 @@ const BUILT_IN: Option<Files<'static>> = Some(Files {
     commission_cities: include_bytes!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/capture-pack/commission-cities.json"
+    )),
+    commission_rewards: include_bytes!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/capture-pack/commission-rewards.json"
     )),
 });
 #[cfg(not(capture_pack))]
@@ -64,6 +71,8 @@ pub struct Pack {
     /// Names the data set in the export (`gi_player.gameData`).
     pub(super) data_id: String,
     pub(super) commission_cities: HashMap<u32, u32>,
+    /// `[lowest, highest, reward id]` for each range of Adventure Ranks.
+    pub(super) commission_rewards: Vec<[u32; 3]>,
 }
 
 impl Pack {
@@ -107,6 +116,7 @@ impl Pack {
             game_data,
             data_id: manifest.data_id,
             commission_cities: parse_json("commission-cities.json", files.commission_cities)?,
+            commission_rewards: parse_json("commission-rewards.json", files.commission_rewards)?,
         })
     }
 }
@@ -142,6 +152,7 @@ mod tests {
             keys: keys.as_bytes(),
             game_data: &game_data,
             commission_cities: b"{}",
+            commission_rewards: b"[]",
         };
         format!(
             "{:#}",

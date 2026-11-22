@@ -117,6 +117,22 @@ describe("parseAccount on a Leyline export", () => {
     expect(tasks?.abyss).toEqual({ start: 6_000_000, end: 7_000_000, stars: 27, maxStars: 36 })
   })
 
+  it("gives realm currency the highest Adeptal Energy among the realm layouts", () => {
+    const { tasks } = leyline({
+      gi_tasks: { realm: { value: 1_200, limit: 2_400 } },
+      gi_teapot: {
+        comfort: {
+          1: { mansion: 5_000, blocks: [3_000, 2_000, 1_000, 500] },
+          2: { mansion: 9_000, blocks: [4_000] },
+          3: { blocks: [100] },
+        },
+      },
+    })
+    expect(tasks?.realm).toEqual({ value: 1_200, limit: 2_400, comfort: 13_000 })
+    const none = leyline({ gi_tasks: { realm: { value: 1_200, limit: 2_400 } } })
+    expect(none.tasks?.realm?.comfort).toBeUndefined()
+  })
+
   it("reads missing zero counts in the tasks as 0", () => {
     const { tasks } = leyline({
       gi_tasks: {

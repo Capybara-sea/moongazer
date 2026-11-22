@@ -68,6 +68,12 @@ describe("parseAccount on malformed input", () => {
     expect(tasks?.welkin).toBeUndefined()
     expect(tasks?.abyss).toBeUndefined()
     expect(leyline({ gi_tasks: "none" }).tasks).toBeUndefined()
+    const realm = { value: 1_200, limit: 2_400 }
+    for (const gi_teapot of [null, "comfort", { comfort: [] }, { comfort: { 1: 5_000 } }]) {
+      expect(leyline({ gi_tasks: { realm }, gi_teapot }).tasks?.realm?.comfort).toBeUndefined()
+    }
+    const odd = { comfort: { 1: { mansion: "9000", blocks: [2_000, "x", null] }, 2: null } }
+    expect(leyline({ gi_tasks: { realm }, gi_teapot: odd }).tasks?.realm?.comfort).toBe(2_000)
   })
 
   it("reads exploration, endgame and collection fields of the wrong type as missing", () => {

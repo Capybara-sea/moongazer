@@ -4,7 +4,8 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import type { Account, Tasks } from "@/domain/account"
-import { RESIN_CAP } from "@/domain/daily"
+import { RESIN_CAP, realmFullNote } from "@/domain/daily"
+import data from "@/generated/overview.json"
 import { formatNumber } from "@/lib/format"
 import { text } from "@/text/zh"
 import { DailyCard } from "./DailyCard"
@@ -45,5 +46,21 @@ describe("DailyCard", () => {
       )
       expect(html.split(note)).toHaveLength(2)
     }
+  })
+
+  it("says when realm currency will be full from its Adeptal Energy, else how much fits", () => {
+    const realm = (comfort?: number) =>
+      renderToStaticMarkup(
+        <DailyCard
+          account={account({ realm: { value: 450, limit: 2400, comfort } })}
+          takenAt={Date.now()}
+        />,
+      )
+    // The rate table is regenerated with every game version, so the level is picked from it.
+    const top = data.realmRates.at(-1)
+    if (!top) throw new Error("the table lacks comfort levels")
+    const hours = Math.ceil(1950 / top.perHour)
+    expect(realm(top.comfort)).toContain(`>${realmFullNote(hours * 3_600_000)}</span>`)
+    expect(realm()).toContain(`>${t.realmRoom(formatNumber(1950))}</span>`)
   })
 })

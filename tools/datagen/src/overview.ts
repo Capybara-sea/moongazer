@@ -10,6 +10,8 @@ type Area = { total: number; city: number }
 type Blessing = { name: string; text: string }
 /** Elements by element key, characters by GOOD key. */
 type Cast = { elements: string[]; guests: string[]; openers: string[] }
+/** A Serenitea Pot comfort level: the Adeptal Energy it takes, the Realm Currency it makes an hour. */
+type RealmRate = { comfort: number; perHour: number }
 export type Overview = {
   profilePictures: Record<string, string>
   nameCards: Record<string, string>
@@ -20,6 +22,7 @@ export type Overview = {
   abyss: Record<string, number>
   abyssBlessings: Record<string, Blessing>
   areas: Record<string, Area>
+  realmRates: RealmRate[]
 }
 
 /** The game's element type ids, as the theater schedule lists them. */
@@ -46,7 +49,7 @@ export async function buildOverview(
 ): Promise<Overview> {
   const load = async (path: string): Promise<Raw[]> =>
     list(JSON.parse(await download(snap.repo, snap.commit, path)), path)
-  const [theater, stygian, pictures, abyss, entities, totals, cities, materials] =
+  const [theater, stygian, pictures, abyss, entities, totals, cities, materials, comfort] =
     await Promise.all([
       load("Genshin/CHS/RoleCombatSchedule.json"),
       load("Genshin/CHS/HardChallengeSchedule.json"),
@@ -56,6 +59,7 @@ export async function buildOverview(
       g.table("ExploreAreaTotalExpExcelConfigData.json"),
       g.table("CityConfigData.json"),
       g.table("MaterialExcelConfigData.json"),
+      g.table("HomeWorldComfortLevelExcelConfigData.json"),
     ])
   return {
     profilePictures: Object.fromEntries(
@@ -69,7 +73,28 @@ export async function buildOverview(
     abyss: Object.fromEntries(abyss.map(row => [num(row, "scheduleId"), abyssOpens(row)])),
     abyssBlessings: blessings(g, abyss, entities),
     areas: areas(totals, cities),
+    realmRates: realmRates(comfort),
   }
+}
+
+/**
+ * The comfort levels, lowest first. AnimeGameData leaves out the first level's Adeptal Energy,
+ * which is 0; each level after it must take more, or looking a level up by energy goes wrong.
+ */
+function realmRates(rows: Raw[]): RealmRate[] {
+  const rates = [...rows]
+    .sort((a, b) => num(a, "levelID") - num(b, "levelID"))
+    .map(row => ({
+      comfort: row.comfort === undefined ? 0 : num(row, "comfort"),
+      perHour: num(row, "homeCoinProduceRate"),
+    }))
+  rates.forEach((rate, i) => {
+    const below = rates[i - 1]
+    if (below ? rate.comfort <= below.comfort : rate.comfort !== 0) {
+      throw new Error(`comfort levels take ${rates.map(r => r.comfort)}, not from 0 rising`)
+    }
+  })
+  return rates
 }
 
 /** Unix seconds. Without a UTC offset Date.parse would read the time in the local zone. */

@@ -14,9 +14,11 @@ import {
   currentCommissions,
   currentWelkin,
   formatDuration,
+  projectRealm,
   projectResin,
   RESIN_CAP,
   ratio,
+  realmFullNote,
   transformerState,
 } from "@/domain/daily"
 import { lookup } from "@/domain/names"
@@ -40,7 +42,8 @@ const monthDayTime = (ms: number) => `${formatMonthDay(ms)} ${formatTime(ms)}`
 
 /**
  * Today's tasks, one graphic per row. Counts are the snapshot's, started over
- * when a reset has passed since; what the export gives as times moves on to now.
+ * when a reset has passed since; what the export gives as times moves on to now,
+ * and Realm Currency is counted on at the rate its Adeptal Energy gives.
  */
 export function DailyCard({ account, takenAt }: { account: Account; takenAt: number }) {
   const now = useNow()
@@ -55,7 +58,7 @@ export function DailyCard({ account, takenAt }: { account: Account; takenAt: num
       <div className="grid grid-cols-[76px_minmax(0,1fr)_auto] gap-x-3.5">
         <Resin resin={tasks?.resin} now={now} />
         <Commissions commissions={tasks?.commissions} takenAt={takenAt} now={now} />
-        <Realm realm={tasks?.realm} />
+        <Realm realm={tasks?.realm} takenAt={takenAt} now={now} />
         <Bosses bosses={tasks?.weeklyBosses} takenAt={takenAt} now={now} />
         <Expeditions expeditions={tasks?.expeditions} now={now} />
         <Transformer transformer={tasks?.transformer} now={now} />
@@ -163,16 +166,30 @@ function Commissions({ commissions, takenAt, now }: CommissionsProps) {
   )
 }
 
-function Realm({ realm }: { realm: Tasks["realm"] }) {
+type RealmProps = { realm: Tasks["realm"]; takenAt: number; now: number }
+
+/** Counted on from the snapshot when the Adeptal Energy gives a rate; the tip says which. */
+function Realm({ realm, takenAt, now }: RealmProps) {
   if (!realm) return <Missing label={t.realm} />
-  const room = realm.limit - realm.value
+  const { value, fullAt, perHour } = projectRealm(realm, takenAt, now)
+  const note =
+    value >= realm.limit
+      ? t.realmFull
+      : fullAt === undefined
+        ? t.realmRoom(formatNumber(realm.limit - value))
+        : realmFullNote(fullAt - now)
   return (
     <Row
       label={t.realm}
-      value={`${formatNumber(realm.value)} / ${formatNumber(realm.limit)}`}
-      note={room > 0 ? t.realmRoom(formatNumber(room)) : t.realmFull}
+      value={`${formatNumber(value)} / ${formatNumber(realm.limit)}`}
+      note={note}
+      tip={
+        fullAt === undefined || perHour === undefined || realm.comfort === undefined
+          ? undefined
+          : t.realmRateTip(formatNumber(realm.comfort), perHour)
+      }
     >
-      <Bar value={ratio(realm.value, realm.limit)} />
+      <Bar value={ratio(value, realm.limit)} />
     </Row>
   )
 }

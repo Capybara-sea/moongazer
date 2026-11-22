@@ -3,11 +3,13 @@
 
 /**
  * Today's tasks carried from the snapshot to now: what the export gives as
- * times moves on by itself, and counts start over at the server's resets.
+ * times moves on by itself, counts start over at the server's resets, and
+ * Realm Currency is counted on at the rate its Adeptal Energy gives.
  */
 
 import type { Tasks } from "@/domain/account"
 import { dailyResetsBetween, lastDailyReset, lastWeeklyReset } from "@/domain/gameTime"
+import { realmRate } from "@/domain/overviewData"
 import { text } from "@/text/zh"
 
 const MINUTE = 60_000
@@ -17,6 +19,7 @@ const RESIN_EVERY = 8 * MINUTE
 export const RESIN_CAP = 200
 
 type Resin = NonNullable<Tasks["resin"]>
+type Realm = NonNullable<Tasks["realm"]>
 type Commissions = NonNullable<Tasks["commissions"]>
 type Bosses = NonNullable<Tasks["weeklyBosses"]>
 type Transformer = NonNullable<Tasks["transformer"]>
@@ -44,6 +47,37 @@ export function projectResin({ value, nextAt }: Resin, now: number) {
     value: Math.min(RESIN_CAP, value + gained),
     fullAt: nextAt + (RESIN_CAP - value - 1) * RESIN_EVERY,
   }
+}
+
+/**
+ * Realm Currency now, when it is full and how much comes an hour. It comes an hour's worth at a
+ * time, at a minute of the hour the export does not give, so the snapshot's value gains that much
+ * each whole hour since and the full time is the latest it can be: it may be full up to an hour
+ * sooner. Without Adeptal Energy there is no rate and nothing changes.
+ */
+export function projectRealm({ value, limit, comfort }: Realm, takenAt: number, now: number) {
+  const perHour = comfort === undefined ? undefined : realmRate(comfort)
+  if (perHour === undefined || value >= limit) return { value, fullAt: undefined, perHour }
+  const hours = Math.max(0, Math.floor((now - takenAt) / HOUR))
+  return {
+    value: Math.min(limit, value + hours * perHour),
+    fullAt: takenAt + Math.ceil((limit - value) / perHour) * HOUR,
+    perHour,
+  }
+}
+
+/**
+ * How long until Realm Currency is full, which can take days: days and hours from a day on, else
+ * whole hours. Under an hour it may come at the next hour's mark or be there already, so the
+ * time is not given.
+ */
+export function realmFullNote(ms: number) {
+  const t = text.daily
+  if (ms < HOUR) return t.realmFullWithinHour
+  const hours = Math.round(ms / HOUR)
+  return t.realmFullIn(
+    hours >= 24 ? t.duration.days(Math.floor(hours / 24), hours % 24) : t.duration.hours(hours),
+  )
 }
 
 /** Commissions now: a daily reset after the snapshot starts them over. */

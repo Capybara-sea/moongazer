@@ -4,8 +4,9 @@
 /**
  * Game data the overview needs beyond names, from the table `cargo xtask
  * gen-data` builds: profile pictures and frames, name cards, season ends and
- * line-ups, Abyss blessings, exploration totals and the hand-written city and
- * offering names. Times are unix seconds there and milliseconds here.
+ * line-ups, Abyss blessings, exploration totals, Realm Currency rates and the
+ * hand-written city and offering names. Times are unix seconds there and
+ * milliseconds here.
  */
 
 import data from "@/generated/overview.json"
@@ -27,6 +28,7 @@ type Table = {
   cities: Record<string, { name: string; offerings: number[] }>
   offerings: Record<string, string>
   theaterLevels: Record<string, string>
+  realmRates: { comfort: number; perHour: number }[]
 }
 
 const table: Table = data
@@ -75,6 +77,11 @@ export const STYGIAN_SEASONS: StygianSeason[] = Object.entries(table.stygian).ma
 /** When a Spiral Abyss period opened. */
 export function abyssStart(season: number) {
   return toMs(table.abyss[String(season)])
+}
+
+/** The Realm Currency an hour at `comfort` Adeptal Energy: that of the highest level it reaches. */
+export function realmRate(comfort: number) {
+  return table.realmRates.findLast(level => comfort >= level.comfort)?.perHour
 }
 
 export function theaterLevelName(level: number) {

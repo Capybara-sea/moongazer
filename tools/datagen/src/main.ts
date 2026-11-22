@@ -67,6 +67,7 @@ const OVERVIEW_MINIMUM: Record<keyof Overview, number> = {
   abyss: 100,
   abyssBlessings: 100,
   areas: 60,
+  realmRates: 10,
 }
 
 const args = process.argv.slice(2)

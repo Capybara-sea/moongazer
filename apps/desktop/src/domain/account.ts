@@ -37,7 +37,8 @@ export type Player = {
 export type Tasks = {
   resin?: { value: number; nextAt?: number }
   commissions?: { finished: number; total: number; claimed: boolean }
-  realm?: { value: number; limit: number }
+  /** `comfort` is the highest Adeptal Energy among the realm layouts, which sets the rate. */
+  realm?: { value: number; limit: number; comfort?: number }
   weeklyBosses?: { left: number; limit: number }
   expeditions?: { character?: string; doneAt: number }[]
   transformer?: { usedAt: number; readyAt: number }
@@ -142,8 +143,31 @@ function player(value: unknown): Player | undefined {
   }
 }
 
-/** `heldResin` is the player's resin, as at login or the last change. */
-function tasks(value: unknown, heldResin: number | undefined): Tasks | undefined {
+/**
+ * The highest Adeptal Energy among the realm layouts: each layout's mansion and outdoor blocks
+ * together. Realm Currency comes at the rate of the highest, not of the layout in use.
+ */
+function bestComfort(value: unknown): number | undefined {
+  let best: number | undefined
+  for (const layout of Object.values(record(record(value)?.comfort) ?? {})) {
+    const raw = record(layout)
+    if (!raw) continue
+    const blocks = list(raw.blocks) ?? []
+    const total = blocks.reduce((sum: number, block) => sum + count(block), count(raw.mansion))
+    best = Math.max(best ?? 0, total)
+  }
+  return best
+}
+
+/**
+ * `heldResin` is the player's resin, as at login or the last change; `comfort` the Adeptal
+ * Energy that sets the Realm Currency rate.
+ */
+function tasks(
+  value: unknown,
+  heldResin: number | undefined,
+  comfort: number | undefined,
+): Tasks | undefined {
   const raw = record(value)
   if (!raw) return undefined
   const resin = record(raw.resin)
@@ -170,7 +194,7 @@ function tasks(value: unknown, heldResin: number | undefined): Tasks | undefined
       total: count(commissions.total),
       claimed: commissions.claimed === true,
     },
-    realm: realm && { value: count(realm.value), limit: count(realm.limit) },
+    realm: realm && { value: count(realm.value), limit: count(realm.limit), comfort },
     weeklyBosses: bosses && { left: count(bosses.left), limit: count(bosses.limit) },
     expeditions: list(raw.expeditions)?.flatMap(item => {
       const doneAt = ms(record(item)?.doneAt)
@@ -325,7 +349,7 @@ export function parseAccount(value: unknown): Account {
       : undefined,
     achievements: achievements(raw),
     anecdotes: anecdotes(raw.gi_anecdotes),
-    tasks: tasks(raw.gi_tasks, num(record(raw.gi_player)?.resin)),
+    tasks: tasks(raw.gi_tasks, num(record(raw.gi_player)?.resin), bestComfort(raw.gi_teapot)),
     exploration: exploration(raw.gi_exploration),
     endgame: endgame(raw.gi_endgame),
     collections: collections(raw),

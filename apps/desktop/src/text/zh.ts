@@ -208,6 +208,10 @@ export const text = {
     realm: "洞天宝钱",
     realmRoom: (n: string) => `可再存 ${n}`,
     realmFull: "已存满",
+    realmFullIn: (duration: string) => `约 ${duration}后存满`,
+    realmFullWithinHour: "1 小时内存满",
+    realmRateTip: (comfort: string, perHour: number) =>
+      `按洞天仙力 ${comfort} 估算，每小时 ${perHour} 个`,
     bosses: "周本减半",
     bossesUsed: (n: number) => `本周已用 ${n} 次`,
     bossesLeft: (left: number, limit: number) => `剩余 ${left} / ${limit}`,
@@ -231,6 +235,8 @@ export const text = {
     duration: {
       minutes: (n: number) => `${n} 分钟`,
       hours: (n: number) => `${n} 小时`,
+      days: (days: number, hours: number) =>
+        hours > 0 ? `${days} 天 ${hours} 小时` : `${days} 天`,
     },
   },
   challenges: {

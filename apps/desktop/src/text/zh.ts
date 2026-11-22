@@ -830,6 +830,8 @@ export const text = {
     closeGroupQr: "关闭",
     credits: "致谢与许可",
     thirdParty: "第三方许可",
+    where: "位置",
+    back: "关于",
     creditList: (capture: boolean) => [
       {
         name: "Teyvat.me Capture",
@@ -847,10 +849,15 @@ export const text = {
       "愿我们有天能在星空下再见",
     ],
   },
+  changelog: {
+    title: "更新日志",
+    current: "当前版本",
+    updated: (version: string) => `望月已更新到 ${version}`,
+    viewAll: "查看全部更新日志",
+    done: "知道了",
+  },
   licenses: {
     title: "第三方许可",
-    where: "位置",
-    back: "关于",
     own: "望月的许可",
     ownBody: "望月的代码以 MIT 许可证发布。logo 和应用图标保留所有权利，不在 MIT 许可证范围内。",
     groups: licenseGroups,

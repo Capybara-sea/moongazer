@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - After auto sync is first started by hand, Moongazer asks whether to start it with the app.
+- About can show the changelog, and the first start after an update shows what changed.
 
 ### Changed
 

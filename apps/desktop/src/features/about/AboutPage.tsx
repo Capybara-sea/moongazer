@@ -2,31 +2,34 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { Alert, Button } from "@heroui/react"
-import { ChevronRight, ExternalLink, FolderOpen, type LucideIcon, Users } from "lucide-react"
+import { ExternalLink, FolderOpen, type LucideIcon, Users } from "lucide-react"
 import { type ReactNode, useState } from "react"
 import { AnimatedLogo } from "@/components/brand/AnimatedLogo"
 import { Panel } from "@/components/Panel"
 import { openGroupChat, openHomepage, openLogDir, toBackendError } from "@/lib/backend"
-import { navigate, useRoute } from "@/lib/route"
+import { useRoute } from "@/lib/route"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
+import { ChangelogPage } from "./ChangelogPage"
 import { GroupChatHint, GroupQrButton } from "./GroupChat"
 import { LicensesPage } from "./LicensesPage"
+import { SUBPAGES, SubpageLink } from "./subpages"
 import { UpdateCard } from "./UpdateCard"
 
-const LICENSES = "licenses"
-
 /**
- * About, or the third-party licenses at #/about/licenses. The page stays
- * mounted while others are shown, so it keeps its own view rather than
- * reading the route of whatever page is in front.
+ * About, or a page inside it: the third-party licenses at #/about/licenses,
+ * the changelog at #/about/changelog. The page stays mounted while others are
+ * shown, so it keeps its own view rather than reading the route of whatever
+ * page is in front.
  */
 export function AboutPage() {
   const route = useRoute()
   const [view, setView] = useState(route.page === "about" ? route.param : undefined)
   if (route.page === "about" && route.param !== view) setView(route.param)
-  return view === LICENSES ? <LicensesPage /> : <About />
+  if (view === SUBPAGES.licenses) return <LicensesPage />
+  if (view === SUBPAGES.changelog) return <ChangelogPage />
+  return <About />
 }
 
 function About() {
@@ -158,14 +161,7 @@ function Credits() {
     <Panel aria-label={text.about.credits}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-semibold text-[15px]">{text.about.credits}</h2>
-        <button
-          type="button"
-          onClick={() => navigate("about", LICENSES)}
-          className="flex h-[30px] cursor-pointer items-center gap-0.5 rounded-[8px] pr-1 pl-2 text-(--accent-text) text-[13px] transition-colors duration-150 hover:bg-default/60 motion-reduce:transition-none"
-        >
-          {text.about.thirdParty}
-          <ChevronRight aria-hidden className="size-4" />
-        </button>
+        <SubpageLink to={SUBPAGES.licenses} label={text.about.thirdParty} />
       </div>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2 text-[13px]">
         {text.about.creditList(capture).map(credit => (

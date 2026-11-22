@@ -9,9 +9,14 @@ import { defineConfig } from "vite"
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   // A leading "/" resolves from this app's root, so "@logo" reaches the repository's assets/logo
-  // (and "@community" its assets/community).
+  // ("@community" its assets/community, "@repo" its root for the changelog).
   resolve: {
-    alias: { "@": "/src", "@logo": "/../../assets/logo", "@community": "/../../assets/community" },
+    alias: {
+      "@": "/src",
+      "@logo": "/../../assets/logo",
+      "@community": "/../../assets/community",
+      "@repo": "/../..",
+    },
   },
   clearScreen: false,
   server: { port: 5173, strictPort: true },

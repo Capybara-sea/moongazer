@@ -9,6 +9,7 @@ import { Switch } from "@/components/Switch"
 import { cn } from "@/lib/cn"
 import { type UpdateStatus, useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text/zh"
+import { SUBPAGES, SubpageLink } from "./subpages"
 
 const TONE: Record<UpdateStatus, Tone> = {
   idle: "idle",
@@ -60,9 +61,12 @@ export function UpdateCard() {
 
   return (
     <Panel aria-label={text.update.title}>
-      <div className="flex flex-col gap-0.5">
-        <h2 className="font-semibold text-[15px]">{text.update.title}</h2>
-        <span className="text-[12px] text-muted">{text.update.hint}</span>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="font-semibold text-[15px]">{text.update.title}</h2>
+          <span className="text-[12px] text-muted">{text.update.hint}</span>
+        </div>
+        <SubpageLink to={SUBPAGES.changelog} label={text.changelog.title} />
       </div>
       {message && <StatusDot tone={TONE[status]}>{message}</StatusDot>}
       {update?.notes && (status === "available" || status === "ready") && (

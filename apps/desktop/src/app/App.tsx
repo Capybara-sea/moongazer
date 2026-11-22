@@ -5,6 +5,7 @@ import { ToastProvider } from "@heroui/react"
 import { LogoWarmUp } from "@/components/brand/AnimatedLogo"
 import { AboutPage } from "@/features/about/AboutPage"
 import { UpdateToasts } from "@/features/about/UpdateToasts"
+import { WhatsNewDialog } from "@/features/about/WhatsNewDialog"
 import { ArtifactsPage } from "@/features/artifacts/ArtifactsPage"
 import { CharactersPage } from "@/features/characters/CharactersPage"
 import { CollectionPage } from "@/features/collection/CollectionPage"
@@ -44,6 +45,7 @@ export function App() {
       <UpdateToasts />
       <RestartDialog />
       <AutoStartDialog />
+      <WhatsNewDialog />
       {/* Reminders (features/messages/ReminderTimer) stay off until they are confirmed. */}
       <BackgroundEvents />
       <SyncEvents />

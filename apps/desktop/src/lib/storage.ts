@@ -16,6 +16,19 @@ export function readStored(key: string) {
   }
 }
 
+/** Whether anything is stored under the app's keys yet, as after an earlier run. */
+export function anyStored() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.key(i)?.startsWith("moongazer:")) return true
+    }
+    return false
+  } catch {
+    // Unavailable: as on a first run.
+    return false
+  }
+}
+
 export function writeStored(key: string, value: string) {
   try {
     localStorage.setItem(key, value)

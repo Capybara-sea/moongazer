@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Panel } from "@/components/Panel"
 import data from "@/generated/notices.json"
 import { cn } from "@/lib/cn"
-import { navigate } from "@/lib/route"
 import { text } from "@/text/zh"
 import {
   type Frontend,
@@ -15,6 +14,7 @@ import {
   loadFrontend,
   withFrontend,
 } from "./licenses"
+import { SubpageNav } from "./subpages"
 
 const notices: { groups: LicenseGroup[]; texts: Record<string, string> } = data
 
@@ -66,22 +66,7 @@ export function LicensesPage() {
 
   return (
     <div ref={root} className="mx-auto flex max-w-[1240px] flex-col gap-4 p-6">
-      <nav aria-label={text.licenses.where} className="flex items-center gap-1.5 text-sm">
-        <button
-          type="button"
-          onClick={() => navigate("about")}
-          className="flex h-8 cursor-pointer items-center gap-1 rounded-[8px] pr-2 pl-1 text-muted transition-colors duration-150 hover:bg-default/60 hover:text-foreground motion-reduce:transition-none"
-        >
-          <ChevronLeft aria-hidden className="size-4" />
-          {text.licenses.back}
-        </button>
-        <span aria-hidden className="text-muted">
-          /
-        </span>
-        <span aria-current="page" className="font-semibold">
-          {text.licenses.title}
-        </span>
-      </nav>
+      <SubpageNav title={text.licenses.title} />
       <Panel aria-label={text.licenses.own}>
         <div className="flex flex-col gap-0.5">
           <h2 className="font-semibold text-[15px]">{text.licenses.own}</h2>

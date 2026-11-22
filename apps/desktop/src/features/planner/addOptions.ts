@@ -121,14 +121,15 @@ export function weaponOptions(account: Account, plan: Plan): Option[] {
       const holder =
         w.location === "" ? t.unequipped : t.wielder(lookup("characters", w.location).name)
       const from = { level: w.level, phase: w.ascension }
+      const note = `Lv.${w.level} · ${text.characters.refinement(w.refinement)}`
       return {
         id: `own-${i}`,
         name: data.name,
         icon: data.icon,
         rarity: data.rarity,
         weapon: data.type,
-        note: `Lv.${w.level}`,
-        detail: `Lv.${w.level} · ${holder}`,
+        note,
+        detail: `${note} · ${holder}`,
         wielder: w.location,
         owned: true,
         planned: weaponPlanned(plan, account, pick),
@@ -165,11 +166,12 @@ export function weaponOptions(account: Account, plan: Plan): Option[] {
   return [...owned, ...rest]
 }
 
-/** The options the search and the filters leave. */
+/** The options not planned yet that the search and the filters leave. */
 export function shownOptions(options: readonly Option[], query: string, filters: Filters) {
   const words = query.trim()
   return options.filter(
     o =>
+      !o.planned &&
       (words === "" || o.name.includes(words)) &&
       (filters.element === null || o.element === filters.element) &&
       (filters.rarity === null || o.rarity === filters.rarity) &&

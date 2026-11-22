@@ -3,6 +3,7 @@
 
 /** A plan as saved, read back with what no longer checks out left out or set to the default. */
 
+import { CONVERT_KINDS, type ConvertKind } from "@/domain/convert"
 import { familyOptions, SLOTS } from "@/domain/customCharacter"
 import { CUSTOM_WEAPON_RARITIES, WEAPON_SLOTS, weaponFamilyOptions } from "@/domain/customWeapon"
 import { isWeaponType } from "@/domain/elements"
@@ -169,11 +170,18 @@ function parseSummaryOrder(value: unknown): string[] | undefined {
   return ids.size > 0 ? [...ids] : undefined
 }
 
+/** The conversions allowed, in our order, without repeats; none when empty. */
+function parseConvert(value: unknown): ConvertKind[] | undefined {
+  const kinds = Array.isArray(value) ? CONVERT_KINDS.filter(kind => value.includes(kind)) : []
+  return kinds.length > 0 ? kinds : undefined
+}
+
 /** A saved plan; goals that no longer check out, such as a removed weapon's, are left out. */
 export function parsePlan(value: unknown): Plan {
   if (!isRecord(value)) return EMPTY_PLAN
   const goals = Array.isArray(value.goals) ? value.goals.flatMap(g => parseGoal(g) ?? []) : []
   const focus = isOneOf(FOCUSES, value.focus) ? value.focus : EMPTY_PLAN.focus
   const summaryOrder = parseSummaryOrder(value.summaryOrder)
-  return { goals, focus, defaults: parseDefaults(value.defaults), summaryOrder }
+  const convert = parseConvert(value.convert)
+  return { goals, focus, defaults: parseDefaults(value.defaults), summaryOrder, convert }
 }

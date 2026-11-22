@@ -101,3 +101,68 @@ export function openDays(
   }
   return out
 }
+
+/** Materials any of which the game converts into any other, each for `count` of `cost`. */
+export type ConvertGroup = { cost: string; count: number; members: string[] }
+export type ConvertKind = "gem" | "weekly"
+
+/** The conversions the planner knows, by CombineExcelConfigData's combineType. */
+const CONVERT_TYPES: [number, ConvertKind][] = [
+  [5, "gem"],
+  [9, "weekly"],
+]
+
+/**
+ * The game's conversions of element gems and of weekly boss drops, as groups whose members each
+ * convert into every other for the same cost; groups with no material of `needed` are left out,
+ * such as the forging billets whose conversions share the weekly boss drops' combineType. A
+ * recipe's cost is the item no recipe of its combineType makes; its other item is the one
+ * converted.
+ */
+export function conversions(
+  rows: Raw[] = [],
+  keyOf: (id: unknown) => string,
+  needed: Set<string>,
+): Record<ConvertKind, ConvertGroup[]> {
+  const out: Record<ConvertKind, ConvertGroup[]> = { gem: [], weekly: [] }
+  for (const [type, kind] of CONVERT_TYPES) {
+    const recipes = rows.filter(
+      r => r.recipeType === "RECIPE_TYPE_CONVERT" && r.combineType === type,
+    )
+    const made = new Set(recipes.map(row => row.resultItemId))
+    /** From one id to each it converts into: the cost's id and count, as "id:count". */
+    const edges = new Map<unknown, Map<unknown, string>>()
+    for (const row of recipes) {
+      const items = list(row.materialItems ?? [], "materialItems").filter(i => i.id !== undefined)
+      const [from, ...others] = items.filter(i => made.has(i.id))
+      const [cost, ...more] = items.filter(i => !made.has(i.id))
+      if (!from || !cost || others.length + more.length > 0 || num(from, "count") !== 1) {
+        throw new Error(`conversion ${row.combineId} is not one item for a cost`)
+      }
+      if (row.resultItemCount !== 1) throw new Error(`conversion ${row.combineId} makes several`)
+      const to = edges.get(from.id) ?? new Map<unknown, string>()
+      edges.set(from.id, to.set(row.resultItemId, `${cost.id}:${num(cost, "count")}`))
+    }
+    const seen = new Set<unknown>()
+    for (const start of [...edges.keys()].sort((a, b) => Number(a) - Number(b))) {
+      if (seen.has(start)) continue
+      const members = [start, ...(edges.get(start)?.keys() ?? [])].sort(
+        (a, b) => Number(a) - Number(b),
+      )
+      for (const id of members) seen.add(id)
+      const costs = new Set(
+        members.flatMap(a => members.filter(b => b !== a).map(b => edges.get(a)?.get(b))),
+      )
+      const [paid] = costs
+      if (costs.size !== 1 || paid === undefined) {
+        throw new Error(`${kind} conversions of ${start} are not all to all at one cost`)
+      }
+      const keys = members.map(keyOf)
+      if (!keys.some(key => needed.has(key))) continue
+      const [costId, count] = paid.split(":")
+      out[kind].push({ cost: keyOf(costId), count: Number(count), members: keys })
+    }
+    if (out[kind].length === 0) throw new Error(`no ${kind} conversions`)
+  }
+  return out
+}

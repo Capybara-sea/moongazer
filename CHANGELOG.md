@@ -12,11 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - After auto sync is first started by hand, Moongazer asks whether to start it with the app.
 - About can show the changelog, and the first start after an update shows what changed.
+- The planner can count on converting spare element gems and weekly boss materials, each with its
+  own switch in the planner's settings; it shows what is converted and the Dust of Azoth or Dream
+  Solvent spent.
 
 ### Changed
 
 - On wide screens the character, weapon, artifact, bag and planner pages fill the window's width.
 - The weapon page opens with cards, and its view buttons are in the same order as the character page's.
+- The planner's material icons are larger and closer together.
+- Adding a goal leaves out what is already planned, and owned weapons show their refinement.
+
+### Fixed
+
+- Dropdown menus are translucent like the other popups, and the planner's priority switch looks like
+  the ones in Settings.
 
 ## [0.3.0] - 2026-11-22
 

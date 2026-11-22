@@ -27,6 +27,13 @@ export const planner = {
   talentsRaiseLevel:
     "天赋所需突破次数超过等级时，等级将自动提高。例如天赋 9 需突破 6 次，等级将提高至 80★。",
   lowWeaponCap: "1★、2★ 武器最高 70 级",
+  convertTitle: "材料转换",
+  convert: { gem: "元素宝石", weekly: "周本素材" },
+  convertLabel: (name: string) => `转换${name}`,
+  convertDetail: {
+    gem: "合成后仍不足时，用其他元素多余的同档宝石转换补足，消耗嬗变之尘。",
+    weekly: "不足时，用同一周本多余的其他素材转换补足，消耗异梦溶媒。",
+  },
   defaultsHint: "仅对之后新增的目标生效，不影响已有目标。",
   addCharacter: "添加角色",
   addWeapon: "添加武器",
@@ -69,9 +76,13 @@ export const planner = {
   talentTitle: (name: string, from: number, to: number) => `${name} ${from} → ${to}`,
   combined: (bag: string, made: string, used: string) =>
     `背包 ${bag}，合成 ${made} 个即可补足（消耗 ${used}）`,
+  converted: (bag: string, made: string | undefined, converted: string, used: string) =>
+    `背包 ${bag}，${made ? `合成 ${made} 个、` : ""}转换 ${converted} 个即可补足（消耗 ${used}）`,
   usedItem: (count: string, name: string) => `${count} 个${name}`,
   usedMora: (mora: string) => `摩拉 ${mora}`,
   combineMark: "合",
+  convertMark: "换",
+  convertSpend: (count: string) => `转换消耗 ${count}`,
   stillShort: (count: string) => `缺 ${count}`,
   satisfied: "已满足",
   neededBy: (names: readonly string[], total: number) =>
@@ -136,7 +147,6 @@ export const planner = {
   all: "全部",
   owned: "已拥有",
   unowned: "未拥有",
-  planned: "已在规划中",
   wielder: (name: string) => `${name} 装备中`,
   unequipped: "未装备",
   noMatch: "无匹配结果",

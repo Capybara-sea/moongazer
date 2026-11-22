@@ -67,6 +67,8 @@ export function moraNote(card: Card) {
 
 type Props = {
   card: Card
+  /** Outlined a moment, as the home page jumped to it. */
+  flash?: boolean
   /** Every card's materials, for who else needs each. */
   totals: ReadonlyMap<string, MaterialTotal>
   weekday: number
@@ -81,7 +83,7 @@ type Props = {
  * any part but its controls; the row of goals, which opens the editor on a
  * click, counts as a part.
  */
-export function GoalCard({ card, totals, weekday, drag, onEdit, onReplace }: Props) {
+export function GoalCard({ card, flash, totals, weekday, drag, onEdit, onReplace }: Props) {
   const { goal, from, caps, lines, stageKeys, off } = card
   const toStage = isWeaponGoal(goal) ? goal.to : goal.to.stage
   const halvedBy = moraNote(card)
@@ -99,6 +101,8 @@ export function GoalCard({ card, totals, weekday, drag, onEdit, onReplace }: Pro
   return (
     <article
       {...drag?.item}
+      data-goal={goal.id}
+      data-flash={flash || undefined}
       className="glass flex flex-col gap-3 rounded-[16px] border border-border bg-surface px-4.5 py-4"
     >
       <GoalHeader card={card} drag={drag} onReplace={onReplace} />
@@ -160,10 +164,10 @@ export function GoalCard({ card, totals, weekday, drag, onEdit, onReplace }: Pro
       {rows.map(([label, list]) =>
         list.length === 0 ? null : (
           <div key={label} data-rise className="flex items-start gap-2">
-            <span className="w-8 flex-none whitespace-nowrap pt-3 pl-[2.5px] text-[12px] text-muted">
+            <span className="w-8 flex-none whitespace-nowrap pt-4 pl-[2.5px] text-[12px] text-muted">
               {label}
             </span>
-            <ul className="flex flex-wrap gap-x-1.5 gap-y-2">
+            <ul className="flex flex-wrap gap-x-1 gap-y-2">
               {list.map(line => (
                 <MaterialCell
                   key={line.key}

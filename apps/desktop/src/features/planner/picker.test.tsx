@@ -117,7 +117,7 @@ describe("the picker", () => {
     expect(html).toMatch(new RegExp(`aria-pressed="true"[^>]*>${text.game.rarity(5)}<`))
   })
 
-  it("leaves out the custom tile when replacing, and marks what is planned", () => {
+  it("leaves out the custom tile when replacing, and what is planned", () => {
     const plan: Plan = {
       ...EMPTY_PLAN,
       goals: [{ id: "g", kind: "weapon", key: "StaffOfHoma", to: TOP }],
@@ -126,7 +126,9 @@ describe("the picker", () => {
       ...NO_FILTERS,
       weapon: "polearm",
     })
+    expect(weapons.length).toBeGreaterThan(0)
     expect(weapons.every(o => o.weapon === "polearm")).toBe(true)
+    expect(weapons.some(o => o.id === "StaffOfHoma")).toBe(false)
     const html = renderToStaticMarkup(
       <GoalPicker
         kind="weapon"
@@ -137,10 +139,16 @@ describe("the picker", () => {
       />,
     )
     expect(html).not.toContain(t.addCustom.weapon)
-    const homa = html.split("<li").find(tile => tile.includes(weaponData("StaffOfHoma").name))
-    expect(homa).toContain('disabled=""')
-    expect(homa).toContain(`>${t.planned}<`)
+    expect(html).not.toContain(weaponData("StaffOfHoma").name)
     expect(html).not.toContain("title=")
+  })
+
+  it("writes an owned weapon's level and refinement under it", () => {
+    const homa = { key: "StaffOfHoma", level: 90, ascension: 6, refinement: 5, lock: false }
+    const account = { ...EMPTY, weapons: [{ ...homa, location: "" }] }
+    const owned = option(weaponOptions(account, EMPTY_PLAN), "own-0")
+    expect(owned.note).toBe(`Lv.90 · ${text.characters.refinement(5)}`)
+    expect(owned.detail).toContain(owned.note)
   })
 })
 

@@ -16,10 +16,11 @@ import {
   summaryGroup,
   type WeaponGoal,
 } from "@/domain/plan"
-import { plannerBag } from "@/domain/planner"
+import { type Line, plannerBag } from "@/domain/planner"
 import { text } from "@/text/zh"
 import { CustomFields } from "./CustomFields"
 import { GoalCard, moraNote } from "./GoalCard"
+import { MaterialCell } from "./MaterialCell"
 import { SummaryPanel, TodayPanel } from "./SidePanels"
 
 const t = text.planner
@@ -169,5 +170,35 @@ describe("a custom weapon's fields", () => {
     }
     const html = renderToStaticMarkup(<CustomFields goal={goal} update={noop} />)
     expect(html).not.toContain(t.weaponType)
+  })
+})
+
+describe("a material cell", () => {
+  const converted: Line = {
+    key: "AgnidusAgateChunk",
+    need: 3,
+    have: 3,
+    made: 0,
+    bag: 1,
+    used: new Map(),
+    converted: {
+      count: 2,
+      from: new Map([["ShivadaJadeChunk", 2]]),
+      cost: "DustOfAzoth",
+      paid: 18,
+    },
+  }
+  const cell = (line: Line) =>
+    renderToStaticMarkup(
+      <ul>
+        <MaterialCell line={line} goals={[]} />
+      </ul>,
+    )
+
+  it("marks one converting makes enough, amber, as combining does", () => {
+    const html = cell(converted)
+    expect(html).toContain(`>${t.convertMark}<`)
+    expect(html).toContain("text-warning")
+    expect(cell({ ...converted, have: 2 })).not.toContain(`>${t.convertMark}<`)
   })
 })

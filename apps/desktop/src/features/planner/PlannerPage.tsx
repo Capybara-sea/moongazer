@@ -3,16 +3,15 @@
 
 import { Button } from "@heroui/react"
 import { Plus } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Notice } from "@/components/Notice"
 import { gameWeekday } from "@/domain/gameTime"
-import { materialTotals, planCards } from "@/domain/plan"
 import { moveGoal, replaceCustom, replaceCustomWeapon } from "@/domain/planEdits"
-import { plannerBag } from "@/domain/planner"
 import { formatDateTime } from "@/lib/format"
+import { motionAllowed } from "@/lib/motion"
+import { useRoute } from "@/lib/route"
 import { useDragOrder } from "@/lib/useDragOrder"
 import { useNow } from "@/lib/useNow"
-import { useCurrentAccount } from "@/stores/accountStore"
 import { usePlannerStore } from "@/stores/plannerStore"
 import { text } from "@/text/zh"
 import { AddGoal, type Adding } from "./AddGoal"
@@ -20,28 +19,47 @@ import { GoalCard } from "./GoalCard"
 import { GoalEditor } from "./GoalEditor"
 import { PlannerSettings } from "./PlannerSettings"
 import { SummaryPanel, TodayPanel } from "./SidePanels"
+import { usePlannerCards } from "./usePlannerCards"
 
 const t = text.planner
+/** How long a card jumped to keeps its outline; the fade is in index.css. */
+const FLASH_MS = 1600
+
+/**
+ * #/planner/<goal id>, from the home page: once the cards are there, scrolls
+ * that goal's card into view and outlines it a moment, then drops the id from
+ * the address so the same jump works again. Returns the goal outlined.
+ */
+function useJump(ready: boolean) {
+  const route = useRoute()
+  const target = route.page === "planner" ? route.param : undefined
+  const [flash, setFlash] = useState<string>()
+  useEffect(() => {
+    if (!ready || target === undefined) return
+    // Replaced, not pushed, so going back skips the jump.
+    location.replace("#/planner")
+    const card = [...document.querySelectorAll<HTMLElement>("[data-goal]")].find(
+      el => el.dataset.goal === target,
+    )
+    if (!card) return
+    card.scrollIntoView({ block: "center", behavior: motionAllowed() ? "smooth" : "auto" })
+    setFlash(target)
+  }, [ready, target])
+  useEffect(() => {
+    if (flash === undefined) return
+    const timer = setTimeout(() => setFlash(undefined), FLASH_MS)
+    return () => clearTimeout(timer)
+  }, [flash])
+  return flash
+}
 
 /** Goals for raising characters and weapons, against the current account's bag. */
 export function PlannerPage() {
-  const { snapshot, account } = useCurrentAccount()
-  const uid = snapshot?.uid ?? null
-  const storeUid = usePlannerStore(s => s.uid)
-  const status = usePlannerStore(s => s.status)
-  const plan = usePlannerStore(s => s.plan)
+  const { snapshot, account, uid, plan, ready, failed, cards, totals } = usePlannerCards()
+  const weekday = gameWeekday(useNow())
   const error = usePlannerStore(s => s.error)
   const saveError = usePlannerStore(s => s.saveError)
-  useEffect(() => {
-    if (uid !== null) void usePlannerStore.getState().load(uid)
-  }, [uid])
-  const weekday = gameWeekday(useNow())
-  const ready = status === "ready" && storeUid === uid && uid !== null
-  const cards = useMemo(
-    () => (account && ready ? planCards(plan, account, plannerBag(account.materials)) : []),
-    [account, plan, ready],
-  )
-  const totals = useMemo(() => materialTotals(cards), [cards])
+  const flash = useJump(ready)
   const drag = useDragOrder((from, to) =>
     usePlannerStore.getState().change(p => moveGoal(p, from, to)),
   )
@@ -75,9 +93,7 @@ export function PlannerPage() {
       </header>
       {!snapshot && <Notice title={t.noAccount} detail={t.noAccountDetail} />}
       {snapshot && uid === null && <Notice title={t.noUid} detail={t.noUidDetail} />}
-      {status === "failed" && storeUid === uid && (
-        <Notice title={t.loadFailed} detail={error ?? ""} />
-      )}
+      {failed && <Notice title={t.loadFailed} detail={error ?? ""} />}
       {saveError && <Notice title={t.saveFailed} detail={saveError} />}
       {account && ready && (
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[304px_1fr]">
@@ -94,6 +110,7 @@ export function PlannerPage() {
                 <GoalCard
                   key={card.goal.id}
                   card={card}
+                  flash={card.goal.id === flash}
                   totals={totals}
                   weekday={weekday}
                   drag={

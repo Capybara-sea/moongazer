@@ -4,10 +4,12 @@
 import { Button, Popover } from "@heroui/react"
 import { Settings2 } from "lucide-react"
 import { LabeledSelect } from "@/components/LabeledSelect"
+import { Segmented } from "@/components/Segmented"
+import { Switch } from "@/components/Switch"
+import { CONVERT_KINDS, type ConvertKind } from "@/domain/convert"
 import { FOCUSES, type Plan } from "@/domain/plan"
 import type { Defaults } from "@/domain/planDefaults"
 import { characterCaps, type Stage, stages, weaponCaps } from "@/domain/planner"
-import { cn } from "@/lib/cn"
 import { usePlannerStore } from "@/stores/plannerStore"
 import { text } from "@/text/zh"
 import { stageLabel } from "./GoalCard"
@@ -33,9 +35,18 @@ function pickStage(caps: readonly number[], value: string) {
 const setDefaults = (edit: (defaults: Defaults) => Defaults) =>
   usePlannerStore.getState().change(plan => ({ ...plan, defaults: edit(plan.defaults) }))
 
-/** The planner's settings: how talents are recommended, and what new goals aim at. */
+const setConvert = (kind: ConvertKind, on: boolean) =>
+  usePlannerStore.getState().change(plan => {
+    const convert = CONVERT_KINDS.filter(k => (k === kind ? on : plan.convert?.includes(k)))
+    return { ...plan, convert: convert.length > 0 ? convert : undefined }
+  })
+
+/**
+ * The planner's settings: how talents are recommended, what new goals aim
+ * at, and which conversions the plan counts on.
+ */
 export function PlannerSettings({ plan }: { plan: Plan }) {
-  const { focus, defaults } = plan
+  const { focus, defaults, convert = [] } = plan
   const characterStage = (stage: Stage) =>
     setDefaults(d => ({ ...d, character: { ...d.character, stage } }))
   const talent = (rank: 0 | 1 | 2, level: number) =>
@@ -53,7 +64,7 @@ export function PlannerSettings({ plan }: { plan: Plan }) {
       <Popover.Content
         placement="bottom end"
         offset={6}
-        className="glass w-[400px] max-w-[calc(100vw-32px)] rounded-[12px] border border-border bg-(--overlay-glass,var(--overlay)) p-0 shadow-(--pop-shadow)"
+        className="glass w-[400px] max-w-[calc(100vw-32px)] overflow-y-auto rounded-[12px] border border-border bg-(--overlay-glass,var(--overlay)) p-0 shadow-(--pop-shadow)"
       >
         <Popover.Dialog
           aria-label={t.settingsLabel}
@@ -61,32 +72,34 @@ export function PlannerSettings({ plan }: { plan: Plan }) {
         >
           <section className="flex flex-col gap-2">
             <h3 className="font-semibold">{t.focusLabel}</h3>
-            <fieldset
-              aria-label={t.focusLabel}
-              className="flex h-9 gap-0.5 self-start rounded-[9px] border border-(--field-border) bg-(--field-background) p-0.5"
-            >
-              {FOCUSES.map(option => (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={option === focus}
-                  onClick={() => usePlannerStore.getState().change(p => ({ ...p, focus: option }))}
-                  className={cn(
-                    "cursor-pointer rounded-[7px] px-2.5 transition-colors duration-150 motion-reduce:transition-none",
-                    option === focus
-                      ? "bg-(--accent-soft) text-foreground"
-                      : "text-muted hover:text-foreground",
-                  )}
-                >
-                  {t.focus[option]}
-                </button>
-              ))}
-            </fieldset>
+            <Segmented
+              label={t.focusLabel}
+              value={focus}
+              options={FOCUSES.map(option => ({ value: option, label: t.focus[option] }))}
+              onPick={option => usePlannerStore.getState().change(p => ({ ...p, focus: option }))}
+              className="self-start"
+            />
             <ul className="flex flex-col gap-1 text-[12px] text-muted leading-[1.6]">
               {t.focusDetail.map(line => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
+          </section>
+          <section className="flex flex-col gap-2 border-border border-t pt-3">
+            <h3 className="font-semibold">{t.convertTitle}</h3>
+            {CONVERT_KINDS.map(kind => (
+              <div key={kind} className="flex items-center justify-between gap-4">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span>{t.convert[kind]}</span>
+                  <span className="text-[12px] text-muted">{t.convertDetail[kind]}</span>
+                </div>
+                <Switch
+                  checked={convert.includes(kind)}
+                  label={t.convertLabel(t.convert[kind])}
+                  onChange={on => setConvert(kind, on)}
+                />
+              </div>
+            ))}
           </section>
           <section className="flex flex-col gap-2 border-border border-t pt-3">
             <h3 className="font-semibold">{t.newCharacter}</h3>

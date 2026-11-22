@@ -19,7 +19,8 @@ import {
   WORLD_BOSS_GROUP,
 } from "@/domain/plan"
 import { moveSummaryGroup } from "@/domain/planEdits"
-import { openGroup, openOn, tierOf } from "@/domain/planner"
+import { tierOf } from "@/domain/planner"
+import { farmToday } from "@/domain/today"
 import { cn } from "@/lib/cn"
 import { useDragOrder } from "@/lib/useDragOrder"
 import { usePlannerStore } from "@/stores/plannerStore"
@@ -31,7 +32,8 @@ const t = text.planner
  * Material cells: five to a row, spread over the column so the rows line up
  * across groups; wrapped as they come when the panels sit under the cards.
  */
-const CELLS = "flex flex-wrap gap-2 lg:grid lg:grid-cols-[repeat(5,46px)] lg:justify-between"
+const CELLS =
+  "flex flex-wrap gap-2 lg:grid lg:grid-cols-[repeat(5,48px)] lg:justify-between lg:gap-x-0"
 
 type Totals = ReadonlyMap<string, MaterialTotal>
 
@@ -74,15 +76,15 @@ function summaryTier(key: string) {
  * wide, so a long count is cut short; the tip, the same all over the cell,
  * has "have/need".
  */
-function TotalCell({ total }: { total: MaterialTotal }) {
+export function TotalCell({ total }: { total: MaterialTotal }) {
   const view = lineView(total.key)
   const short = !view.unknown && total.have < total.need
   const tip = useTip<HTMLLIElement>(
     materialTip(view.name, amountLines(total.key, total.have, total.need), total.goals),
   )
   return (
-    <li {...tip.props} className="flex w-[46px] flex-col items-center gap-0.5">
-      <MaterialIcon view={view} className="size-9 rounded-[9px] text-[14px]" />
+    <li {...tip.props} className="flex w-[48px] flex-col items-center gap-0.5">
+      <MaterialIcon view={view} className="size-11 rounded-[10px] text-[16px]" />
       <span
         className={cn(
           "tabular max-w-full truncate text-[11px]",
@@ -98,10 +100,7 @@ function TotalCell({ total }: { total: MaterialTotal }) {
 
 /** Today's weekday, and the domain materials still short that drop today. */
 export function TodayPanel({ totals, weekday }: { totals: Totals; weekday: number }) {
-  const open = [...totals.values()].filter(total => {
-    const group = openGroup(total.key)
-    return group !== undefined && total.have < total.need && openOn(group, weekday)
-  })
+  const open = farmToday(totals, weekday)
   return (
     <Panel>
       <h2 className="font-semibold text-[15px]">{t.today(weekday)}</h2>
@@ -123,13 +122,9 @@ export function TodayPanel({ totals, weekday }: { totals: Totals; weekday: numbe
       </p>
       {open.length > 0 && (
         <ul className={CELLS}>
-          {open
-            .toSorted(
-              (a, b) => groupRank(a.key) - groupRank(b.key) || tierOf(a.key) - tierOf(b.key),
-            )
-            .map(total => (
-              <TotalCell key={total.key} total={total} />
-            ))}
+          {open.map(total => (
+            <TotalCell key={total.key} total={total} />
+          ))}
         </ul>
       )}
       <p className="text-[11px] text-muted">{t.abundance}</p>

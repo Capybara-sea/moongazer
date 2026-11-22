@@ -17,6 +17,7 @@ import {
   orderGroups,
   planCards,
   SPECIALTY_GROUP,
+  stepCost,
   summaryGroup,
   talentOrder,
   WEEKLY_BOSS_GROUP,
@@ -99,6 +100,21 @@ describe("plans", () => {
     expect(planCards(plan, account([{ ...ayaka, constellation: 6 }]), new Map())[0]?.from).toEqual(
       planCards(plan, account([ayaka]), new Map())[0]?.from,
     )
+  })
+
+  it("cost one step from where the item is now", () => {
+    const [card] = planCards({ goals: [goal], focus: "ready" }, account([ayaka]), new Map())
+    if (!card) throw new Error("no card")
+    const from = { stage: { level: 80, phase: 6 }, talents: ayaka.talent }
+    const level = stepCost(card, { kind: "level", to: { level: 90, phase: 6 } })
+    expect(level).toEqual(
+      characterNeed(ayaka.key, from, { ...from, stage: { level: 90, phase: 6 } }),
+    )
+    const skill = stepCost(card, { kind: "talent", talent: "skill", to: 7 })
+    expect(skill).toEqual(
+      characterNeed(ayaka.key, from, { ...from, talents: { ...from.talents, skill: 7 } }),
+    )
+    expect(skill.get("PhilosophiesOfElegance")).toBe(4)
   })
 })
 

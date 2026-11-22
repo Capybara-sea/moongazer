@@ -6,7 +6,18 @@ import { TWINS } from "./animeGameData.ts"
 import { type Talent, TRAVELER_ELEMENTS } from "./builds.ts"
 import { customTemplate, customWeaponTemplate, type Slot, type WeaponSlot } from "./customCosts.ts"
 import { talentOrders } from "./manual.ts"
-import { byId, byPhase, expItems, expList, hasGaps, openDays, sameCaps } from "./plannerTables.ts"
+import {
+  byId,
+  byPhase,
+  type ConvertGroup,
+  type ConvertKind,
+  conversions,
+  expItems,
+  expList,
+  hasGaps,
+  openDays,
+  sameCaps,
+} from "./plannerTables.ts"
 import { goodKey, type Ids, list, num, type Raw } from "./tables.ts"
 
 /** Material GOOD key to count; Mora is one of the materials. */
@@ -36,6 +47,8 @@ export type Planner = {
   combine: Record<string, string>
   /** The Mora combining one of the key costs. */
   combineMora: Record<string, number>
+  /** The groups of materials the game converts into each other: element gems, weekly boss drops. */
+  convert: Record<ConvertKind, ConvertGroup[]>
   /**
    * The days a talent or weapon material's domain gives it: 0 Monday and Thursday, 1 Tuesday and
    * Friday, 2 Wednesday and Saturday; all of them give it on Sunday.
@@ -204,6 +217,7 @@ export async function buildPlanner(g: Game, ids: Ids, materialKeys: Set<string>)
     weaponExpItems: expItems(materials, "ITEM_USE_ADD_WEAPON_EXP", keyOf),
     combine: {},
     combineMora: {},
+    convert: { gem: [], weekly: [] },
     openDays: {},
   }
   for (const [key, id] of ids.characters) {
@@ -299,6 +313,7 @@ export async function buildPlanner(g: Game, ids: Ids, materialKeys: Set<string>)
     planner.combineMora[result] = Number(row.scoinCost ?? 0)
   }
 
+  planner.convert = conversions(combines, keyOf, needed)
   planner.openDays = openDays(daily, byId(dungeons, "id"), byId(previews, "id"), keyOf, needed)
   const rankOf = (key: string) => Number(materialById.get(idOf.get(key))?.rankLevel ?? 0)
   return {

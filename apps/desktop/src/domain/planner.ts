@@ -249,7 +249,12 @@ export type Line = {
   used: Need
   /** What the bag held for this card, after the cards before it. */
   bag: number
+  /** Of `have`, what converting others of the same tier made, when the plan allows it. */
+  converted?: Conversion
 }
+
+/** How many converting made, from how many of which materials, and what it cost of which item. */
+export type Conversion = { count: number; from: Need; cost: string; paid: number }
 
 /** The material three of which make one of `key`. */
 export function lowerTier(key: string): string | undefined {

@@ -5,6 +5,7 @@ import { Button } from "@heroui/react"
 import { FolderInput, FolderOpen, RotateCcw } from "lucide-react"
 import { type ReactNode, useEffect, useState } from "react"
 import { Panel } from "@/components/Panel"
+import { Segmented } from "@/components/Segmented"
 import { Switch } from "@/components/Switch"
 import {
   type DataDir,
@@ -14,7 +15,6 @@ import {
   planDataDir,
   toBackendError,
 } from "@/lib/backend"
-import { cn } from "@/lib/cn"
 import type { NumberStyle } from "@/lib/format"
 import { type ThemeMode, useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
@@ -46,27 +46,7 @@ function Segments<T extends string>({ label, value, options, onPick }: SegmentsP
   return (
     <div className="flex items-center justify-between gap-6 border-(--separator) border-t py-3.5">
       <span className="font-medium text-sm">{label}</span>
-      <fieldset
-        aria-label={label}
-        className="flex flex-none gap-0.5 rounded-[9px] bg-surface-secondary p-0.5"
-      >
-        {options.map(option => (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={option.value === value}
-            onClick={e => onPick(option.value, e.currentTarget.getBoundingClientRect())}
-            className={cn(
-              "h-8 cursor-pointer rounded-[7px] px-3 text-[13px] transition-colors motion-reduce:transition-none",
-              option.value === value
-                ? "bg-surface font-semibold text-foreground shadow-sm"
-                : "text-muted hover:text-foreground",
-            )}
-          >
-            {option.label}
-          </button>
-        ))}
-      </fieldset>
+      <Segmented label={label} value={value} options={options} onPick={onPick} />
     </div>
   )
 }

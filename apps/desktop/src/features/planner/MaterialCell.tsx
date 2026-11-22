@@ -4,6 +4,7 @@
 import { GameIcon } from "@/components/GameIcon"
 import { iconTone } from "@/components/RarityChip"
 import { useTip } from "@/components/Tip"
+import { isConvertCost } from "@/domain/convert"
 import { unknownSlot } from "@/domain/customCharacter"
 import { materialData } from "@/domain/names"
 import { knownLike } from "@/domain/plan"
@@ -67,32 +68,51 @@ export function haveOfNeed(key: string, have: number, need: number) {
 
 /**
  * What a cell writes under its icon: what is still short, or that it is enough; for a
- * material not known yet, what is needed.
+ * material not known yet, what is needed; for what conversions are paid in, what they spend.
  */
 export function shortOf(key: string, have: number, need: number) {
   const view = lineView(key)
-  if (view.unknown) return view.count(need, true)
+  if (view.unknown || isConvertCost(key)) return view.count(need, true)
   return have < need ? view.count(need - have, true) : t.satisfied
 }
 
-/** A cell's tip on its amount: "have/need", then what is short or that it is enough. */
+/**
+ * A cell's tip on its amount: "have/need", then what is short or that it is enough; for what
+ * conversions are paid in, what they spend.
+ */
 export function amountLines(key: string, have: number, need: number) {
   const view = lineView(key)
+  if (isConvertCost(key)) return [t.convertSpend(view.count(need, true))]
   const status = have < need ? t.stillShort(view.count(need - have, true)) : t.satisfied
   return [haveOfNeed(key, have, need), view.unknown ? undefined : status]
 }
 
-/** What combining takes, when it makes up what the card is short; nothing otherwise. */
+/**
+ * What combining and converting take, when they make up what the card is
+ * short; nothing otherwise.
+ */
 export function combinedNote(line: Line) {
   const view = lineView(line.key)
-  if (line.made === 0 || line.have < line.need) return undefined
-  const used = [...line.used]
+  const { made, converted } = line
+  if ((made === 0 && !converted) || line.have < line.need) return undefined
+  const used = [
+    ...line.used,
+    ...(converted?.from ?? []),
+    ...(converted ? [[converted.cost, converted.paid] as const] : []),
+  ]
     .map(([key, count]) => {
       const amount = formatAmount(count, "up")
       return key === "Mora" ? t.usedMora(amount) : t.usedItem(amount, materialData(key).name)
     })
     .join(t.listSeparator)
-  return t.combined(view.count(line.bag, false), formatAmount(line.made), used)
+  const bag = view.count(line.bag, false)
+  if (!converted) return t.combined(bag, formatAmount(made), used)
+  return t.converted(
+    bag,
+    made > 0 ? formatAmount(made) : undefined,
+    formatAmount(converted.count),
+    used,
+  )
 }
 
 /** The goals that need a material, the first few by name; nothing when none do. */
@@ -126,13 +146,16 @@ type CellProps = {
 /**
  * A material a card needs: its icon over what is still short, red, or
  * that it is enough; amber with a "combined" mark when combining three of the tier
- * below makes up the rest; muted, with what is needed, when not known yet.
+ * below makes up the rest, or a "converted" mark when converting others of the
+ * same tier does; muted, with what is needed, when not known yet, or with
+ * what conversions spend of what they are paid in.
  * Every cell is as wide as the next, so a long count is cut short rather than
  * pushing them apart; the tip, the same all over the cell, has "have/need".
  */
 export function MaterialCell({ line, goals, note }: CellProps) {
   const view = lineView(line.key)
   const short = !view.unknown && line.have < line.need
+  const mark = !short && (line.converted ? t.convertMark : line.made > 0 && t.combineMark)
   const tip = useTip<HTMLLIElement>(
     materialTip(
       view.name,
@@ -141,19 +164,19 @@ export function MaterialCell({ line, goals, note }: CellProps) {
     ),
   )
   return (
-    <li {...tip.props} className="flex w-[54px] flex-col items-center gap-1">
+    <li {...tip.props} className="flex w-[52px] flex-col items-center gap-1">
       <span className="relative">
-        <MaterialIcon view={view} className="size-10 rounded-[10px] text-[15px]" />
-        {line.made > 0 && !short && (
+        <MaterialIcon view={view} className="size-12 rounded-[11px] text-[17px]" />
+        {mark && (
           <span className="absolute -top-1.5 -right-1.5 rounded-[5px] bg-warning px-1 font-semibold text-[10px] text-warning-foreground leading-[16px]">
-            {t.combineMark}
+            {mark}
           </span>
         )}
       </span>
       <span
         className={cn(
           "tabular max-w-full truncate text-[11px] leading-none",
-          short ? "text-danger" : line.made > 0 ? "text-warning" : "text-muted",
+          short ? "text-danger" : mark ? "text-warning" : "text-muted",
         )}
       >
         {shortOf(line.key, line.have, line.need)}

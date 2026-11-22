@@ -9,6 +9,7 @@
 
 import type { Account } from "@/domain/account"
 import { talentLevels } from "@/domain/builds"
+import { type ConvertKind, convertedBy, convertShort } from "@/domain/convert"
 import { type CustomSlots, customNeed, familyOptions, unknownSlot } from "@/domain/customCharacter"
 import {
   type CustomWeaponRarity,
@@ -95,6 +96,8 @@ export type Plan = {
   defaults: Defaults
   /** The summary's groups (summaryGroup ids) the player has moved, in their order. */
   summaryOrder?: string[]
+  /** The conversions the player allows the plan to count on; none when left out. */
+  convert?: ConvertKind[]
 }
 export const EMPTY_PLAN: Plan = { goals: [], focus: "important", defaults: DEFAULTS }
 
@@ -244,39 +247,40 @@ export function talentOrder(goal: CharacterGoal | CustomGoal): Talent[] {
   return goal.order ?? (goal.kind === "custom" ? [...TALENTS] : defaultOrder(goal.key))
 }
 
-function talentStep(goal: CharacterGoal | CustomGoal, from: CharacterState, talent: Talent) {
-  const level = from.talents[talent] + 1
-  const step: Step = { kind: "talent", talent, to: level }
-  const to = { ...from, talents: { ...from.talents, [talent]: level } }
-  return { step, cost: needOf(goal, from, to) }
+/** What one step costs from where the card's item is now. */
+export function stepCost(card: Pick<Card, "goal" | "from" | "moraDiscount">, step: Step): Need {
+  const { goal, from, moraDiscount } = card
+  const to =
+    step.kind === "talent"
+      ? { ...from, talents: { ...from.talents, [step.talent]: step.to } }
+      : { ...from, stage: step.to }
+  return needOf(goal, from, to, moraDiscount)
 }
 
 /** `base` is where the card's costs count from: past `from` when a card before raises the level. */
 function nextSteps(card: Omit<Card, "steps">, base: Stage, focus: TalentFocus): Step[] {
-  const { goal, from, caps, lines, moraDiscount } = card
+  const { goal, from, caps, lines } = card
+  const covered = (step: Step) => covers(lines, stepCost(card, step))
   const step = stageStep(from.stage, targetOf(goal, from).stage, caps)
   if (step && compareStages(from.stage, base) < 0) return []
-  if (step) {
-    const cost = needOf(goal, from, { ...from, stage: step.to }, moraDiscount)
-    return covers(lines, cost) ? [step] : []
-  }
+  if (step) return covered(step) ? [step] : []
   if (isWeaponGoal(goal)) return []
   const open = talentOrder(goal).filter(t => from.talents[t] < goal.to.talents[t])
   const candidates = focus === "important" ? open.slice(0, 1) : open
-  return candidates.flatMap(talent => {
-    const { step, cost } = talentStep(goal, from, talent)
-    return covers(lines, cost) ? [step] : []
-  })
+  return candidates
+    .map((talent): Step => ({ kind: "talent", talent, to: from.talents[talent] + 1 }))
+    .filter(covered)
 }
 
 /**
  * Every goal worked out against the account, the bag shared among them in
- * order, goals switched off left out. Every element of the Traveler shares one
+ * order, goals switched off left out, then what is still short made up by
+ * the conversions the plan allows. Every element of the Traveler shares one
  * level, which a card counts only past what the Traveler cards before it
  * raise it to.
  */
 export function planCards(
-  plan: Pick<Plan, "goals" | "focus">,
+  plan: Pick<Plan, "goals" | "focus" | "convert">,
   account: Account,
   bag: ReadonlyMap<string, number>,
 ) {
@@ -301,13 +305,23 @@ export function planCards(
     return { card, base: base.stage, reached: compareStages(from.stage, to.stage) >= 0 }
   })
   // An empty need takes nothing, so the cards after one switched off share the bag without it.
-  const allLines = allocate(
-    partial.map(({ card }) => (card.off ? new Map() : card.need)),
+  const allLines = convertShort(
+    allocate(
+      partial.map(({ card }) => (card.off ? new Map() : card.need)),
+      bag,
+    ),
     bag,
+    plan.convert ?? [],
   )
   return partial.map(({ card, base, reached }, i): Card => {
     const lines = allLines[i] ?? []
-    const worked = { ...card, lines, done: !card.off && reached && card.need.size === 0 }
+    // What converting a level goal's material costs goes with that goal's materials.
+    const stageKeys = new Set(card.stageKeys)
+    for (const { key, converted } of lines) {
+      if (converted && stageKeys.has(key)) stageKeys.add(converted.cost)
+    }
+    const done = !card.off && reached && card.need.size === 0
+    const worked = { ...card, stageKeys, lines, done }
     const steps = worked.done || card.off ? [] : nextSteps(worked, base, plan.focus)
     return { ...worked, steps }
   })
@@ -366,10 +380,11 @@ export function knownLike(key: string) {
  * The summary group a material goes in: Mora with EXP, every region's
  * specialties together, world and weekly bosses' drops apart, the rest by the
  * game's material type, those not known yet with the known ones of their
- * slot. A type goes by its name, the one id names.json keeps for it.
+ * slot, what conversions are paid in with what they convert. A type goes by
+ * its name, the one id names.json keeps for it.
  */
 export function summaryGroup(key: string) {
-  const known = knownLike(key)
+  const known = convertedBy(key) ?? knownLike(key)
   if (known === "Mora" || isExp(known)) return MORA_EXP_GROUP
   if (WORLD_BOSS.has(known)) return WORLD_BOSS_GROUP
   if (WEEKLY_BOSS.has(known)) return WEEKLY_BOSS_GROUP

@@ -66,7 +66,7 @@ export function LabeledSelect({ label, mark, value, options, onChange, className
       <Select.Popover
         placement="bottom end"
         maxHeight={360}
-        className="min-w-[max(9rem,var(--trigger-width))] rounded-[12px] border border-border shadow-(--pop-shadow) motion-reduce:animate-none"
+        className="glass min-w-[max(9rem,var(--trigger-width))] rounded-[12px] border border-border bg-(--overlay-glass,var(--overlay)) shadow-(--pop-shadow) motion-reduce:animate-none"
       >
         <ListBox>
           {options.map(option => (

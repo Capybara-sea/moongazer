@@ -484,6 +484,31 @@ button#decorum-tb-close:hover {
 }
 
 /*
+ * A planner card the home page jumps to shows its outline a moment
+ * (PlannerPage's FLASH_MS): fading in and out, or just there with motion off.
+ * An animation, as the page's rise transition takes over the card's own.
+ */
+[data-flash] {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduce-motion="true"]) [data-flash] {
+    animation: goal-flash 1600ms ease-in-out both;
+  }
+}
+@keyframes goal-flash {
+  from,
+  to {
+    outline-color: transparent;
+  }
+  25%,
+  60% {
+    outline-color: var(--accent);
+  }
+}
+
+/*
  * Theme switch (revealFrom in lib/motion.ts): the new theme spreads from the
  * toggle as a circle with a soft 120px edge over a still image of the old
  * one. HeroUI's base styles take the page out of view transitions

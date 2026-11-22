@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
+import { convertShort } from "@/domain/convert"
 import { type CustomGoal, planCards } from "@/domain/plan"
 import { allocate, type Line, lowerTier, plannerBag } from "@/domain/planner"
 import { formatAmount, formatNumber } from "@/lib/format"
@@ -76,6 +77,28 @@ describe("material cells", () => {
     if (!line) throw new Error("no line")
     const used = [t.usedItem("18", lineView(low).name), t.usedMora(formatAmount(2 * 550 + 6 * 175))]
     expect(combinedNote(line)).toBe(t.combined("0", "2", used.join(t.listSeparator)))
+  })
+
+  it("name what combining and converting take, and what converting spends", () => {
+    const bag = new Map([
+      ["AgnidusAgateChunk", 1],
+      ["AgnidusAgateFragment", 3],
+      ["ShivadaJadeChunk", 5],
+      ["Mora", 100_000],
+      ["DustOfAzoth", 100],
+    ])
+    const [lines] = convertShort(allocate([new Map([["AgnidusAgateChunk", 3]])], bag), bag, ["gem"])
+    const [line, dust] = lines ?? []
+    if (!line || !dust) throw new Error("no lines")
+    const used = [
+      t.usedItem("3", lineView("AgnidusAgateFragment").name),
+      t.usedMora(formatAmount(900)),
+      t.usedItem("1", lineView("ShivadaJadeChunk").name),
+      t.usedItem("9", lineView("DustOfAzoth").name),
+    ]
+    expect(combinedNote(line)).toBe(t.converted("1", "1", "1", used.join(t.listSeparator)))
+    expect(shortOf(dust.key, dust.have, dust.need)).toBe("9")
+    expect(amountLines(dust.key, dust.have, dust.need)).toEqual([t.convertSpend("9")])
   })
 
   it("show Mora under 10,000 as it is", () => {

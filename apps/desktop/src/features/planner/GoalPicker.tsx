@@ -24,7 +24,7 @@ type Props = {
   onPick: (option: Option) => void
 }
 
-/** The filters, then a tile per character or weapon; planned ones cannot be picked again. */
+/** The filters, then a tile per character or weapon. */
 export function GoalPicker({ kind, options, filters, onFilters, onCustom, onPick }: Props) {
   const set = (change: Partial<Filters>) => onFilters({ ...filters, ...change })
   return (
@@ -69,10 +69,9 @@ export function GoalPicker({ kind, options, filters, onFilters, onCustom, onPick
             name={option.name}
             icon={option.icon}
             rarity={option.rarity}
-            note={option.planned ? t.planned : option.note}
-            detail={option.planned ? t.planned : option.detail}
+            note={option.note}
+            detail={option.detail}
             badge={option.wielder ? <Wielder wielder={option.wielder} /> : undefined}
-            disabled={option.planned}
             onPick={() => onPick(option)}
           />
         ))}
@@ -136,21 +135,10 @@ type TileProps = {
   note?: string
   detail?: string
   badge?: ReactNode
-  disabled?: boolean
   onPick: () => void
 }
 
-function Tile({
-  name,
-  icon,
-  placeholder,
-  rarity,
-  note,
-  detail,
-  badge,
-  disabled,
-  onPick,
-}: TileProps) {
+function Tile({ name, icon, placeholder, rarity, note, detail, badge, onPick }: TileProps) {
   const more = detail ?? note
   const tip = useTip<HTMLLIElement>(
     <>
@@ -162,10 +150,9 @@ function Tile({
     <li {...tip.props}>
       <button
         type="button"
-        disabled={disabled}
         aria-description={detail}
         onClick={onPick}
-        className="flex w-full cursor-pointer flex-col items-center gap-1 rounded-[12px] p-1.5 transition-colors duration-150 hover:bg-default/50 disabled:cursor-default disabled:opacity-50 motion-reduce:transition-none"
+        className="flex w-full cursor-pointer flex-col items-center gap-1 rounded-[12px] p-1.5 transition-colors duration-150 hover:bg-default/50 motion-reduce:transition-none"
       >
         <span className="relative w-full">
           <GameIcon

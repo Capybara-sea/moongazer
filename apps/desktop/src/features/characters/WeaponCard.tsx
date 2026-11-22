@@ -4,12 +4,13 @@
 import { Lock } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
-import { RarityChip } from "@/components/RarityChip"
+import { iconTone, RarityChip } from "@/components/RarityChip"
 import { Tip } from "@/components/Tip"
 import { WeaponTooltip } from "@/components/WeaponTooltip"
 import { levelCap } from "@/domain/builds"
 import type { Weapon } from "@/domain/good"
 import { weaponData } from "@/domain/names"
+import { cn } from "@/lib/cn"
 import { text } from "@/text/zh"
 
 /** The equipped weapon: icon, name, rarity, level, ascension, refinement and lock. */
@@ -36,7 +37,7 @@ function Equipped({ weapon }: { weapon: Weapon }) {
           <GameIcon
             icon={data.icon}
             label={data.name}
-            className="glass-inset size-[52px] rounded-[12px] bg-surface-secondary text-[20px]"
+            className={cn("size-[52px] rounded-[12px] text-[20px]", iconTone(data.rarity))}
           />
         </WeaponTooltip>
       </span>

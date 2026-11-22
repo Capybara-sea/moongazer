@@ -4,6 +4,7 @@
 import { Lock, Star } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
+import { iconTone } from "@/components/RarityChip"
 import { SetEffectTooltip } from "@/components/SetEffectTooltip"
 import { Tip } from "@/components/Tip"
 import { artifactIcon, formatStat, mainStatValue, statName } from "@/domain/builds"
@@ -70,7 +71,7 @@ function Piece({ artifact, equipped }: { artifact: Artifact; equipped: number })
           <GameIcon
             icon={artifactIcon(setKey, slotKey)}
             label={set}
-            className="size-8.5 rounded-[8px] bg-surface text-[14px]"
+            className={cn("size-8.5 rounded-[8px] text-[14px]", iconTone(artifact.rarity))}
           />
         </SetEffectTooltip>
         <div className="min-w-0 flex-1">

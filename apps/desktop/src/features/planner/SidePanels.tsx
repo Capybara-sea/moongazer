@@ -25,7 +25,14 @@ import { cn } from "@/lib/cn"
 import { useDragOrder } from "@/lib/useDragOrder"
 import { usePlannerStore } from "@/stores/plannerStore"
 import { text } from "@/text/zh"
-import { amountLines, lineView, MaterialIcon, materialTip, shortOf } from "./MaterialCell"
+import {
+  amountLines,
+  lineView,
+  MaterialIcon,
+  materialTip,
+  shortOf,
+  useBagHolds,
+} from "./MaterialCell"
 
 const t = text.planner
 /**
@@ -74,13 +81,14 @@ function summaryTier(key: string) {
  * A material over every card: its icon over what is still short, red, or
  * that it is enough; muted, with what is needed, when not known yet. Cells are all as
  * wide, so a long count is cut short; the tip, the same all over the cell,
- * has "have/need".
+ * has "have/need" and what the bag holds.
  */
 export function TotalCell({ total }: { total: MaterialTotal }) {
   const view = lineView(total.key)
+  const bag = useBagHolds(total.key)
   const short = !view.unknown && total.have < total.need
   const tip = useTip<HTMLLIElement>(
-    materialTip(view.name, amountLines(total.key, total.have, total.need), total.goals),
+    materialTip(view.name, amountLines(total.key, total.have, total.need, bag), total.goals),
   )
   return (
     <li {...tip.props} className="flex w-[48px] flex-col items-center gap-0.5">

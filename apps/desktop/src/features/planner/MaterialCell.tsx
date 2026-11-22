@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { useMemo } from "react"
 import { GameIcon } from "@/components/GameIcon"
 import { iconTone } from "@/components/RarityChip"
 import { useTip } from "@/components/Tip"
@@ -8,9 +9,10 @@ import { isConvertCost } from "@/domain/convert"
 import { unknownSlot } from "@/domain/customCharacter"
 import { materialData } from "@/domain/names"
 import { knownLike } from "@/domain/plan"
-import { expUnit, type Line } from "@/domain/planner"
+import { expUnit, isExp, type Line, plannerBag } from "@/domain/planner"
 import { cn } from "@/lib/cn"
 import { formatAmount } from "@/lib/format"
+import { useCurrentAccount } from "@/stores/accountStore"
 import { text } from "@/text/zh"
 
 const t = text.planner
@@ -76,15 +78,29 @@ export function shortOf(key: string, have: number, need: number) {
   return have < need ? view.count(need - have, true) : t.satisfied
 }
 
+/** What `materials` hold of `key` before the cards share them, EXP as the planner pools it. */
+export function bagHolds(materials: ReadonlyMap<string, number>, key: string) {
+  return (isExp(key) ? plannerBag(materials) : materials).get(key) ?? 0
+}
+
+/** What the shown account's bag holds of `key`; nothing while there is no account to read. */
+export function useBagHolds(key: string) {
+  const { account } = useCurrentAccount()
+  return useMemo(() => account && bagHolds(account.materials, key), [account, key])
+}
+
 /**
- * A cell's tip on its amount: "have/need", then what is short or that it is enough; for what
- * conversions are paid in, what they spend.
+ * A cell's tip on its amount: "have/need", what the bag holds before the cards share it, then
+ * what is short or that it is enough; for what conversions are paid in, what they spend first.
+ * The bag rounds down, unless "have", which rounds up once it is enough, would then read as more.
  */
-export function amountLines(key: string, have: number, need: number) {
+export function amountLines(key: string, have: number, need: number, bag?: number) {
   const view = lineView(key)
-  if (isConvertCost(key)) return [t.convertSpend(view.count(need, true))]
+  const up = have >= need && bag !== undefined && view.count(bag, true) === view.count(have, true)
+  const held = bag === undefined || view.unknown ? undefined : t.inBag(view.count(bag, up))
+  if (isConvertCost(key)) return [t.convertSpend(view.count(need, true)), held]
   const status = have < need ? t.stillShort(view.count(need - have, true)) : t.satisfied
-  return [haveOfNeed(key, have, need), view.unknown ? undefined : status]
+  return [haveOfNeed(key, have, need), held, view.unknown ? undefined : status]
 }
 
 /**
@@ -150,16 +166,18 @@ type CellProps = {
  * same tier does; muted, with what is needed, when not known yet, or with
  * what conversions spend of what they are paid in.
  * Every cell is as wide as the next, so a long count is cut short rather than
- * pushing them apart; the tip, the same all over the cell, has "have/need".
+ * pushing them apart; the tip, the same all over the cell, has "have/need" and
+ * what the bag holds.
  */
 export function MaterialCell({ line, goals, note }: CellProps) {
   const view = lineView(line.key)
+  const bag = useBagHolds(line.key)
   const short = !view.unknown && line.have < line.need
   const mark = !short && (line.converted ? t.convertMark : line.made > 0 && t.combineMark)
   const tip = useTip<HTMLLIElement>(
     materialTip(
       view.name,
-      [...amountLines(line.key, line.have, line.need), combinedNote(line), note],
+      [...amountLines(line.key, line.have, line.need, bag), combinedNote(line), note],
       goals,
     ),
   )

@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { toast } from "@heroui/react"
-import { Check } from "lucide-react"
+import { Check, CirclePlay } from "lucide-react"
 import { useMemo, useState } from "react"
 import { DoneBadge } from "@/components/DoneBadge"
 import { EmptyState } from "@/components/EmptyState"
@@ -22,7 +22,7 @@ import {
   visibleRows,
 } from "@/domain/anecdotes"
 import { lookup } from "@/domain/names"
-import { openTravelersTales, toBackendError } from "@/lib/backend"
+import { openTravelersTales, openVideoSearch, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { useAnecdoteListStore } from "@/stores/anecdoteListStore"
 import { text } from "@/text/zh"
@@ -174,7 +174,7 @@ function Section({ group, rows, large }: SectionProps) {
       {rows.length === 0 ? (
         <p className="border-(--separator) border-t px-3.5 py-3 text-[13px] text-muted">{t.none}</p>
       ) : (
-        rows.map(row => <Item key={row.info.id} row={row} />)
+        rows.map(row => <AnecdoteItem key={row.info.id} row={row} />)
       )}
     </div>
   )
@@ -200,7 +200,7 @@ function needLine(need: Need) {
   return { text: need.kind === "character" ? t.needMissing(what) : t.needOpen(what), warn: true }
 }
 
-function Item({ row }: { row: AnecdoteRow }) {
+export function AnecdoteItem({ row }: { row: AnecdoteRow }) {
   const [peek, setPeek] = useState(false)
   const { info, status } = row
   const absent = status === "absent"
@@ -264,24 +264,47 @@ function Item({ row }: { row: AnecdoteRow }) {
         <span />
       )}
       {tips.length > 0 && (
-        <ul
-          aria-label={t.tips}
-          className="col-span-2 col-start-2 mt-1 flex flex-col gap-0.5 rounded-[8px] border border-border bg-surface-secondary px-2.5 py-1.5 text-[12px]"
-        >
-          {tips.map(tip => (
-            <li key={tip.text} className={tip.warn ? "text-(--warn)" : "text-muted"}>
-              {tip.text}
-              {tip.done && (
-                <>
-                  {" "}
-                  <DoneBadge inline label={t.needDone} />
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+        <div className="col-span-2 col-start-2 mt-1 flex items-center gap-3 rounded-[8px] border border-border bg-surface-secondary px-2.5 py-1.5 text-[12px]">
+          <ul aria-label={t.tips} className="flex min-w-0 flex-1 flex-col gap-0.5">
+            {tips.map(tip => (
+              <li key={tip.text} className={tip.warn ? "text-(--warn)" : "text-muted"}>
+                {tip.text}
+                {tip.done && (
+                  <>
+                    {" "}
+                    <DoneBadge inline label={t.needDone} />
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+          <VideoGuide title={info.title} />
+        </div>
       )}
     </div>
+  )
+}
+
+/** Opens Bilibili's video search for the guide author's video on the anecdote. */
+function VideoGuide({ title }: { title: string }) {
+  const label = t.videoLabel(title)
+  const tip = useTip<HTMLButtonElement>(label)
+  return (
+    <button
+      {...tip.props}
+      type="button"
+      aria-label={label}
+      onClick={() => {
+        openVideoSearch(t.videoKeyword(title)).catch((error: unknown) => {
+          toast(t.openFailed, { description: toBackendError(error).message })
+        })
+      }}
+      className="flex flex-none cursor-pointer items-center gap-1 whitespace-nowrap text-(--accent-text) hover:underline"
+    >
+      <CirclePlay size={13} aria-hidden />
+      {t.video}
+      {tip.bubble}
+    </button>
   )
 }
 

@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { Check, Gift } from "lucide-react"
-import type { ComponentProps, ReactNode } from "react"
+import type { ReactNode } from "react"
 import { Bar } from "@/components/Bar"
 import { DoneBadge } from "@/components/DoneBadge"
 import { GameIcon } from "@/components/GameIcon"
@@ -68,13 +68,15 @@ export function DailyCard({ account, takenAt }: { account: Account; takenAt: num
 type RowProps = {
   label: string
   value?: ReactNode
+  /** Small text under the value, for what a bar row's bar does not say. */
+  note?: string
   /** Hover text for the whole row. */
   tip?: string
   className?: string
   children: ReactNode
 }
 
-function Row({ label, value, tip, className, children }: RowProps) {
+function Row({ label, value, note, tip, className, children }: RowProps) {
   return (
     <Tip
       as="div"
@@ -89,6 +91,9 @@ function Row({ label, value, tip, className, children }: RowProps) {
       {/* Pinned to the value column: a row may leave the middle empty (Welkin with no days). */}
       <span className="tabular col-start-3 whitespace-nowrap text-right font-semibold">
         {value}
+        {note && (
+          <span className="block font-normal text-[11px] text-muted leading-tight">{note}</span>
+        )}
       </span>
     </Tip>
   )
@@ -102,17 +107,6 @@ function Missing({ label, tip }: { label: string; tip?: string }) {
   )
 }
 
-type MeterProps = { value: number; tone?: ComponentProps<typeof Bar>["tone"]; note?: string }
-
-function Meter({ value, tone, note }: MeterProps) {
-  return (
-    <span className="flex min-w-0 flex-col gap-[3px]">
-      <Bar value={value} tone={tone} />
-      {note && <span className="truncate text-[11px] text-muted">{note}</span>}
-    </span>
-  )
-}
-
 function Resin({ resin, now }: { resin: Tasks["resin"]; now: number }) {
   if (!resin) return <Missing label={t.resin} />
   const { value, fullAt } = projectResin(resin, now)
@@ -123,8 +117,8 @@ function Resin({ resin, now }: { resin: Tasks["resin"]; now: number }) {
         ? t.resinFullIn(formatDuration(fullAt - now))
         : undefined
   return (
-    <Row label={t.resin} value={`${formatNumber(value)} / ${RESIN_CAP}`}>
-      <Meter value={value / RESIN_CAP} note={note} />
+    <Row label={t.resin} value={`${formatNumber(value)} / ${RESIN_CAP}`} note={note}>
+      <Bar value={value / RESIN_CAP} />
     </Row>
   )
 }
@@ -173,11 +167,12 @@ function Realm({ realm }: { realm: Tasks["realm"] }) {
   if (!realm) return <Missing label={t.realm} />
   const room = realm.limit - realm.value
   return (
-    <Row label={t.realm} value={`${formatNumber(realm.value)} / ${formatNumber(realm.limit)}`}>
-      <Meter
-        value={ratio(realm.value, realm.limit)}
-        note={room > 0 ? t.realmRoom(formatNumber(room)) : t.realmFull}
-      />
+    <Row
+      label={t.realm}
+      value={`${formatNumber(realm.value)} / ${formatNumber(realm.limit)}`}
+      note={room > 0 ? t.realmRoom(formatNumber(room)) : t.realmFull}
+    >
+      <Bar value={ratio(realm.value, realm.limit)} />
     </Row>
   )
 }
@@ -265,14 +260,14 @@ function Transformer({ transformer, now }: { transformer: Tasks["transformer"]; 
   if (!transformer) return <Missing label={t.transformer} />
   const { ready, progress } = transformerState(transformer, now)
   return (
-    <Row label={t.transformer} value={ready ? t.transformerReady : t.transformerCooling}>
-      <Meter
-        value={progress}
-        tone={ready ? "accent" : "muted"}
-        note={
-          ready ? t.transformerReadySince : t.transformerReadyAt(monthDayTime(transformer.readyAt))
-        }
-      />
+    <Row
+      label={t.transformer}
+      value={ready ? t.transformerReady : t.transformerCooling}
+      note={
+        ready ? t.transformerReadySince : t.transformerReadyAt(monthDayTime(transformer.readyAt))
+      }
+    >
+      <Bar value={progress} tone={ready ? "accent" : "muted"} />
     </Row>
   )
 }

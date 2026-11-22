@@ -83,6 +83,7 @@ export const planner = {
   combineMark: "合",
   convertMark: "换",
   convertSpend: (count: string) => `转换消耗 ${count}`,
+  inBag: (count: string) => `背包 ${count}`,
   stillShort: (count: string) => `缺 ${count}`,
   satisfied: "已满足",
   neededBy: (names: readonly string[], total: number) =>

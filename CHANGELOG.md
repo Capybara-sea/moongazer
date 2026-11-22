@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   own switch in the planner's settings; it shows what is converted and the Dust of Azoth or Dream
   Solvent spent.
 - The overview's challenges are marked done at full stars, or for Stygian Onslaught a full clear.
+- Each anecdote's tips have a "Video guide" link that searches Bilibili for the guide author's
+  video.
+- Hovering a planner material also shows how many the bag holds in all, before the goals share it.
 
 ### Changed
 
@@ -24,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The planner's material icons are larger and closer together.
 - Adding a goal leaves out what is already planned, and owned weapons show their refinement.
 - Adding a goal lists owned characters and weapons by level, highest first.
+- On the daily card, the notes for resin, the realm currency and the transformer sit under their
+  values, leaving just the bar in the middle.
 
 ### Fixed
 
@@ -37,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   clearly in the light theme.
 - In the light theme, borders, boxes inside cards, toggle groups, tags and element icons show
   clearly, and green and amber text is easier to read.
+- The artifact and weapon icons on a character's page are colored by rarity, as on their own pages.
 
 ## [0.3.0] - 2026-11-22
 

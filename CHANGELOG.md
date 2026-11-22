@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The achievements page can sort by finish time, the latest first.
+
 ### Changed
 
 - The daily card estimates when Realm Currency will be full from the Adeptal Energy, and counts it

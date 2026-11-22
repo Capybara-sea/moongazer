@@ -145,10 +145,13 @@ export function achievementView(state: Achievements | undefined): AchievementVie
 }
 
 export type AchievementFilter = "all" | "done" | "todo"
+/** The game's order, or the latest finished first. */
+export type AchievementSort = "game" | "recent"
 
 /**
  * The series to show, each with only its tiers that pass; `hideHidden` leaves
- * out unfinished hidden tiers.
+ * out unfinished hidden tiers. Sorted by `recent`, a series goes by the latest
+ * finish time among its tiers shown; those with none follow in the game's order.
  */
 export function visibleSeries(
   view: AchievementView,
@@ -157,17 +160,19 @@ export function visibleSeries(
     filter,
     query,
     hideHidden,
+    sort,
   }: {
     goal: number | null
     filter: AchievementFilter
     query: string
     hideHidden: boolean
+    sort: AchievementSort
   },
 ): AchievementSeries[] {
   const q = query.trim().toLowerCase()
   const matches = (row: AchievementRow) =>
     row.info.title.toLowerCase().includes(q) || row.info.desc.toLowerCase().includes(q)
-  return view.series.flatMap(s => {
+  const shown = view.series.flatMap(s => {
     if (goal !== null && s.goal !== goal) return []
     if (q && !s.rows.some(matches)) return []
     const rows = s.rows.filter(
@@ -177,6 +182,9 @@ export function visibleSeries(
     )
     return rows.length > 0 ? [{ goal: s.goal, rows }] : []
   })
+  if (sort === "game") return shown
+  const latest = new Map(shown.map(s => [s, Math.max(-1, ...s.rows.map(r => r.at ?? -1))]))
+  return shown.sort((a, b) => (latest.get(b) ?? -1) - (latest.get(a) ?? -1))
 }
 
 /** Finished, unfinished and all tiers in a goal, or in every goal. */

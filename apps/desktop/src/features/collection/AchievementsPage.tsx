@@ -8,11 +8,13 @@ import { CheckboxField } from "@/components/CheckboxField"
 import { EmptyState } from "@/components/EmptyState"
 import { FilterChip } from "@/components/FilterChip"
 import { GameIcon } from "@/components/GameIcon"
+import { LabeledSelect } from "@/components/LabeledSelect"
 import { Notice } from "@/components/Notice"
 import { SearchBox } from "@/components/SearchBox"
 import {
   ACHIEVEMENT_GOALS,
   type AchievementFilter,
+  type AchievementSort,
   type AchievementView,
   achievementView,
   filterCounts,
@@ -29,6 +31,7 @@ import { SeriesCard } from "./SeriesCard"
 
 const t = text.achievementPage
 const FILTERS: AchievementFilter[] = ["all", "done", "todo"]
+const SORTS: readonly AchievementSort[] = ["game", "recent"]
 const GOAL_NAMES = new Map(ACHIEVEMENT_GOALS.map(g => [g.id, g.name]))
 /** Cards already drawn are skipped when the filters change. */
 const Card = memo(SeriesCard)
@@ -91,13 +94,14 @@ function Stat({ label, value, gold }: { label: string; value: string; gold?: boo
   )
 }
 
-/** Done or not, with the counts of the goal shown; the search; hidden descriptions. */
+/** Done or not, with the counts of the goal shown; the sort; the search; hidden ones. */
 function Toolbar({ view }: { view: AchievementView }) {
   const goal = useAchievementListStore(s => s.goal)
   const filter = useAchievementListStore(s => s.filter)
   const query = useAchievementListStore(s => s.query)
   const hideHidden = useAchievementListStore(s => s.hideHidden)
-  const { setFilter, setQuery, setHideHidden } = useAchievementListStore.getState()
+  const sort = useAchievementListStore(s => s.sort)
+  const { setFilter, setQuery, setHideHidden, setSort } = useAchievementListStore.getState()
   const counts = filterCounts(view, goal)
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -117,6 +121,15 @@ function Toolbar({ view }: { view: AchievementView }) {
         ))}
       </fieldset>
       <div className="flex flex-wrap items-center gap-3">
+        <LabeledSelect
+          label={t.sort}
+          value={sort}
+          options={SORTS.map(option => ({ value: option, label: t.sorts[option] }))}
+          onChange={value => {
+            const picked = SORTS.find(option => option === value)
+            if (picked) setSort(picked)
+          }}
+        />
         <SearchBox value={query} label={t.search} onChange={setQuery} className="w-[180px]" />
         <CheckboxField checked={hideHidden} label={t.hideHidden} onChange={setHideHidden} />
       </div>
@@ -130,9 +143,10 @@ function Body({ view }: { view: AchievementView }) {
   const filter = useAchievementListStore(s => s.filter)
   const query = useAchievementListStore(s => s.query)
   const hideHidden = useAchievementListStore(s => s.hideHidden)
+  const sort = useAchievementListStore(s => s.sort)
   const matched = useMemo(
-    () => visibleSeries(view, { goal: null, filter, query, hideHidden }),
-    [view, filter, query, hideHidden],
+    () => visibleSeries(view, { goal: null, filter, query, hideHidden, sort }),
+    [view, filter, query, hideHidden, sort],
   )
   // The goals the filter and the search leave something in; the others are not listed.
   const hits = useMemo(() => new Set(matched.map(s => s.goal)), [matched])

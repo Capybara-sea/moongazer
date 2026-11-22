@@ -4,7 +4,14 @@
 import { describe, expect, it } from "vitest"
 import data from "@/generated/collection.json"
 import type { Achievements } from "./account"
-import { type AchievementInfo, achievementView, filterCounts, visibleSeries } from "./achievements"
+import {
+  type AchievementFilter,
+  type AchievementInfo,
+  type AchievementSort,
+  achievementView,
+  filterCounts,
+  visibleSeries,
+} from "./achievements"
 
 const all: AchievementInfo[] = data.achievements
 
@@ -84,7 +91,13 @@ describe("achievementView", () => {
 
 describe("visibleSeries", () => {
   const view = achievementView(state([one.id], { [two.id]: 7 }))
-  const base = { goal: null, filter: "all" as const, query: "", hideHidden: false }
+  const base = {
+    goal: null,
+    filter: "all" as AchievementFilter,
+    query: "",
+    hideHidden: false,
+    sort: "game" as AchievementSort,
+  }
 
   it("keeps only the tiers that pass the filter", () => {
     const todo = visibleSeries(view, { ...base, filter: "todo" })
@@ -115,6 +128,27 @@ describe("visibleSeries", () => {
     expect(has(false, false)).toBe(true)
     expect(has(false, true)).toBe(false)
     expect(has(true, true)).toBe(true)
+  })
+
+  it("puts the latest finished first by the newest tier shown, the rest in the game's order", () => {
+    const [a, c, untimed] = all.filter(item => !item.previous && !next(item.id))
+    if (!a || !c || !untimed) throw new Error("no one-tier achievements")
+    // A finished one without a time, as upstream leaves those before 2020-09-15, stays behind.
+    const times = new Map<number, number | undefined>([
+      [a.id, 3_000],
+      [c.id, 1_000],
+      [one.id, 2_000],
+      [two.id, 5_000],
+      [untimed.id, undefined],
+    ])
+    const finished = achievementView({ ...state([...times.keys()]), done: times })
+    const firsts = (sort: AchievementSort, filter: AchievementFilter = "all") =>
+      visibleSeries(finished, { ...base, filter, sort }).map(s => s.rows[0]?.info.id)
+    const latest: (number | undefined)[] = [one.id, a.id, c.id]
+    expect(firsts("recent").slice(0, 3)).toEqual(latest)
+    expect(firsts("recent").slice(3)).toEqual(firsts("game").filter(id => !latest.includes(id)))
+    // Tiers filtered out do not count: unfinished ones only keep the game's order.
+    expect(firsts("recent", "todo")).toEqual(firsts("game", "todo"))
   })
 
   it("lists only the goal picked, and counts by it", () => {

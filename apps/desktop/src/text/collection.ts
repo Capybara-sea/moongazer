@@ -26,6 +26,8 @@ export const achievementPage = {
   byState: "完成状态",
   filters: { all: "全部", done: "已完成", todo: "未完成" },
   search: "搜索标题或描述",
+  sort: "排序",
+  sorts: { game: "默认", recent: "完成时间" },
   hideHidden: "不含隐藏成就",
   goals: "成就分类",
   allGoals: "全部分类",

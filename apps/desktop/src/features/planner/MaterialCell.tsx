@@ -97,7 +97,8 @@ export function useBagHolds(key: string) {
 export function amountLines(key: string, have: number, need: number, bag?: number) {
   const view = lineView(key)
   const up = have >= need && bag !== undefined && view.count(bag, true) === view.count(have, true)
-  const held = bag === undefined || view.unknown ? undefined : t.inBag(view.count(bag, up))
+  const held =
+    bag === undefined || view.unknown ? undefined : t.inBag(view.count(bag, up), key === "Mora")
   if (isConvertCost(key)) return [t.convertSpend(view.count(need, true)), held]
   const status = have < need ? t.stillShort(view.count(need - have, true)) : t.satisfied
   return [haveOfNeed(key, have, need), held, view.unknown ? undefined : status]
@@ -108,7 +109,6 @@ export function amountLines(key: string, have: number, need: number, bag?: numbe
  * short; nothing otherwise.
  */
 export function combinedNote(line: Line) {
-  const view = lineView(line.key)
   const { made, converted } = line
   if ((made === 0 && !converted) || line.have < line.need) return undefined
   const used = [
@@ -121,14 +121,8 @@ export function combinedNote(line: Line) {
       return key === "Mora" ? t.usedMora(amount) : t.usedItem(amount, materialData(key).name)
     })
     .join(t.listSeparator)
-  const bag = view.count(line.bag, false)
-  if (!converted) return t.combined(bag, formatAmount(made), used)
-  return t.converted(
-    bag,
-    made > 0 ? formatAmount(made) : undefined,
-    formatAmount(converted.count),
-    used,
-  )
+  if (!converted) return t.combined(formatAmount(made), used)
+  return t.converted(made > 0 ? formatAmount(made) : undefined, formatAmount(converted.count), used)
 }
 
 /** The goals that need a material, the first few by name; nothing when none do. */

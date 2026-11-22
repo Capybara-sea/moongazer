@@ -74,16 +74,15 @@ export const planner = {
   stageTitle: (from: string, to: string, ascensions: number) =>
     ascensions > 0 ? `等级 ${from} → ${to}，还需突破 ${ascensions} 次` : `等级 ${from} → ${to}`,
   talentTitle: (name: string, from: number, to: number) => `${name} ${from} → ${to}`,
-  combined: (bag: string, made: string, used: string) =>
-    `背包 ${bag}，合成 ${made} 个即可补足（消耗 ${used}）`,
-  converted: (bag: string, made: string | undefined, converted: string, used: string) =>
-    `背包 ${bag}，${made ? `合成 ${made} 个、` : ""}转换 ${converted} 个即可补足（消耗 ${used}）`,
+  combined: (made: string, used: string) => `合成 ${made} 个即可补足（消耗 ${used}）`,
+  converted: (made: string | undefined, converted: string, used: string) =>
+    `${made ? `合成 ${made} 个、` : ""}转换 ${converted} 个即可补足（消耗 ${used}）`,
   usedItem: (count: string, name: string) => `${count} 个${name}`,
   usedMora: (mora: string) => `摩拉 ${mora}`,
   combineMark: "合",
   convertMark: "换",
   convertSpend: (count: string) => `转换消耗 ${count}`,
-  inBag: (count: string) => `背包 ${count}`,
+  inBag: (count: string, mora = false) => (mora ? `当前拥有 ${count}` : `当前拥有 ${count} 个`),
   stillShort: (count: string) => `缺 ${count}`,
   satisfied: "已满足",
   neededBy: (names: readonly string[], total: number) =>

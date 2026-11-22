@@ -84,7 +84,7 @@ describe("material cells", () => {
     const line = lines?.[0]
     if (!line) throw new Error("no line")
     const used = [t.usedItem("18", lineView(low).name), t.usedMora(formatAmount(2 * 550 + 6 * 175))]
-    expect(combinedNote(line)).toBe(t.combined("0", "2", used.join(t.listSeparator)))
+    expect(combinedNote(line)).toBe(t.combined("2", used.join(t.listSeparator)))
   })
 
   it("name what combining and converting take, and what converting spends", () => {
@@ -104,7 +104,7 @@ describe("material cells", () => {
       t.usedItem("1", lineView("ShivadaJadeChunk").name),
       t.usedItem("9", lineView("DustOfAzoth").name),
     ]
-    expect(combinedNote(line)).toBe(t.converted("1", "1", "1", used.join(t.listSeparator)))
+    expect(combinedNote(line)).toBe(t.converted("1", "1", used.join(t.listSeparator)))
     expect(shortOf(dust.key, dust.have, dust.need)).toBe("9")
     expect(amountLines(dust.key, dust.have, dust.need)).toEqual([t.convertSpend("9"), undefined])
     expect(amountLines(dust.key, dust.have, dust.need, 100)).toEqual([
@@ -155,7 +155,7 @@ describe("material cells", () => {
     expect(amountLines(top, 3, 21, 40)).toEqual(["3/21", t.inBag("40"), t.stillShort("18")])
     expect(amountLines(top, 0, 21, 0)).toEqual(["0/21", t.inBag("0"), t.stillShort("21")])
     expect(amountLines("Mora", 0, 10, 1_234_567)[1]).toBe(
-      t.inBag(text.number.unit("123", text.number.units.tenThousand)),
+      t.inBag(text.number.unit("123", text.number.units.tenThousand), true),
     )
   })
 
@@ -192,7 +192,7 @@ describe("material cells", () => {
     const wan = text.number.unit("124", text.number.units.tenThousand)
     expect(amountLines("Mora", 1_234_567, 1_234_567, 1_234_567)).toEqual([
       `${wan}/${wan}`,
-      t.inBag(wan),
+      t.inBag(wan, true),
       t.satisfied,
     ])
   })

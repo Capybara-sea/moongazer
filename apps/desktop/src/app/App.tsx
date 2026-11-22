@@ -14,6 +14,7 @@ import { BackgroundEvents } from "@/features/messages/BackgroundEvents"
 import { OverviewPage } from "@/features/overview/OverviewPage"
 import { PlannerPage } from "@/features/planner/PlannerPage"
 import { SettingsPage } from "@/features/settings/SettingsPage"
+import { AutoStartDialog } from "@/features/sync/AutoStartDialog"
 import { SyncEvents } from "@/features/sync/SyncEvents"
 import { WeaponsPage } from "@/features/weapons/WeaponsPage"
 import { useAppearanceStore } from "@/stores/appearanceStore"
@@ -42,6 +43,7 @@ export function App() {
       <ToastProvider placement="bottom end" width={360} />
       <UpdateToasts />
       <RestartDialog />
+      <AutoStartDialog />
       {/* Reminders (features/messages/ReminderTimer) stay off until they are confirmed. */}
       <BackgroundEvents />
       <SyncEvents />

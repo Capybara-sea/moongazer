@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- After auto sync is first started by hand, Moongazer asks whether to start it with the app.
+
 ### Changed
 
 - On wide screens the character, weapon, artifact, bag and planner pages fill the window's width.

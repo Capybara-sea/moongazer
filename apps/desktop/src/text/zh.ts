@@ -595,6 +595,13 @@ export const text = {
       connected: "已连接",
       interrupted: "连接中断",
     },
+    askAutoStart: {
+      title: "打开望月时自动开启同步？",
+      body: "开启后无需每次手动开启。每次打开望月时，系统都会弹出管理员权限确认。",
+      later: "之后可在设置中更改。",
+      no: "暂不开启",
+      yes: "自动开启",
+    },
     panelLabel: (name: string, phase: string | undefined) =>
       phase ? `${name}，自动同步${phase}。切换账号或查看自动同步` : `${name}。切换账号`,
     loadFailed: "读取失败",

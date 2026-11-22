@@ -14,6 +14,7 @@ import {
   startCapture,
   stopCapture,
 } from "@/lib/backend/sync"
+import { readStored, writeStored } from "@/lib/storage"
 
 type CaptureState = {
   /** Whether this build has auto sync; without it nothing of it shows. */
@@ -42,6 +43,8 @@ type CaptureState = {
   error: string | null
   /** Why the auto start setting could not be saved. */
   autoStartError: string | null
+  /** Whether to ask if sync should start with the app; asked once, after a start by hand. */
+  askAutoStart: boolean
   load: () => Promise<void>
   setStatus: (status: CaptureStatus) => void
   addBatch: (batch: Batch) => void
@@ -55,7 +58,12 @@ type CaptureState = {
   /** Opens the panel only once there is a status to show. */
   setPanelOpen: (open: boolean) => void
   setAutoStart: (on: boolean) => Promise<void>
+  /** The answer to that question, whichever it was; it is not asked again. */
+  answerAutoStart: (on: boolean) => Promise<void>
 }
+
+/** Set once the question about auto start was answered. */
+const ASKED_KEY = "moongazer:sync:askedAutoStart"
 
 /** Whether auto sync is on: started and not stopped, whatever stage it is at. */
 export const syncOn = (s: { status: CaptureStatus | null }) =>
@@ -74,6 +82,8 @@ const stopped: Outcome = s => s.phase === "off"
 let waitingFor: Outcome | null = null
 /** How many times the batches were cleared, so a load can tell one came meanwhile. */
 let clears = 0
+/** A start by hand that should ask about auto start once it gets past the prompt. */
+let asking = false
 
 /** Both lists' batches once each, by when they were read. */
 function joined(a: Batch[], b: Batch[]) {
@@ -116,6 +126,7 @@ export const useCaptureStore = create<CaptureState>((set, get) => {
     autoStart: null,
     error: null,
     autoStartError: null,
+    askAutoStart: false,
 
     async load() {
       const failed = (error: unknown) =>
@@ -151,6 +162,11 @@ export const useCaptureStore = create<CaptureState>((set, get) => {
         waitingFor = null
         patch.busy = false
       }
+      if (asking && started(status)) {
+        asking = false
+        // Only a start that worked asks; one turned down at the prompt does not.
+        if (status.phase !== "off") patch.askAutoStart = true
+      }
       if (get().autoStart !== null) patch.loadError = null
       set(patch)
     },
@@ -164,7 +180,12 @@ export const useCaptureStore = create<CaptureState>((set, get) => {
       set({ batches: [] })
     },
 
-    start: () => send(started, startCapture),
+    async start() {
+      asking = get().autoStart === false && readStored(ASKED_KEY) === null
+      await send(started, startCapture)
+      // The command failed, so no status will come for it.
+      if (!get().busy) asking = false
+    },
     stop: () => send(stopped, stopCapture),
     restart: () =>
       send(started, async () => {
@@ -186,6 +207,12 @@ export const useCaptureStore = create<CaptureState>((set, get) => {
       } catch (error) {
         set({ autoStart: before, autoStartError: toBackendError(error).message })
       }
+    },
+
+    async answerAutoStart(on) {
+      writeStored(ASKED_KEY, "yes")
+      set({ askAutoStart: false })
+      if (on) await get().setAutoStart(true)
     },
   }
 })

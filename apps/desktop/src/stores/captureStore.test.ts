@@ -8,9 +8,16 @@ import {
   getCaptureChanges,
   getCaptureStatus,
   getSyncSettings,
+  setSyncAutoStart,
   startCapture,
 } from "@/lib/backend/sync"
 import { syncOn, useCaptureStore } from "./captureStore"
+
+const stored = vi.hoisted(() => new Map<string, string>())
+vi.mock("@/lib/storage", () => ({
+  readStored: (key: string) => stored.get(key) ?? null,
+  writeStored: (key: string, value: string) => stored.set(key, value),
+}))
 
 vi.mock("@/lib/backend", async importOriginal => ({
   ...(await importOriginal<object>()),
@@ -30,7 +37,7 @@ vi.mock("@/lib/backend/sync", () => ({
   startCapture: vi.fn(async () => {}),
   stopCapture: async () => {},
   saveCaptureNow: async () => {},
-  setSyncAutoStart: async () => {},
+  setSyncAutoStart: vi.fn(async () => {}),
 }))
 
 const off: CaptureStatus = {
@@ -65,6 +72,8 @@ const busyAfter = (status: CaptureStatus) => {
 beforeEach(() => {
   useCaptureStore.setState(useCaptureStore.getInitialState(), true)
   vi.mocked(getCaptureStatus).mockResolvedValue(off)
+  vi.mocked(setSyncAutoStart).mockClear()
+  stored.clear()
 })
 
 describe("the buttons after a start or stop", () => {
@@ -95,6 +104,56 @@ describe("the buttons after a start or stop", () => {
     vi.mocked(startCapture).mockRejectedValueOnce({ kind: "ipc", message: "gone" })
     await store().start()
     expect(store()).toMatchObject({ busy: false, error: "gone" })
+  })
+})
+
+describe("asking about auto start", () => {
+  /** A start by hand from off, with auto start off, that leads to `status`. */
+  const startTo = async (status: CaptureStatus) => {
+    useCaptureStore.setState({ autoStart: false })
+    store().setStatus(off)
+    await store().start()
+    store().setStatus(starting)
+    store().setStatus(status)
+    return store().askAutoStart
+  }
+
+  it("asks once a start by hand gets past the prompt, and not again once answered", async () => {
+    expect(await startTo(waitingGame)).toBe(true)
+    await store().answerAutoStart(false)
+    expect(store().askAutoStart).toBe(false)
+    expect(setSyncAutoStart).not.toHaveBeenCalled()
+    expect(await startTo(waitingGame)).toBe(false)
+  })
+
+  it("turns auto start on for a yes", async () => {
+    await startTo(connected)
+    await store().answerAutoStart(true)
+    expect(setSyncAutoStart).toHaveBeenCalledWith(true)
+    expect(store()).toMatchObject({ askAutoStart: false, autoStart: true })
+  })
+
+  it("does not ask after a start turned down or failed, so the next one asks", async () => {
+    expect(await startTo(declined)).toBe(false)
+    vi.mocked(startCapture).mockRejectedValueOnce({ kind: "ipc", message: "gone" })
+    await store().start()
+    store().setStatus(waitingGame)
+    expect(store().askAutoStart).toBe(false)
+    expect(await startTo(waitingGame)).toBe(true)
+  })
+
+  it("does not ask when auto start is on or unread, or for a start it did not send", async () => {
+    useCaptureStore.setState({ autoStart: true })
+    await store().start()
+    store().setStatus(waitingGame)
+    expect(store().askAutoStart).toBe(false)
+    useCaptureStore.setState({ autoStart: null })
+    await store().start()
+    store().setStatus(waitingGame)
+    expect(store().askAutoStart).toBe(false)
+    useCaptureStore.setState({ autoStart: false })
+    store().setStatus(waitingGame)
+    expect(store().askAutoStart).toBe(false)
   })
 })
 

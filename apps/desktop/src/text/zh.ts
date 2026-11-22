@@ -9,6 +9,7 @@
  */
 
 import { achievementPage, anecdotePage, collection } from "./collection"
+import { planner } from "./planner"
 
 /** Stat names by GOOD stat key; percentage and flat stats share a name. */
 const stats: Record<string, string> = {
@@ -60,6 +61,8 @@ export const text = {
     artifacts: "圣遗物",
     materials: "背包",
     collection: "收集",
+    growGroup: "养成",
+    planner: "规划",
     settings: "设置",
     about: "关于",
   },
@@ -290,6 +293,7 @@ export const text = {
   collection,
   achievementPage,
   anecdotePage,
+  planner,
   collections: {
     title: "收集",
     outfits: "衣装",

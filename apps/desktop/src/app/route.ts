@@ -16,6 +16,7 @@ export const PAGES: { key: PageKey; label: string; group?: string; divider?: tru
   { key: "artifacts", label: text.nav.artifacts, group: text.nav.accountGroup },
   { key: "materials", label: text.nav.materials, group: text.nav.accountGroup },
   { key: "collection", label: text.nav.collection, group: text.nav.accountGroup },
+  { key: "planner", label: text.nav.planner, group: text.nav.growGroup },
   { key: "settings", label: text.nav.settings, divider: true },
   { key: "about", label: text.nav.about },
 ]

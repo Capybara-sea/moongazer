@@ -368,6 +368,22 @@ export async function openTravelersTales() {
   await call("open_travelers_tales")
 }
 
+/** The account's planner as saved, parsed but not checked; null before the first save. */
+export async function getPlannerData(uid: number): Promise<unknown> {
+  const value = await call("planner_data", { uid })
+  if (value === null) return null
+  if (typeof value !== "string") throw protocolError("planner data")
+  try {
+    return JSON.parse(value) as unknown
+  } catch {
+    throw protocolError("planner data")
+  }
+}
+
+export async function savePlannerData(uid: number, data: unknown) {
+  await call("save_planner_data", { uid, data: JSON.stringify(data) })
+}
+
 /**
  * Best effort: outside the Tauri window (a plain browser on the dev server)
  * `getCurrentWindow` throws synchronously, and the title is not worth a crash.

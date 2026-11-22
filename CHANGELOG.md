@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A Planner page under a new Growth group: goals for characters and weapons, what they still need
+  from the bag in card order, and what can be raised now; ones not out yet can be planned too.
+
 ### Changed
 
 - Hidden achievements show their description too, finished or not.

@@ -11,6 +11,7 @@ mod capture;
 mod data_location;
 mod icons;
 mod logging;
+mod planner;
 mod portable;
 mod snapshots;
 mod text;
@@ -146,6 +147,8 @@ fn main() {
             snapshots::open_group_chat,
             snapshots::open_video_search,
             snapshots::open_travelers_tales,
+            planner::planner_data,
+            planner::save_planner_data,
             update::app_info,
             update::check_update,
             update::download_update,

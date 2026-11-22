@@ -219,6 +219,25 @@ pub async fn delete_snapshot(storage: State<'_, Storage>, id: i64) -> Result<(),
     Ok(())
 }
 
+impl Storage {
+    /// A stored setting; `None` when unset.
+    pub fn read_setting(&self, key: &str) -> Result<Option<String>, SnapshotError> {
+        let guard = self.lock();
+        let db = guard
+            .as_ref()
+            .map_err(|err| SnapshotError::Storage(err.clone()))?;
+        db.setting(key).map_err(storage_error)
+    }
+
+    pub fn set_setting(&self, key: &str, value: &str) -> Result<(), SnapshotError> {
+        let guard = self.lock();
+        let db = guard
+            .as_ref()
+            .map_err(|err| SnapshotError::Storage(err.clone()))?;
+        db.set_setting(key, value).map_err(storage_error)
+    }
+}
+
 #[cfg(feature = "capture")]
 impl Storage {
     /// A stored setting; `None` when unset or when the database is
@@ -230,14 +249,6 @@ impl Storage {
             tracing::error!(error = %format!("{err:#}"), key, "reading a setting failed");
             None
         })
-    }
-
-    pub fn set_setting(&self, key: &str, value: &str) -> Result<(), SnapshotError> {
-        let guard = self.lock();
-        let db = guard
-            .as_ref()
-            .map_err(|err| SnapshotError::Storage(err.clone()))?;
-        db.set_setting(key, value).map_err(storage_error)
     }
 
     /// The kept exports of `uid`'s snapshots, newest first, each read when

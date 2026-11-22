@@ -12,6 +12,7 @@ import { HomePage } from "@/features/home/HomePage"
 import { MaterialsPage } from "@/features/materials/MaterialsPage"
 import { BackgroundEvents } from "@/features/messages/BackgroundEvents"
 import { OverviewPage } from "@/features/overview/OverviewPage"
+import { PlannerPage } from "@/features/planner/PlannerPage"
 import { SettingsPage } from "@/features/settings/SettingsPage"
 import { SyncEvents } from "@/features/sync/SyncEvents"
 import { WeaponsPage } from "@/features/weapons/WeaponsPage"
@@ -30,6 +31,7 @@ export function App() {
           artifacts: <ArtifactsPage />,
           materials: <MaterialsPage />,
           collection: <CollectionPage />,
+          planner: <PlannerPage />,
           settings: <SettingsPage />,
           about: <AboutPage />,
         }}

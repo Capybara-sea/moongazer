@@ -4,9 +4,9 @@
 // Writes apps/desktop/src/generated/names.json, the Chinese names, rarities, icons, set effects,
 // material types, constellations and weapon passives of game items by GOOD key; overview.json, the
 // game data the overview page needs; builds.json, constellation talent boosts, artifact main stat
-// values and what character stats are computed from; and collection.json, the achievements and
-// anecdotes; from the commits pinned in sources.json. `--update` first moves the pins to the
-// latest commits.
+// values and what character stats are computed from; collection.json, the achievements and
+// anecdotes; and planner.json, what raising characters and weapons costs; from the commits pinned
+// in sources.json. `--update` first moves the pins to the latest commits.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { join, relative } from "node:path"
@@ -18,6 +18,7 @@ import { latestCommit } from "./download.ts"
 import { cities, offerings, theaterLevels, travelerNames } from "./manual.ts"
 import { crossCheck } from "./optimizer.ts"
 import { buildOverview, type Overview } from "./overview.ts"
+import { buildPlanner, type Planner } from "./planner.ts"
 import { visionNames } from "./snap.ts"
 import { buildTables, type Tables } from "./tables.ts"
 
@@ -47,6 +48,14 @@ const BUILDS_MINIMUM: Record<keyof Builds, number> = {
 const COLLECTION_MINIMUM: Record<string, number> = {
   achievementGoals: 70,
   achievements: 1800,
+}
+const PLANNER_MINIMUM: Partial<Record<keyof Planner, number>> = {
+  costs: 300,
+  characters: 100,
+  weapons: 200,
+  combine: 100,
+  combineMora: 100,
+  openDays: 100,
 }
 const OVERVIEW_MINIMUM: Record<keyof Overview, number> = {
   profilePictures: 150,
@@ -97,11 +106,13 @@ for (const [key, entry] of Object.entries(await manualCharacters(agd, profiles, 
 }
 const overview = await buildOverview(sources.snapMetadata, agd, ids.characters)
 const builds = await buildBuilds(agd, ids)
+const planner = await buildPlanner(agd, ids, new Set(Object.keys(tables.materials)))
 // All are checked before any is written, so a failed run leaves no mismatched set.
 const namesCounts = count(tables, MINIMUM)
 const overviewCounts = count(overview, OVERVIEW_MINIMUM)
 const buildsCounts = count(builds, BUILDS_MINIMUM)
 const collectionCounts = count(collection, COLLECTION_MINIMUM)
+const plannerCounts = count(planner, PLANNER_MINIMUM)
 
 await mkdir(OUTPUT, { recursive: true })
 await write("names.json", namesCounts, {
@@ -126,6 +137,10 @@ await write("collection.json", collectionCounts, {
     animeGameData: sources.animeGameData.commit,
   },
   ...collection,
+})
+await write("planner.json", plannerCounts, {
+  sources: { animeGameData: sources.animeGameData.commit },
+  ...planner,
 })
 
 /** GOOD keys by Chinese name, of the game's characters; a name two share is left out. */

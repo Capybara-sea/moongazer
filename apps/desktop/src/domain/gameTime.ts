@@ -28,6 +28,11 @@ export function lastWeeklyReset(now: number) {
   return last(now, WEEKLY_ANCHOR, WEEK)
 }
 
+/** The game's day of the week at `now`: 0 is Monday, 6 Sunday; days turn at the daily reset. */
+export function gameWeekday(now: number) {
+  return Math.round((lastDailyReset(now) - WEEKLY_ANCHOR) / DAY) % 7
+}
+
 /** Daily resets after `from` up to and including `to`. */
 export function dailyResetsBetween(from: number, to: number) {
   return Math.max(0, Math.round((lastDailyReset(to) - lastDailyReset(from)) / DAY))

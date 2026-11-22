@@ -4,6 +4,7 @@
 import iconUrl from "@logo/icon.svg?url"
 import {
   Backpack,
+  ClipboardList,
   Gem,
   House,
   Info,
@@ -32,6 +33,7 @@ const NAV_ICONS = {
   artifacts: Gem,
   materials: Backpack,
   collection: Library,
+  planner: ClipboardList,
   settings: Settings,
   about: Info,
 } as const

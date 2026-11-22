@@ -320,7 +320,7 @@ function travelerTalentBoosts(
 }
 
 /** GOOD's element names by what the game calls an elemental burst's energy. */
-const TRAVELER_ELEMENTS: Record<string, string> = {
+export const TRAVELER_ELEMENTS: Record<string, string> = {
   Fire: "Pyro",
   Water: "Hydro",
   Wind: "Anemo",

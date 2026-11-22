@@ -46,6 +46,7 @@
     --info: #1459bd;
     --knob-off: #8792ab;
     --pop-shadow: 0 12px 32px rgb(20 28 48 / 0.14);
+    --drag-shadow: 0 18px 40px rgb(20 28 48 / 0.2);
     /* Text and icons on solid accent, ok and danger fills. */
     --on-accent: #ffffff;
   }
@@ -78,6 +79,7 @@
     --info: #7fb2ff;
     --knob-off: #93a2c3;
     --pop-shadow: 0 0 0 1px rgb(0 0 0 / 0.05), 0 12px 32px rgb(0 0 0 / 0.45);
+    --drag-shadow: 0 18px 40px rgb(0 0 0 / 0.5);
     --on-accent: #ffffff;
   }
 
@@ -358,11 +360,12 @@ button#decorum-tb-close:hover {
       transition-delay: 0ms;
     }
   }
+  /* Not on an item a reorder moves in the page (lib/useDragOrder.ts): it is styled as if new. */
   @starting-style {
     :root:not([data-reduce-motion="true"]) {
-      [data-page] > * > :not(:has(.glass)),
-      [data-page] > * > :has(.glass) > :not(:has(.glass)),
-      [data-page] > * > :has(.glass) .glass {
+      [data-page] > * > :not(:has(.glass)):not([data-moved], [data-moved] *),
+      [data-page] > * > :has(.glass) > :not(:has(.glass)):not([data-moved], [data-moved] *),
+      [data-page] > * > :has(.glass) .glass:not([data-moved], [data-moved] *) {
         opacity: 0;
         transform: translateY(var(--page-shift, 12px)) scale(0.985);
         filter: blur(6px);
@@ -400,7 +403,7 @@ button#decorum-tb-close:hover {
   }
 }
 
-/* Rows that appear inside a card (a list growing, a new snapshot) fade up. */
+/* Rows that appear inside a card (a list growing, a new snapshot) fade up, not again as it moves. */
 @media (prefers-reduced-motion: no-preference) {
   :root:not([data-reduce-motion="true"]) [data-rise] {
     transition-property: opacity, transform;
@@ -408,10 +411,43 @@ button#decorum-tb-close:hover {
     transition-timing-function: var(--ease-out-soft);
   }
   @starting-style {
-    :root:not([data-reduce-motion="true"]) [data-rise] {
+    :root:not([data-reduce-motion="true"]) [data-rise]:not([data-moved], [data-moved] *) {
       opacity: 0;
       transform: translateY(6px);
     }
+  }
+}
+
+/*
+ * Reordering by drag (lib/useDragOrder.ts): items show they can be grabbed,
+ * and the one held is lifted, its deeper shadow on a layer that fades in, as
+ * only opacity and transforms move.
+ */
+[data-drag-item] {
+  position: relative;
+  cursor: grab;
+  user-select: none;
+}
+/* Over the controls in it too: unlayered, it wins over their cursor utilities as it is. */
+[data-dragging],
+:where([data-dragging] *) {
+  cursor: grabbing;
+}
+[data-drag-item]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--drag-shadow);
+  opacity: 0;
+  pointer-events: none;
+}
+[data-dragging]::after {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-reduce-motion="true"]) [data-drag-item]::after {
+    transition: opacity 200ms var(--ease-out-soft);
   }
 }
 

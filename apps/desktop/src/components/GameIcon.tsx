@@ -9,6 +9,8 @@ type Props = {
   icon?: string
   /** What the icon shows; its first character is the placeholder. */
   label: string
+  /** Shown in place of the label's first character, as "?" for what is not known yet. */
+  placeholder?: string
   /** Size, shape and colors of the box. */
   className?: string
 }
@@ -18,7 +20,7 @@ type Props = {
  * it loads, and when no host has it, the box shows the label's first
  * character, as in the design.
  */
-export function GameIcon({ icon, label, className }: Props) {
+export function GameIcon({ icon, label, placeholder, className }: Props) {
   const [failed, setFailed] = useState<string | null>(null)
   const [loaded, setLoaded] = useState<string | null>(null)
   const show = icon !== undefined && failed !== icon
@@ -31,7 +33,7 @@ export function GameIcon({ icon, label, className }: Props) {
       )}
     >
       {/* Hidden once loaded: icons with transparent parts would let it show through. */}
-      {!(show && loaded === icon) && <span aria-hidden>{initial(label)}</span>}
+      {!(show && loaded === icon) && <span aria-hidden>{placeholder ?? initial(label)}</span>}
       {show && (
         <img
           src={`http://icon.localhost/${icon}`}

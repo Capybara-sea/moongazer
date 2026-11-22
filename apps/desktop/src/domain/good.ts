@@ -28,6 +28,8 @@ export type Weapon = {
   /** The wielder's key, "Traveler" for any Traveler, "" when unequipped. */
   location: string
   lock: boolean
+  /** The game's id for this weapon; only exports made the way auto sync makes them have it. */
+  guid?: string
 }
 
 export const SLOTS = ["flower", "plume", "sands", "goblet", "circlet"] as const
@@ -102,6 +104,7 @@ export function weapons(value: unknown): Weapon[] {
         refinement: count(raw.refinement),
         location: str(raw.location) ?? "",
         lock: raw.lock === true,
+        guid: str(raw.gi_guid),
       },
     ]
   })

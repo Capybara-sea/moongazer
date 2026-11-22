@@ -3,8 +3,9 @@
 
 import { Lock, Star } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
-import { RARITY_TONES } from "@/components/RarityChip"
+import { iconTone } from "@/components/RarityChip"
 import { SetEffectTooltip } from "@/components/SetEffectTooltip"
+import { Tip } from "@/components/Tip"
 import { artifactIcon, formatStat, mainStatValue, statName } from "@/domain/builds"
 import type { Substat } from "@/domain/good"
 import { cn } from "@/lib/cn"
@@ -32,10 +33,7 @@ export function ArtifactCard({ row }: { row: ArtifactRow }) {
             <GameIcon
               icon={artifactIcon(artifact.setKey, slotKey)}
               label={setName}
-              className={cn(
-                "size-11 rounded-[10px] text-[18px]",
-                RARITY_TONES[rarity] ?? "bg-surface-secondary",
-              )}
+              className={cn("size-11 rounded-[10px] text-[18px]", iconTone(rarity))}
             />
           </SetEffectTooltip>
         </span>
@@ -45,19 +43,19 @@ export function ArtifactCard({ row }: { row: ArtifactRow }) {
         </div>
         <div className="flex flex-none items-center gap-1.5">
           {artifact.astralMark && (
-            <span title={t.astralMark} className="flex text-(--gold-fg)">
+            <Tip content={t.astralMark} className="flex text-(--gold-fg)">
               <Star
                 role="img"
                 aria-label={t.astralMark}
                 fill="currentColor"
                 className="size-[15px]"
               />
-            </span>
+            </Tip>
           )}
           {artifact.lock && (
-            <span title={t.locked} className="flex text-muted">
+            <Tip content={t.locked} className="flex text-muted">
               <Lock role="img" aria-label={t.locked} className="size-[15px]" />
-            </span>
+            </Tip>
           )}
           <span className="tabular rounded-[6px] bg-surface-secondary px-2 py-0.5 font-semibold text-[12px]">
             {t.level(level)}

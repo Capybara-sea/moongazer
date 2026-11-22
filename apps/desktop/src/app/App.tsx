@@ -16,22 +16,25 @@ import { PlannerPage } from "@/features/planner/PlannerPage"
 import { SettingsPage } from "@/features/settings/SettingsPage"
 import { SyncEvents } from "@/features/sync/SyncEvents"
 import { WeaponsPage } from "@/features/weapons/WeaponsPage"
+import { useAppearanceStore } from "@/stores/appearanceStore"
 import { AppShell } from "./AppShell"
 import { RestartDialog } from "./RestartDialog"
 
 export function App() {
+  // Pages stay mounted once visited, so they start over when how numbers are written changes.
+  const numbers = useAppearanceStore(s => s.numbers)
   return (
     <>
       <AppShell
         pages={{
-          home: <HomePage />,
-          overview: <OverviewPage />,
-          characters: <CharactersPage />,
-          weapons: <WeaponsPage />,
-          artifacts: <ArtifactsPage />,
-          materials: <MaterialsPage />,
-          collection: <CollectionPage />,
-          planner: <PlannerPage />,
+          home: <HomePage key={numbers} />,
+          overview: <OverviewPage key={numbers} />,
+          characters: <CharactersPage key={numbers} />,
+          weapons: <WeaponsPage key={numbers} />,
+          artifacts: <ArtifactsPage key={numbers} />,
+          materials: <MaterialsPage key={numbers} />,
+          collection: <CollectionPage key={numbers} />,
+          planner: <PlannerPage key={numbers} />,
           settings: <SettingsPage />,
           about: <AboutPage />,
         }}

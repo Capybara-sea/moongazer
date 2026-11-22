@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { useEffect, useRef } from "react"
+import { Tip } from "@/components/Tip"
 import type { Character } from "@/domain/good"
 import { characterData } from "@/domain/names"
 import { cn } from "@/lib/cn"
@@ -56,26 +57,26 @@ export function CharacterRail({
         const name = characterData(character.key).name
         const on = character.key === selected
         return (
-          <button
-            key={character.key}
-            ref={element => {
-              if (element) items.current.set(character.key, element)
-              else items.current.delete(character.key)
-            }}
-            type="button"
-            aria-label={name}
-            title={name}
-            aria-pressed={on}
-            onClick={() => navigate("characters", character.key)}
-            className={cn(
-              "flex flex-none cursor-pointer rounded-[12px] transition-shadow duration-150 motion-reduce:transition-none",
-              on
-                ? "shadow-[0_0_0_2px_var(--accent),0_0_0_4px_var(--accent-soft)]"
-                : "hover:shadow-[0_0_0_2px_var(--border)]",
-            )}
-          >
-            <CharacterAvatar characterKey={character.key} size="rail" />
-          </button>
+          <Tip key={character.key} content={name} className="contents">
+            <button
+              ref={element => {
+                if (element) items.current.set(character.key, element)
+                else items.current.delete(character.key)
+              }}
+              type="button"
+              aria-label={name}
+              aria-pressed={on}
+              onClick={() => navigate("characters", character.key)}
+              className={cn(
+                "flex flex-none cursor-pointer rounded-[12px] transition-shadow duration-150 motion-reduce:transition-none",
+                on
+                  ? "shadow-[0_0_0_2px_var(--accent),0_0_0_4px_var(--accent-soft)]"
+                  : "hover:shadow-[0_0_0_2px_var(--border)]",
+              )}
+            >
+              <CharacterAvatar characterKey={character.key} size="rail" />
+            </button>
+          </Tip>
         )
       })}
     </nav>

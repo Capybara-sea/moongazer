@@ -6,7 +6,7 @@ import { Plus } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { Notice } from "@/components/Notice"
 import { gameWeekday } from "@/domain/gameTime"
-import { planCards } from "@/domain/plan"
+import { materialTotals, planCards } from "@/domain/plan"
 import { moveGoal, replaceCustom, replaceCustomWeapon } from "@/domain/planEdits"
 import { plannerBag } from "@/domain/planner"
 import { formatDateTime } from "@/lib/format"
@@ -41,6 +41,7 @@ export function PlannerPage() {
     () => (account && ready ? planCards(plan, account, plannerBag(account.materials)) : []),
     [account, plan, ready],
   )
+  const totals = useMemo(() => materialTotals(cards), [cards])
   const drag = useDragOrder((from, to) =>
     usePlannerStore.getState().change(p => moveGoal(p, from, to)),
   )
@@ -79,42 +80,40 @@ export function PlannerPage() {
       )}
       {saveError && <Notice title={t.saveFailed} detail={saveError} />}
       {account && ready && (
-        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[280px_1fr]">
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[304px_1fr]">
           {/* Under the cards in a narrow window, where they would push the cards out of view. */}
           <div className="order-last flex flex-col gap-4 lg:order-first">
-            <TodayPanel cards={cards} weekday={weekday} />
-            <SummaryPanel cards={cards} />
+            <TodayPanel totals={totals} weekday={weekday} />
+            <SummaryPanel totals={totals} order={plan.summaryOrder} />
           </div>
           {cards.length === 0 ? (
             <Notice title={t.empty} detail={t.emptyDetail} />
           ) : (
-            <div className="flex flex-col gap-3">
-              {cards.length > 1 && <p className="text-[12px] text-muted">{t.priorityHint}</p>}
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-4">
-                {cards.map((card, index) => (
-                  <GoalCard
-                    key={card.goal.id}
-                    card={card}
-                    weekday={weekday}
-                    drag={
-                      cards.length > 1
-                        ? {
-                            item: drag.item(index),
-                            handle: drag.handle(index),
-                            rearrange: drag.rearrange,
-                          }
-                        : undefined
-                    }
-                    onEdit={() => setEditing(card.goal.id)}
-                    onReplace={() =>
-                      setAdding({
-                        kind: card.goal.kind === "customWeapon" ? "weapon" : "character",
-                        replacing: card.goal.id,
-                      })
-                    }
-                  />
-                ))}
-              </div>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-4">
+              {cards.map((card, index) => (
+                <GoalCard
+                  key={card.goal.id}
+                  card={card}
+                  totals={totals}
+                  weekday={weekday}
+                  drag={
+                    cards.length > 1
+                      ? {
+                          item: drag.item(index),
+                          handle: drag.handle(index),
+                          rearrange: drag.rearrange,
+                        }
+                      : undefined
+                  }
+                  onEdit={() => setEditing(card.goal.id)}
+                  onReplace={() =>
+                    setAdding({
+                      kind: card.goal.kind === "customWeapon" ? "weapon" : "character",
+                      replacing: card.goal.id,
+                    })
+                  }
+                />
+              ))}
             </div>
           )}
         </div>

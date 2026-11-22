@@ -7,6 +7,7 @@ import { Bar } from "@/components/Bar"
 import { GameIcon } from "@/components/GameIcon"
 import { HoverPreview } from "@/components/HoverPreview"
 import { Panel } from "@/components/Panel"
+import { Tip } from "@/components/Tip"
 import type { Account } from "@/domain/account"
 import { ELEMENT_ICONS } from "@/domain/elements"
 import { lookup } from "@/domain/names"
@@ -43,7 +44,7 @@ const PIPS: Record<ActState, string> = {
 }
 
 /** One fact of a record, as the game writes it: "best record  Lunar Mode act 10". */
-type Fact = { label?: string; value: string; star?: boolean; title?: string }
+type Fact = { label?: string; value: string; star?: boolean; tip?: string }
 
 type Challenge = {
   name: string
@@ -90,7 +91,7 @@ function abyss(account: Account, now: number): Challenge {
       label: t.best,
       value: String(running.stars),
       star: true,
-      title: t.stars(running.stars, running.maxStars),
+      tip: t.stars(running.stars, running.maxStars),
     },
   ]
   if (period) facts.push({ label: t.deepest, value: t.floorChamber(period.floor, period.chamber) })
@@ -125,7 +126,7 @@ function theater(account: Account, now: number): Challenge {
       {
         label: t.best,
         value: level ? `${level} ${act}` : act,
-        title: t.stars(record.stars, record.maxStars),
+        tip: t.stars(record.stars, record.maxStars),
       },
     ],
     acts: theaterActs(record),
@@ -158,7 +159,7 @@ function stygian(account: Account, takenAt: number, now: number): Challenge {
     {
       label: t.best,
       value: t.stygianDifficulty(record.difficulty),
-      title: t.stygianNote(done, total),
+      tip: t.stygianNote(done, total),
     },
   ]
   if (fastest !== undefined) facts.push({ label: t.fastest, value: t.seconds(fastest) })
@@ -186,25 +187,25 @@ function Row({ name, left, start, end, facts, acts, blessing, cast, teams }: Cha
         <span className="w-24 flex-none whitespace-nowrap font-semibold text-[14px]">{name}</span>
         {share !== undefined && <Bar value={share} className="h-1 min-w-10 flex-1" />}
         {left && (
-          <span
-            title={end === undefined ? undefined : t.endsAt(formatMonthDay(end))}
+          <Tip
+            content={end === undefined ? undefined : t.endsAt(formatMonthDay(end))}
             className={cn("tabular whitespace-nowrap text-[12px] text-muted", !share && "ml-auto")}
           >
             {left}
-          </span>
+          </Tip>
         )}
       </div>
       <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
         {facts.map(fact => (
-          <span
+          <Tip
             key={fact.label ?? fact.value}
-            title={fact.title}
+            content={fact.tip}
             className="flex items-center gap-1.5 whitespace-nowrap text-[13px]"
           >
             {fact.label && <span className="text-[12px] text-muted">{fact.label}</span>}
             {fact.star && <AbyssStar />}
             <span className="tabular font-semibold">{fact.value}</span>
-          </span>
+          </Tip>
         ))}
         {acts && <Acts acts={acts} />}
       </div>
@@ -237,12 +238,12 @@ function Acts({ acts }: { acts: ActState[] }) {
       {acts.map((state, i) => {
         const label = t.actStates[state](i + 1)
         return (
-          <span
+          <Tip
             // biome-ignore lint/suspicious/noArrayIndexKey: an act's place is its identity
             key={i}
             role="img"
             aria-label={label}
-            title={label}
+            content={label}
             className={cn(
               "flex size-4 items-center justify-center rounded-[4px] border",
               PIPS[state],
@@ -256,7 +257,7 @@ function Acts({ acts }: { acts: ActState[] }) {
                 className={cn("size-2.5", state === "passed" && "opacity-35")}
               />
             )}
-          </span>
+          </Tip>
         )
       })}
     </span>

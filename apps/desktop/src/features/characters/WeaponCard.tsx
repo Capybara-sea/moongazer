@@ -5,6 +5,7 @@ import { Lock } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
 import { RarityChip } from "@/components/RarityChip"
+import { Tip } from "@/components/Tip"
 import { WeaponTooltip } from "@/components/WeaponTooltip"
 import { levelCap } from "@/domain/builds"
 import type { Weapon } from "@/domain/good"
@@ -54,9 +55,9 @@ function Equipped({ weapon }: { weapon: Weapon }) {
         </span>
       </div>
       {weapon.lock && (
-        <span title={text.characterDetail.locked} className="flex flex-none text-muted">
+        <Tip content={text.characterDetail.locked} className="flex flex-none text-muted">
           <Lock role="img" aria-label={text.characterDetail.locked} className="size-[15px]" />
-        </span>
+        </Tip>
       )}
     </div>
   )

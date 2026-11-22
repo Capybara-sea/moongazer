@@ -22,6 +22,8 @@ type Option = {
 
 type Props = {
   label: string
+  /** Shown in the frame instead of the label, which still names the select. */
+  mark?: ReactNode
   value: string
   options: readonly Option[]
   onChange: (value: string) => void
@@ -33,7 +35,7 @@ type Props = {
  * A select with its muted label inside the same frame, as in "Sort [Level v]".
  * HeroUI's, not the native one, whose list ignores the theme and the glass.
  */
-export function LabeledSelect({ label, value, options, onChange, className }: Props) {
+export function LabeledSelect({ label, mark, value, options, onChange, className }: Props) {
   const picked = options.find(option => option.value === value)
   const icons = options.some(option => option.icon)
   return (
@@ -46,7 +48,7 @@ export function LabeledSelect({ label, value, options, onChange, className }: Pr
       className={cn("group", className)}
     >
       <Select.Trigger className="h-9 items-center gap-1.5 rounded-[9px] py-0 pr-2 pl-2.5 text-[13px] shadow-none">
-        <span className="text-muted">{label}</span>
+        {mark ?? <span className="text-muted">{label}</span>}
         {picked?.icon && (
           <span className="flex size-[22px] flex-none overflow-hidden rounded-[5px]">
             {picked.icon}

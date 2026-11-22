@@ -5,6 +5,8 @@
 //! the webview. Like apps/desktop/src/text/, this file may contain Chinese.
 
 pub const APP_NAME: &str = "望月";
+/// After the name in test builds, as on the title bar's badge.
+pub const TEST_BUILD: &str = "测试版";
 
 pub const TRAY_OPEN: &str = "打开望月";
 pub const TRAY_QUIT: &str = "退出望月";
@@ -23,15 +25,15 @@ pub mod sync {
 }
 
 pub const PICK_DATA_DIR: &str = "选择数据位置";
-pub const MOVE_DATA_FAILED: &str = "没能更改数据位置，这次仍用原来的位置。\n\n错误信息：";
+pub const MOVE_DATA_FAILED: &str = "更改数据位置失败，本次仍使用原位置。\n\n错误信息：";
 
-pub const FATAL_ERROR: &str = "程序出错，需要关闭。\n\n\
-    可以试试重新打开；如果反复出现，请重新安装或下载最新版本。\n\n错误信息：";
+pub const FATAL_ERROR: &str = "程序发生错误，即将关闭。\n\n\
+    请尝试重新打开；如果问题反复出现，请重新安装或下载最新版本。\n\n错误信息：";
 
-pub const WEBVIEW2_ASK: &str = "这台电脑缺少 Microsoft Edge WebView2 运行时\
-    （Windows 11 自带，部分 Windows 10 没有），程序需要它才能显示界面。\n\n\
-    现在从微软官网下载并安装吗？需要联网，装好后会自动重新打开本程序。";
+pub const WEBVIEW2_ASK: &str = "此电脑缺少 Microsoft Edge WebView2 运行时\
+    （Windows 11 已内置，部分 Windows 10 未安装），程序需要它才能显示界面。\n\n\
+    是否立即从微软官网下载并安装？需要联网，安装完成后将自动重新打开本程序。";
 
-pub const WEBVIEW2_MANUAL: &str = "没能自动安装 WebView2。\n\n\
-    请从微软官网手动下载安装后，再重新打开本程序：\n\
+pub const WEBVIEW2_MANUAL: &str = "自动安装 WebView2 失败。\n\n\
+    请从微软官网手动下载并安装，然后重新打开本程序：\n\
     https://developer.microsoft.com/microsoft-edge/webview2/";

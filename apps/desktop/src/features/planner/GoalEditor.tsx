@@ -3,9 +3,10 @@
 
 import { AlertDialog, Button } from "@heroui/react"
 import { GripVertical } from "lucide-react"
+import { useState } from "react"
 import { CheckboxField } from "@/components/CheckboxField"
+import { Tip } from "@/components/Tip"
 import { type Card, type Goal, goalName, isWeaponGoal, talentOrder } from "@/domain/plan"
-import { raiseForTalents } from "@/domain/planDefaults"
 import {
   compareStages,
   type Stage,
@@ -23,6 +24,7 @@ import { text } from "@/text/zh"
 import { Choice } from "./Choice"
 import { CustomFields } from "./CustomFields"
 import { rankedOrder, stageLabel } from "./GoalCard"
+import { RankBadge } from "./RankBadge"
 
 const t = text.planner
 
@@ -148,21 +150,20 @@ function StagePicker({ card, update }: PartProps) {
   )
 }
 
+/**
+ * Each talent's goal. Levels past what the level goal's ascensions allow are
+ * greyed out: raising them takes a higher level goal first.
+ */
 function TalentPickers({ card, update }: PartProps) {
-  const { goal, from, caps } = card
+  const { goal, from } = card
   if (isWeaponGoal(goal)) return null
   const order = rankedOrder(goal)
+  const phase = goal.to.stage.phase
   const pick = (talent: Talent, level: number) =>
     update(g =>
       isWeaponGoal(g)
         ? g
-        : {
-            ...g,
-            to: {
-              stage: raiseForTalents(g.to.stage, talentPhase(level), caps),
-              talents: { ...g.to.talents, [talent]: level },
-            },
-          },
+        : { ...g, to: { ...g.to, talents: { ...g.to.talents, [talent]: level } } },
     )
   return (
     <section className="flex flex-col gap-1.5">
@@ -170,31 +171,38 @@ function TalentPickers({ card, update }: PartProps) {
       {TALENTS.map(talent => {
         const now = from.talents[talent]
         const aim = goal.to.talents[talent]
-        const levels = Array.from({ length: 10 - now }, (_, i) => now + 1 + i)
+        const bonus = card.bonus[talent]
         return (
           <div key={talent} className="flex items-center gap-1.5">
-            <span className="w-14 flex-none">
-              {t.rank[order.indexOf(talent)]}
+            <span className="flex w-14 flex-none items-center gap-1">
+              {order.includes(talent) && <RankBadge rank={order.indexOf(talent)} />}
               {t.talents[talent]}
             </span>
-            <span className="tabular w-6 flex-none text-muted">{now}</span>
+            <TalentProgress now={now} aim={aim} bonus={bonus} />
             <div className="flex flex-wrap gap-1">
-              <Choice
-                label={t.keep}
-                selected={aim <= now}
-                onPick={() => pick(talent, 0)}
-                className="px-2"
-              />
-              {levels.map(level => (
-                <Choice
-                  key={level}
-                  label={String(level)}
-                  title={t.talentNeeds(talentPhase(level))}
-                  selected={aim === level}
-                  onPick={() => pick(talent, level)}
-                  className="w-7"
-                />
-              ))}
+              {LEVELS.map(level =>
+                level === now ? (
+                  // The current level is the goal of not raising it.
+                  <Choice
+                    key={level}
+                    label={String(level + bonus)}
+                    tip={t.keep}
+                    selected={aim <= now}
+                    onPick={() => pick(talent, 0)}
+                    className="w-7"
+                  />
+                ) : (
+                  <Choice
+                    key={level}
+                    label={String(level + bonus)}
+                    tip={level > now ? t.talentNeeds(talentPhase(level)) : undefined}
+                    selected={aim === level}
+                    disabled={level < now || talentPhase(level) > phase}
+                    onPick={() => pick(talent, level)}
+                    className="w-7"
+                  />
+                ),
+              )}
             </div>
           </div>
         )
@@ -202,6 +210,41 @@ function TalentPickers({ card, update }: PartProps) {
     </section>
   )
 }
+
+type ProgressProps = { now: number; aim: number; bonus: number }
+
+/**
+ * A talent's level, then "→ goal" when it is raised, as on the cards. The goal
+ * fades in and out in a space kept for it, so the picks beside never move; it
+ * keeps the last goal while it fades out.
+ */
+function TalentProgress({ now, aim, bonus }: ProgressProps) {
+  const raised = aim > now
+  const [shown, setShown] = useState(aim)
+  if (raised && shown !== aim) setShown(aim)
+  return (
+    <span className="tabular w-12 flex-none whitespace-nowrap">
+      <span className={bonus > 0 ? "text-(--accent-text)" : "text-muted"}>{now + bonus}</span>
+      <span
+        aria-hidden={!raised}
+        className={cn(
+          "transition-[opacity,translate] duration-200 ease-(--ease-out-soft) motion-reduce:transition-none",
+          raised ? "opacity-100" : "-translate-x-1 opacity-0",
+        )}
+      >
+        <span className="px-0.5 text-muted">→</span>
+        <span className="font-semibold">{shown + bonus}</span>
+      </span>
+    </span>
+  )
+}
+
+/**
+ * Every talent level, so the picks stay in place: those below the current one
+ * greyed out, the current one for not raising it. Each shows the level with
+ * the constellations' +3, as the game does, though goals keep the base level.
+ */
+const LEVELS = Array.from({ length: 10 }, (_, i) => i + 1)
 
 /** The talents' order of importance, dragged into place or moved with the arrow keys. */
 function OrderEditor({ card, update }: PartProps) {
@@ -223,20 +266,21 @@ function OrderEditor({ card, update }: PartProps) {
       </h4>
       <div className="flex flex-wrap items-center gap-2">
         {order.map((talent, at) => {
-          const label = `${ranked ? (t.rank[at] ?? "") : ""}${t.talents[talent]}`
+          const name = t.talents[talent]
           return (
-            <button
-              key={talent}
-              type="button"
-              {...drag.item(at)}
-              {...drag.handle(at)}
-              aria-label={t.dragLabel(label)}
-              title={t.dragHint}
-              className="flex items-center gap-1 rounded-[8px] border border-border bg-overlay py-1 pr-2.5 pl-1.5 transition-colors duration-150 hover:border-(--field-border) focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 motion-reduce:transition-none"
-            >
-              <GripVertical aria-hidden size={13} className="text-muted" />
-              {label}
-            </button>
+            <Tip key={talent} content={t.dragHint} className="contents">
+              <button
+                type="button"
+                {...drag.item(at)}
+                {...drag.handle(at)}
+                aria-label={t.dragLabel(ranked ? t.rankedName(name, at + 1) : name)}
+                className="flex items-center gap-1 rounded-[8px] border border-border bg-overlay py-1 pr-2.5 pl-1.5 transition-colors duration-150 hover:border-(--field-border) focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 motion-reduce:transition-none"
+              >
+                <GripVertical aria-hidden size={13} className="text-muted" />
+                {ranked && <RankBadge rank={at} />}
+                {name}
+              </button>
+            </Tip>
           )
         })}
         {goal.order && (

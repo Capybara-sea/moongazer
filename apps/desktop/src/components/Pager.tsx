@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import { cn } from "@/lib/cn"
 import { pageItems } from "@/lib/usePages"
 import { text } from "@/text/zh"
+import { Tip } from "./Tip"
 
 const t = text.pager
 const BUTTON =
@@ -23,16 +24,17 @@ export function Pager({ page, pages, onPage }: Props) {
   // A gap is keyed by the page before it: gaps never sit side by side.
   let before = -1
   const step = (to: number, label: string, icon: ReactNode) => (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={to < 0 || to >= pages}
-      onClick={() => onPage(to)}
-      className={cn(BUTTON, "enabled:hover:bg-default/60")}
-    >
-      {icon}
-    </button>
+    <Tip content={label} className="contents">
+      <button
+        type="button"
+        aria-label={label}
+        disabled={to < 0 || to >= pages}
+        onClick={() => onPage(to)}
+        className={cn(BUTTON, "enabled:hover:bg-default/60")}
+      >
+        {icon}
+      </button>
+    </Tip>
   )
   return (
     <nav

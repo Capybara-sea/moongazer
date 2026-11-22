@@ -3,7 +3,7 @@
 
 import { Delta } from "@/components/Delta"
 import { GameIcon } from "@/components/GameIcon"
-import { RARITY_TONES } from "@/components/RarityChip"
+import { iconTone } from "@/components/RarityChip"
 import { cn } from "@/lib/cn"
 import { formatNumber, signedDelta } from "@/lib/format"
 import type { MaterialRow } from "./order"
@@ -19,10 +19,7 @@ export function MaterialCard({ row }: { row: MaterialRow }) {
         <GameIcon
           icon={icon}
           label={name}
-          className={cn(
-            "size-10 rounded-[10px] text-[16px]",
-            RARITY_TONES[rarity ?? 0] ?? "bg-surface-secondary",
-          )}
+          className={cn("size-10 rounded-[10px] text-[16px]", iconTone(rarity))}
         />
       </span>
       <div className="flex min-w-0 flex-1 flex-col">

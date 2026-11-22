@@ -4,7 +4,7 @@
 import { useState } from "react"
 import { GameIcon } from "@/components/GameIcon"
 import { LabeledSelect } from "@/components/LabeledSelect"
-import { RARITY_TONES } from "@/components/RarityChip"
+import { iconTone } from "@/components/RarityChip"
 import { familyOptions, SLOTS } from "@/domain/customCharacter"
 import { CUSTOM_WEAPON_RARITIES, WEAPON_SLOTS, weaponFamilyOptions } from "@/domain/customWeapon"
 import { isWeaponType, WEAPON_TYPES } from "@/domain/elements"
@@ -36,10 +36,7 @@ function withIcon({ value, label, icon, rarity, placeholder }: SlotPick) {
           icon={icon}
           label={label}
           placeholder={placeholder}
-          className={cn(
-            "size-full text-[11px]",
-            RARITY_TONES[rarity ?? 0] ?? "bg-surface-secondary",
-          )}
+          className={cn("size-full text-[11px]", iconTone(rarity))}
         />
       </span>
     ),

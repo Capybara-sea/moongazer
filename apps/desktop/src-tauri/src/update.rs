@@ -58,7 +58,7 @@ const RELEASE_IDENTIFIER: &str = "io.github.capybara-sea.moongazer";
 
 /// Another identifier than the release's makes a test build, except the dev
 /// branch's (".dev"), which has its own badge.
-fn is_test_build(identifier: &str) -> bool {
+pub fn is_test_build(identifier: &str) -> bool {
     identifier != RELEASE_IDENTIFIER && !identifier.ends_with(".dev")
 }
 

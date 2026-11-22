@@ -3,15 +3,25 @@
 
 import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
+import { talentBoosts } from "@/domain/builds"
 import { customNeed, isUnknown } from "@/domain/customCharacter"
 import type { Weapon } from "@/domain/good"
+import { materialData } from "@/domain/names"
 import {
   type CustomGoal,
   EMPTY_PLAN,
   goalName,
+  knownLike,
+  MORA_EXP_GROUP,
+  materialTotals,
+  orderGroups,
   planCards,
+  SPECIALTY_GROUP,
+  summaryGroup,
   talentOrder,
+  WEEKLY_BOSS_GROUP,
   type WeaponGoal,
+  WORLD_BOSS_GROUP,
 } from "@/domain/plan"
 import { replaceCustom } from "@/domain/planEdits"
 import {
@@ -73,6 +83,22 @@ describe("plans", () => {
     const [card] = planCards({ goals: [goal], focus: "ready" }, account([]), new Map())
     expect(card?.standing).toBe("unowned")
     expect(card?.from).toEqual(START)
+    expect(card?.bonus).toEqual({ auto: 0, skill: 0, burst: 0 })
+  })
+
+  it("knows the +3 constellations give, while goals keep base levels", () => {
+    const [third, fifth] = talentBoosts(ayaka.key)
+    if (!third || !fifth) throw new Error("no boosts")
+    const plan = { goals: [goal], focus: "important" as const }
+    const bonus = (constellation: number) =>
+      planCards(plan, account([{ ...ayaka, constellation }]), new Map())[0]?.bonus
+    expect(bonus(2)).toEqual({ auto: 0, skill: 0, burst: 0 })
+    expect(bonus(3)?.[third]).toBe(3)
+    expect(bonus(3)?.[fifth]).toBe(0)
+    expect(bonus(6)?.[fifth]).toBe(3)
+    expect(planCards(plan, account([{ ...ayaka, constellation: 6 }]), new Map())[0]?.from).toEqual(
+      planCards(plan, account([ayaka]), new Map())[0]?.from,
+    )
   })
 })
 
@@ -247,5 +273,74 @@ describe("custom goals", () => {
     const ascend = customNeed(custom.slots, at20, { ...at20, stage: { level: 20, phase: 1 } })
     expect(ascend.get("ShivadaJadeSliver")).toBe(1)
     expect(covers(card?.lines ?? [], ascend)).toBe(false)
+  })
+})
+
+describe("material totals", () => {
+  const TOP = { level: 90, phase: 6 }
+  const custom = (id: string, name: string): CustomGoal => ({
+    id,
+    kind: "custom",
+    name,
+    rarity: 5,
+    slots: {},
+    to: { stage: TOP, talents: { auto: 0, skill: 9, burst: 9 } },
+  })
+
+  it("add the cards up and name the goals that need each in card order, none switched off", () => {
+    const ayaka = {
+      id: "a",
+      kind: "character" as const,
+      key: "KamisatoAyaka",
+      to: { stage: TOP, talents: { auto: 0, skill: 0, burst: 0 } },
+    }
+    const sword: WeaponGoal = {
+      id: "s",
+      kind: "weapon",
+      key: "MistsplitterReforged",
+      to: TOP,
+      off: true,
+    }
+    const goals = [custom("x", "Newcomer"), ayaka, sword, custom("y", "Other")]
+    const cards = planCards({ goals, focus: "ready" }, account([]), new Map())
+    const totals = materialTotals(cards)
+    const mora = totals.get("Mora")
+    expect(mora?.goals).toEqual(["Newcomer", goalName(ayaka), "Other"])
+    const moraOf = (i: number) => cards[i]?.lines.find(l => l.key === "Mora")?.need ?? 0
+    expect(mora?.need).toBe(moraOf(0) + moraOf(1) + moraOf(3))
+    expect(totals.get("?weekly:0")?.goals).toEqual(["Newcomer", "Other"])
+  })
+})
+
+describe("summary groups", () => {
+  it("put Mora with EXP, the rest by the game's type, those not known yet with their slot's", () => {
+    expect(summaryGroup("Mora")).toBe(MORA_EXP_GROUP)
+    expect(summaryGroup(CHARACTER_EXP)).toBe(MORA_EXP_GROUP)
+    expect(summaryGroup("?book:2")).toBe(summaryGroup("PhilosophiesOfElegance"))
+    expect(isUnknown(knownLike("?w-weapon:0"))).toBe(false)
+    expect(summaryGroup("?w-weapon:3")).toBe(summaryGroup(knownLike("?w-weapon:0")))
+    const book = materialData("PhilosophiesOfElegance").type
+    expect(book).toBeTruthy()
+    expect(summaryGroup("PhilosophiesOfElegance")).toBe(book)
+  })
+
+  it("keep world and weekly bosses' drops apart, though the game types them alike", () => {
+    expect(materialData("HurricaneSeed").type).toBe(materialData("DvalinsPlume").type)
+    expect(summaryGroup("HurricaneSeed")).toBe(WORLD_BOSS_GROUP)
+    expect(summaryGroup("DvalinsPlume")).toBe(WEEKLY_BOSS_GROUP)
+    expect(summaryGroup("?boss:0")).toBe(WORLD_BOSS_GROUP)
+    expect(summaryGroup("?weekly:0")).toBe(WEEKLY_BOSS_GROUP)
+  })
+
+  it("put every region's specialties in one group", () => {
+    expect(materialData("Cecilia").type).not.toBe(materialData("ClearwaterJade").type)
+    expect(summaryGroup("Cecilia")).toBe(SPECIALTY_GROUP)
+    expect(summaryGroup("ClearwaterJade")).toBe(SPECIALTY_GROUP)
+  })
+
+  it("keep the player's order, groups never moved in their default place", () => {
+    expect(orderGroups(["a", "b", "c", "d"])).toEqual(["a", "b", "c", "d"])
+    expect(orderGroups(["a", "b", "c", "d"], ["c", "a"])).toEqual(["c", "b", "a", "d"])
+    expect(orderGroups(["a", "b"], ["x", "b", "a"])).toEqual(["b", "a"])
   })
 })

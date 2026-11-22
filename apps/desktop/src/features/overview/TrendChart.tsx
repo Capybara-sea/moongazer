@@ -7,7 +7,7 @@ import { LabeledSelect } from "@/components/LabeledSelect"
 import { Panel } from "@/components/Panel"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
-import { formatAmount, formatDelta, formatNumber, signedDelta } from "@/lib/format"
+import { formatAmount, formatAmounts, formatDelta, formatNumber, signedDelta } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
 import { text } from "@/text/zh"
 import {
@@ -37,6 +37,7 @@ const SERIES = {
   mora: {
     label: text.tiles.mora,
     format: formatAmount,
+    axis: formatAmounts,
     fill: "fill-(--c-mora)",
     stroke: "stroke-(--c-mora)",
     bg: "bg-(--c-mora)",
@@ -44,6 +45,7 @@ const SERIES = {
   primogems: {
     label: text.tiles.primogems,
     format: formatNumber,
+    axis: (ticks: readonly number[]) => ticks.map(formatNumber),
     fill: "fill-(--c-primo)",
     stroke: "stroke-(--c-primo)",
     bg: "bg-(--c-primo)",
@@ -197,9 +199,9 @@ function SeriesChart({ currency, buckets, mode, hover, onHover }: ChartProps) {
       </div>
       <div className="flex gap-2">
         <div className="tabular flex h-[150px] w-[52px] flex-none flex-col items-end justify-between text-[11px] text-muted">
-          {plot.ticks.map(tick => (
-            <span key={tick} className="leading-none">
-              {series.format(tick)}
+          {series.axis(plot.ticks).map((label, i) => (
+            <span key={plot.ticks[i]} className="leading-none">
+              {label}
             </span>
           ))}
         </div>

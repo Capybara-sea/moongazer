@@ -17,6 +17,7 @@ import {
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { MessageCenter } from "@/features/messages/MessageCenter"
 import { SyncShade } from "@/features/sync/SyncCard"
+import { setWindowTitle } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { navigate, type PageKey, usePage } from "@/lib/route"
@@ -194,6 +195,13 @@ function SideMenu({ page }: { page: PageKey }) {
  */
 function TitleBar() {
   const testBuild = useUpdateStore(s => s.info?.testBuild ?? false)
+  // The window's own title too, which the taskbar shows.
+  useEffect(() => {
+    if (!testBuild) return
+    const title = `${text.appName} ${text.testBuild}`
+    document.title = title
+    void setWindowTitle(title)
+  }, [testBuild])
   return (
     <header
       data-tauri-decorum-tb=""

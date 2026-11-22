@@ -3,6 +3,7 @@
 
 import { CloseButton } from "@heroui/react"
 import { Panel } from "@/components/Panel"
+import { Tip } from "@/components/Tip"
 import { NAME_KINDS } from "@/domain/names"
 import type { BackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
@@ -55,9 +56,9 @@ function Row({ result }: { result: FileResult }) {
   return (
     <li data-rise className="flex flex-col gap-0.5 border-(--separator) border-t py-2">
       <div className="flex items-baseline justify-between gap-4 text-[13px]">
-        <span className="min-w-0 truncate" title={result.file}>
+        <Tip className="min-w-0 truncate" content={result.file}>
           {result.file}
-        </span>
+        </Tip>
         <span className={cn("flex-none", TONE[result.status])}>{statusText(result)}</span>
       </div>
       {detail && <span className="select-text break-all text-[12px] text-muted">{detail}</span>}

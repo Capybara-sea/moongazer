@@ -5,6 +5,7 @@ import qrCode from "@community/qq-group.svg"
 import { AlertDialog, Button } from "@heroui/react"
 import { Check, Copy, QrCode } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useTip } from "@/components/Tip"
 import { text } from "@/text/zh"
 
 const t = text.about
@@ -19,13 +20,15 @@ export function GroupChatHint() {
     return () => clearTimeout(timer)
   }, [copied])
   const Icon = copied ? Check : Copy
+  const label = copied ? t.groupNumberCopied : t.copyGroupNumber
+  const tip = useTip<HTMLButtonElement>(label)
   return (
     <>
       {t.groupChatJoin} <span className="select-text text-foreground">{t.groupNumber}</span>
       <button
+        {...tip.props}
         type="button"
-        aria-label={copied ? t.groupNumberCopied : t.copyGroupNumber}
-        title={copied ? t.groupNumberCopied : t.copyGroupNumber}
+        aria-label={label}
         onClick={() => {
           navigator.clipboard.writeText(t.groupNumber).then(
             () => setCopied(true),
@@ -37,6 +40,7 @@ export function GroupChatHint() {
         className="mx-0.5 inline-flex size-5 cursor-pointer items-center justify-center rounded-[5px] align-[-5px] text-muted transition-colors duration-150 hover:bg-default/60 hover:text-foreground motion-reduce:transition-none"
       >
         <Icon aria-hidden className={copied ? "size-3.5 text-success" : "size-3.5"} />
+        {tip.bubble}
       </button>
       {t.groupChatRest}
     </>

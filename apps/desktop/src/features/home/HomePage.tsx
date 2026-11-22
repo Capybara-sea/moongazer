@@ -8,6 +8,7 @@ import { LabeledList } from "@/components/Delta"
 import { Notice } from "@/components/Notice"
 import { Panel } from "@/components/Panel"
 import { StatusDot } from "@/components/StatusDot"
+import { Tip, useTip } from "@/components/Tip"
 import { type AccountGroup, liveUid } from "@/domain/accounts"
 import { ImportButton } from "@/features/overview/ImportButton"
 import { describeChange, sourceLabel } from "@/features/overview/RecentSnapshots"
@@ -104,13 +105,14 @@ function FirstSteps() {
 function SyncStage() {
   const status = useCaptureStore(s => s.status)
   const { side } = useSyncSide(null)
+  const tip = useTip<HTMLButtonElement>(t.openSync)
   if (!status || !side) return null
   const waiting =
     (status.phase === "waitingGame" || status.phase === "waitingLogin") && status.problem === null
   return (
     <button
+      {...tip.props}
       type="button"
-      title={t.openSync}
       onClick={() => useCaptureStore.getState().setPanelOpen(true)}
       className="flex max-w-full cursor-pointer flex-col items-center gap-1 rounded-[10px] px-4 py-2 transition-colors duration-150 hover:bg-default/60 motion-reduce:transition-none"
     >
@@ -118,6 +120,7 @@ function SyncStage() {
         {t.syncStage(side.label)}
       </StatusDot>
       <span className="text-[12px] text-muted">{waiting ? t.firstSnapshot : side.line}</span>
+      {tip.bubble}
     </button>
   )
 }
@@ -176,9 +179,9 @@ function Latest({ group }: { group: AccountGroup }) {
             {text.snapshot.live}
           </StatusDot>
         ) : (
-          <span className="font-semibold text-[20px] tabular" title={formatDateTime(takenAt)}>
+          <Tip className="font-semibold text-[20px] tabular" content={formatDateTime(takenAt)}>
             {formatWhen(takenAt, now)}
-          </span>
+          </Tip>
         )}
         <span className="rounded-[6px] bg-surface-secondary px-2 py-px text-[11px] text-muted">
           {sourceLabel(row.snapshot)}

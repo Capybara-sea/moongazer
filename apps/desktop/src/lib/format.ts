@@ -59,24 +59,93 @@ export function formatTimeWithSeconds(ms: number) {
 }
 
 const grouped = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 })
-const groupedTenths = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-})
+/** For amounts rounded already: keeps the decimals they have, up to the most formatAmounts adds. */
+const groupedDecimals = new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 })
 
 /** "3,280". */
 export function formatNumber(n: number) {
   return grouped.format(n)
 }
 
-/** As formatNumber, but from 10,000 on in units of 10,000 with one decimal, e.g. 1,248.0 of them. */
-export function formatAmount(n: number) {
-  return Math.abs(n) >= 10_000
-    ? text.number.tenThousand(groupedTenths.format(n / 10_000))
-    : formatNumber(n)
+/**
+ * How large numbers are written: in K, M and B, or in the Chinese units of
+ * ten thousand and a hundred million.
+ */
+export type NumberStyle = "kmb" | "wan"
+
+let numberStyle: NumberStyle = "wan"
+
+/** Set by the appearance store, from the saved setting and when it changes. */
+export function setNumberStyle(style: NumberStyle) {
+  numberStyle = style
 }
 
-/** "+160" or "-3"; from 10,000 on, in units of 10,000 with one decimal. */
+type Unit = readonly [size: number, name: string]
+
+const UNITS: Record<NumberStyle, readonly Unit[]> = {
+  kmb: [
+    [1e9, "B"],
+    [1e6, "M"],
+    [1e3, "K"],
+  ],
+  wan: [
+    [1e8, text.number.units.hundredMillion],
+    [1e4, text.number.units.tenThousand],
+  ],
+}
+
+/** Which way a number is rounded: up suits what is needed, down what there is. */
+export type Rounding = "nearest" | "up" | "down"
+
+const ROUND: Record<Rounding, (n: number) => number> = {
+  nearest: Math.round,
+  up: Math.ceil,
+  down: Math.floor,
+}
+
+/**
+ * As formatNumber, but from 10,000 on in the units the settings name: one
+ * decimal under 100 of a unit, none from there, and none when it is .0, as in
+ * "12.3K", "645K" or "2.7M".
+ */
+export function formatAmount(n: number, rounding: Rounding = "nearest") {
+  return amount(n, ROUND[rounding], 0)
+}
+
+/**
+ * As formatAmount for each of `values`, with up to three more decimals where
+ * fewer would write two of them the same, as on a chart's axis.
+ */
+export function formatAmounts(values: readonly number[]) {
+  let written = values.map(n => amount(n, Math.round, 0))
+  for (let more = 1; more <= 3 && new Set(written).size < written.length; more++) {
+    written = values.map(n => amount(n, Math.round, more))
+  }
+  return written
+}
+
+function amount(n: number, round: (n: number) => number, more: number) {
+  if (Math.abs(n) < 10_000) return formatNumber(round(n))
+  const units = UNITS[numberStyle]
+  const at = units.findIndex(([size]) => Math.abs(n) >= size)
+  const written = inUnit(n, units[at] ?? [1, ""], round, more)
+  // Rounding can reach the next unit up: 999,960 is "1M", not "1,000K".
+  const next = units[at - 1]
+  return next && written.size >= next[0] ? inUnit(n, next, round, more).label : written.label
+}
+
+/** `n` in `unit`, one decimal under 100 of it and `more` past that; and the size it rounded to. */
+function inUnit(n: number, [size, name]: Unit, round: (n: number) => number, more: number) {
+  const digits = (Math.abs(n / size) < 100 ? 1 : 0) + more
+  // Scaled before dividing: 1,100,000 / 1e6 * 10 is a hair over 11, which rounds up to 12.
+  const value = round((n * 10 ** digits) / size) / 10 ** digits
+  return {
+    size: Math.abs(value) * size,
+    label: text.number.unit(groupedDecimals.format(value), name),
+  }
+}
+
+/** "+160" or "-3"; from 10,000 on, in the units the settings name. */
 export function formatDelta(n: number) {
   const sign = n > 0 ? "+" : n < 0 ? "-" : ""
   return sign + formatAmount(Math.abs(n))

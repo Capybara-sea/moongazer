@@ -7,6 +7,7 @@ import { useMemo, useState } from "react"
 import { DoneBadge } from "@/components/DoneBadge"
 import { EmptyState } from "@/components/EmptyState"
 import { GameIcon } from "@/components/GameIcon"
+import { Tip, useTip } from "@/components/Tip"
 import {
   ANECDOTE_AREAS,
   ANECDOTE_RULES,
@@ -109,26 +110,28 @@ function Characters({ groups }: { groups: CharacterGroup[] }) {
           const total = g.rows.filter(r => r.status !== "absent").length
           const name = characterName(g.character)
           return (
-            <button
-              key={g.character}
-              type="button"
-              aria-pressed={on}
-              title={name}
-              onClick={() => setCharacter(on ? null : g.character)}
-              className={cn(
-                "relative flex cursor-pointer flex-col items-center gap-0.5 rounded-[10px] border px-0.5 py-1.5 transition-colors duration-150 motion-reduce:transition-none",
-                on ? "border-accent bg-(--accent-soft)" : "border-transparent hover:bg-default/60",
-              )}
-            >
-              <span className="relative">
-                <Avatar character={g.character} className="size-10 text-[14px]" />
-                {g.todo === 0 && <DoneBadge label={t.allDone} />}
-              </span>
-              <span className="max-w-full truncate text-[11px]">{name}</span>
-              <span className="text-[10px] text-muted tabular">
-                {g.done} / {total}
-              </span>
-            </button>
+            <Tip key={g.character} content={name} className="contents">
+              <button
+                type="button"
+                aria-pressed={on}
+                onClick={() => setCharacter(on ? null : g.character)}
+                className={cn(
+                  "relative flex cursor-pointer flex-col items-center gap-0.5 rounded-[10px] border px-0.5 py-1.5 transition-colors duration-150 motion-reduce:transition-none",
+                  on
+                    ? "border-accent bg-(--accent-soft)"
+                    : "border-transparent hover:bg-default/60",
+                )}
+              >
+                <span className="relative">
+                  <Avatar character={g.character} className="size-10 text-[14px]" />
+                  {g.todo === 0 && <DoneBadge label={t.allDone} />}
+                </span>
+                <span className="max-w-full truncate text-[11px]">{name}</span>
+                <span className="text-[10px] text-muted tabular">
+                  {g.done} / {total}
+                </span>
+              </button>
+            </Tip>
           )
         })}
       </div>
@@ -280,13 +283,14 @@ function Item({ row }: { row: AnecdoteRow }) {
 
 /** Where the guide's places and triggers come from, with a link to it. */
 function Source() {
+  const tip = useTip<HTMLButtonElement>(t.openSourceLabel)
   return (
     <p className="flex flex-wrap items-center gap-x-2 text-[12px] text-muted">
       {t.source}
       <button
+        {...tip.props}
         type="button"
         aria-label={t.openSourceLabel}
-        title={t.openSourceLabel}
         onClick={() => {
           openTravelersTales().catch((error: unknown) => {
             toast(t.openFailed, { description: toBackendError(error).message })
@@ -295,6 +299,7 @@ function Source() {
         className="cursor-pointer text-(--accent-text) hover:underline"
       >
         {t.openSource}
+        {tip.bubble}
       </button>
     </p>
   )

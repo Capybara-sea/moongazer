@@ -3,6 +3,7 @@
 
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/cn"
+import { Tip } from "./Tip"
 
 type Props<T extends string> = {
   /** The group's name read out, such as "display mode". */
@@ -24,20 +25,20 @@ export function ViewToggle<T extends string>({ label, value, options, onChange }
         const Icon = option.icon
         const pressed = option.value === value
         return (
-          <button
-            key={option.value}
-            type="button"
-            aria-pressed={pressed}
-            aria-label={option.label}
-            title={option.label}
-            onClick={() => onChange(option.value)}
-            className={cn(
-              "flex w-[34px] cursor-pointer items-center justify-center rounded-[7px] transition-colors duration-150 ease-(--ease-out-soft) focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 motion-reduce:transition-none",
-              pressed ? "bg-(--accent-soft) text-foreground" : "text-muted hover:text-foreground",
-            )}
-          >
-            <Icon aria-hidden size={15} />
-          </button>
+          <Tip key={option.value} content={option.label} className="contents">
+            <button
+              type="button"
+              aria-pressed={pressed}
+              aria-label={option.label}
+              onClick={() => onChange(option.value)}
+              className={cn(
+                "flex w-[34px] cursor-pointer items-center justify-center rounded-[7px] transition-colors duration-150 ease-(--ease-out-soft) focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 motion-reduce:transition-none",
+                pressed ? "bg-(--accent-soft) text-foreground" : "text-muted hover:text-foreground",
+              )}
+            >
+              <Icon aria-hidden size={15} />
+            </button>
+          </Tip>
         )
       })}
     </fieldset>

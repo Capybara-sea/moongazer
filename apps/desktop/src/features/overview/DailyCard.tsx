@@ -7,6 +7,7 @@ import { Bar } from "@/components/Bar"
 import { DoneBadge } from "@/components/DoneBadge"
 import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
+import { Tip } from "@/components/Tip"
 import type { Account, Tasks } from "@/domain/account"
 import {
   currentBosses,
@@ -65,15 +66,16 @@ type RowProps = {
   label: string
   value?: ReactNode
   /** Hover text for the whole row. */
-  title?: string
+  tip?: string
   className?: string
   children: ReactNode
 }
 
-function Row({ label, value, title, className, children }: RowProps) {
+function Row({ label, value, tip, className, children }: RowProps) {
   return (
-    <div
-      title={title}
+    <Tip
+      as="div"
+      content={tip}
       className={cn(
         "grid min-h-[46px] grid-cols-[76px_minmax(0,1fr)_auto] items-center gap-3.5 border-(--separator) border-t py-1.5 text-[13px]",
         className,
@@ -82,7 +84,7 @@ function Row({ label, value, title, className, children }: RowProps) {
       <span className="whitespace-nowrap text-muted">{label}</span>
       {children}
       <span className="tabular whitespace-nowrap text-right font-semibold">{value}</span>
-    </div>
+    </Tip>
   )
 }
 
@@ -128,7 +130,7 @@ function Commissions({ commissions, takenAt, now }: CommissionsProps) {
   const { finished, total, claimed, reset } = currentCommissions(commissions, takenAt, now)
   const state = claimed ? "claimed" : finished >= total ? "claimable" : "left"
   return (
-    <Row label={t.commissions} value={`${finished} / ${total}`} title={reset ? t.reset : undefined}>
+    <Row label={t.commissions} value={`${finished} / ${total}`} tip={reset ? t.reset : undefined}>
       <span className="flex min-w-0 items-center gap-1.5">
         {slots(total).map(n => (
           <span
@@ -180,7 +182,7 @@ function Bosses({ bosses, takenAt, now }: BossesProps) {
   if (!bosses) return <Missing label={t.bosses} />
   const { left, limit, used, reset } = currentBosses(bosses, takenAt, now)
   return (
-    <Row label={t.bosses} value={t.bossesLeft(left, limit)} title={reset ? t.reset : undefined}>
+    <Row label={t.bosses} value={t.bossesLeft(left, limit)} tip={reset ? t.reset : undefined}>
       <span className="flex min-w-0 items-center gap-1.5">
         {slots(limit).map(n => (
           <span
@@ -240,15 +242,15 @@ function Expedition({ character, doneAt, now }: ExpeditionProps) {
         />
         {done && <DoneBadge />}
       </span>
-      <span
-        title={formatDateTime(doneAt)}
+      <Tip
+        content={formatDateTime(doneAt)}
         className={cn(
           "tabular whitespace-nowrap text-[10px]",
           done ? "text-(--accent-text)" : "text-muted",
         )}
       >
         {done ? t.expeditionDone : formatTime(doneAt)}
-      </span>
+      </Tip>
     </span>
   )
 }
@@ -274,15 +276,15 @@ type WelkinProps = { welkin: Tasks["welkin"]; takenAt: number; now: number }
 function Welkin({ welkin, takenAt, now }: WelkinProps) {
   if (!welkin) return <Missing label={t.welkin} />
   const { days, endsAt, claimedToday } = currentWelkin(welkin.days, takenAt, now)
+  // The row's tip covers the chip as well (only the outer tip opens), so it carries the chip's note.
   return (
     <Row
       label={t.welkin}
       value={days > 0 ? t.welkinDays(days) : t.welkinNone}
-      title={days > 0 ? t.welkinUntil(formatMonthDay(endsAt)) : undefined}
+      tip={days > 0 ? `${t.welkinUntil(formatMonthDay(endsAt))}\n${t.welkinGuess}` : undefined}
     >
       {days > 0 && (
         <span
-          title={t.welkinGuess}
           className={cn(
             "flex w-fit items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[12px]",
             FADE,

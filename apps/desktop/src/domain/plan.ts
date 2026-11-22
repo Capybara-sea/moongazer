@@ -8,15 +8,17 @@
  */
 
 import type { Account } from "@/domain/account"
-import { type CustomSlots, customNeed } from "@/domain/customCharacter"
+import { talentLevels } from "@/domain/builds"
+import { type CustomSlots, customNeed, familyOptions, unknownSlot } from "@/domain/customCharacter"
 import {
   type CustomWeaponRarity,
   type CustomWeaponSlots,
   customWeaponNeed,
+  weaponFamilyOptions,
 } from "@/domain/customWeapon"
 import type { WeaponType } from "@/domain/elements"
 import type { Weapon } from "@/domain/good"
-import { lookup, weaponData } from "@/domain/names"
+import { lookup, materialData, weaponData } from "@/domain/names"
 import { DEFAULTS, type Defaults } from "@/domain/planDefaults"
 import {
   allocate,
@@ -26,6 +28,7 @@ import {
   compareStages,
   covers,
   defaultOrder,
+  isExp,
   type Line,
   type Need,
   START,
@@ -86,7 +89,13 @@ export type Goal = CharacterGoal | WeaponGoal | CustomGoal | CustomWeaponGoal
 /** Raise the most important talent first, or any talent the bag covers. */
 export type TalentFocus = "important" | "ready"
 export const FOCUSES = ["important", "ready"] as const
-export type Plan = { goals: Goal[]; focus: TalentFocus; defaults: Defaults }
+export type Plan = {
+  goals: Goal[]
+  focus: TalentFocus
+  defaults: Defaults
+  /** The summary's groups (summaryGroup ids) the player has moved, in their order. */
+  summaryOrder?: string[]
+}
 export const EMPTY_PLAN: Plan = { goals: [], focus: "important", defaults: DEFAULTS }
 
 /** A weapon's goal, released or not, which is a level goal alone. */
@@ -119,6 +128,8 @@ export type Card = {
   wielder?: string
   /** Whose passive halves this weapon's ascension Mora, when the account has them. */
   moraDiscount?: MoraDiscount
+  /** The levels constellations add to each talent; all 0 when it has none or is not owned. */
+  bonus: Record<Talent, number>
   /** Switched off: no lines, never done, no steps. */
   off: boolean
   lines: Line[]
@@ -166,6 +177,18 @@ export function characterFrom(account: Account, key: string): [CharacterState, S
     ? account.characters.find(c => c.key.startsWith("Traveler"))
     : undefined
   return traveler ? [{ ...START, stage: stageOf(traveler) }, "otherElement"] : [START, "unowned"]
+}
+
+/**
+ * The +3 constellations 3 and 5 give an owned character's talents; goals for
+ * plans store and cost the base levels. The Traveler's other elements have
+ * none, as exports hold only the current element's constellations.
+ */
+function talentBonus(account: Account, goal: Goal): Record<Talent, number> {
+  const own = goal.kind === "character" && account.characters.find(c => c.key === goal.key)
+  const levels = own ? talentLevels(own) : undefined
+  const bonus = (talent: Talent) => (levels ? levels[talent].total - levels[talent].base : 0)
+  return { auto: bonus("auto"), skill: bonus("skill"), burst: bonus("burst") }
 }
 
 function weaponFrom(account: Account, goal: WeaponGoal): [Stage, Standing, string?] {
@@ -273,7 +296,8 @@ export function planCards(
     const stageOnly = needOf(goal, base, { ...base, stage: to.stage }, moraDiscount)
     const need = needOf(goal, base, to, moraDiscount)
     const stageKeys = new Set(stageOnly.keys())
-    const card = { goal, standing, from, caps, need, stageKeys, wielder, moraDiscount, off }
+    const bonus = talentBonus(account, goal)
+    const card = { goal, standing, from, caps, need, stageKeys, wielder, moraDiscount, bonus, off }
     return { card, base: base.stage, reached: compareStages(from.stage, to.stage) >= 0 }
   })
   // An empty need takes nothing, so the cards after one switched off share the bag without it.
@@ -292,6 +316,76 @@ export function planCards(
 export function goalName(goal: Goal) {
   if (goal.kind === "custom" || goal.kind === "customWeapon") return goal.name
   return lookup(goal.kind === "weapon" ? "weapons" : "characters", goal.key).name
+}
+
+/** A material over every card: what they need, what they get, and the goals that need it. */
+export type MaterialTotal = { key: string; need: number; have: number; goals: string[] }
+
+/**
+ * Every card's materials added up, each with the names of the goals that need
+ * it in card order. Goals switched off have no lines, so they are left out.
+ */
+export function materialTotals(cards: readonly Card[]): Map<string, MaterialTotal> {
+  const totals = new Map<string, MaterialTotal>()
+  for (const card of cards) {
+    for (const line of card.lines) {
+      const total = totals.get(line.key) ?? { key: line.key, need: 0, have: 0, goals: [] }
+      total.need += line.need
+      total.have += line.have
+      total.goals.push(goalName(card.goal))
+      totals.set(line.key, total)
+    }
+  }
+  return totals
+}
+
+/** The summary's own groups; the others are the game's material types. */
+export const MORA_EXP_GROUP = "moraExp"
+export const SPECIALTY_GROUP = "specialty"
+export const WORLD_BOSS_GROUP = "worldBoss"
+export const WEEKLY_BOSS_GROUP = "weeklyBoss"
+
+// World and weekly bosses' drops share one type in the game.
+const WORLD_BOSS = new Set(familyOptions("boss").flat())
+const WEEKLY_BOSS = new Set(familyOptions("weekly").flat())
+
+/**
+ * A known material standing for one of a custom goal's that is not known
+ * yet: the slot's first family's at the same tier, of the same type and
+ * rarity.
+ */
+export function knownLike(key: string) {
+  const unknown = unknownSlot(key)
+  if (!unknown) return key
+  const families =
+    unknown.of === "weapon" ? weaponFamilyOptions(unknown.slot) : familyOptions(unknown.slot)
+  return families[0]?.[unknown.tier] ?? families[0]?.at(-1) ?? key
+}
+
+/**
+ * The summary group a material goes in: Mora with EXP, every region's
+ * specialties together, world and weekly bosses' drops apart, the rest by the
+ * game's material type, those not known yet with the known ones of their
+ * slot. A type goes by its name, the one id names.json keeps for it.
+ */
+export function summaryGroup(key: string) {
+  const known = knownLike(key)
+  if (known === "Mora" || isExp(known)) return MORA_EXP_GROUP
+  if (WORLD_BOSS.has(known)) return WORLD_BOSS_GROUP
+  if (WEEKLY_BOSS.has(known)) return WEEKLY_BOSS_GROUP
+  const data = materialData(known)
+  if (data.tab === "specialty") return SPECIALTY_GROUP
+  return data.type ?? ""
+}
+
+/**
+ * The summary's groups, `ids` in their default order, as the player ordered
+ * them in `saved`; those never moved keep their default place.
+ */
+export function orderGroups(ids: readonly string[], saved: readonly string[] = []) {
+  const moved = saved.filter(id => ids.includes(id))
+  let next = 0
+  return ids.map(id => (saved.includes(id) ? (moved[next++] ?? id) : id))
 }
 
 /** Every weapon the planner has data for is in names.json, which gives its rarity. */

@@ -5,6 +5,7 @@ import { Check, UserRound } from "lucide-react"
 import type { ReactNode } from "react"
 import { ProfileAvatar } from "@/components/ProfileAvatar"
 import type { Tone } from "@/components/StatusDot"
+import { Tip } from "@/components/Tip"
 import { type AccountGroup, liveUid, timeLabel } from "@/domain/accounts"
 import { cn } from "@/lib/cn"
 import { formatDateTime, maskUid } from "@/lib/format"
@@ -87,9 +88,9 @@ export function AccountFace({ tone, line, trailing }: FaceProps) {
         )}
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span title={shown?.name} className="truncate font-semibold text-[13px] leading-[1.35]">
+        <Tip content={shown?.name} className="truncate font-semibold text-[13px] leading-[1.35]">
           {shown ? shown.name : t.none}
-        </span>
+        </Tip>
         <span className="truncate text-[11px] text-muted leading-[1.4] tabular">
           {line ?? (shown ? shown.uid : t.noneHint(capture, on))}
         </span>
@@ -145,9 +146,9 @@ export function AccountList() {
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="flex min-w-0 items-center gap-1.5">
-                    <span title={name} className={cn("truncate", current && "font-semibold")}>
+                    <Tip content={name} className={cn("truncate", current && "font-semibold")}>
                       {name}
-                    </span>
+                    </Tip>
                     {syncing && (
                       <span className="flex-none rounded-full bg-[color-mix(in_srgb,var(--ok)_20%,transparent)] px-1.5 text-(--ok) text-[10px] leading-4">
                         {t.syncing}

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { text } from "@/text/zh"
 import {
   formatAmount,
+  formatAmounts,
   formatDateTime,
   formatDelta,
   formatDuration,
@@ -15,8 +16,13 @@ import {
   formatWhen,
   maskUid,
   movedTo,
+  setNumberStyle,
   signedDelta,
 } from "./format"
+
+// Most cases here are written in K, M and B; the default is the Chinese units.
+beforeEach(() => setNumberStyle("kmb"))
+afterEach(() => setNumberStyle("wan"))
 
 const now = new Date(2026, 10, 17, 12, 0).getTime()
 const at = (month: number, day: number, hour: number, minute = 0, year = 2026) =>
@@ -72,16 +78,69 @@ describe("formatNumber", () => {
 })
 
 describe("formatAmount", () => {
-  it("counts in units of ten thousand from 10,000 on", () => {
+  const { units } = text.number
+
+  it("writes K, M and B from 10,000 on, one decimal under 100 of a unit", () => {
     expect(formatAmount(9_999)).toBe("9,999")
-    expect(formatAmount(10_000)).toBe(text.number.tenThousand("1.0"))
-    expect(formatAmount(12_345)).toBe(text.number.tenThousand("1.2"))
-    expect(formatAmount(12_480_000)).toBe(text.number.tenThousand("1,248.0"))
+    expect(formatAmount(10_000)).toBe("10K")
+    expect(formatAmount(12_345)).toBe("12.3K")
+    expect(formatAmount(644_800)).toBe("645K")
+    expect(formatAmount(12_480_000)).toBe("12.5M")
+    expect(formatAmount(3_200_000_000)).toBe("3.2B")
+  })
+
+  it("writes the Chinese units when set to", () => {
+    setNumberStyle("wan")
+    expect(formatAmount(9_999)).toBe("9,999")
+    expect(formatAmount(12_345)).toBe(text.number.unit("1.2", units.tenThousand))
+    expect(formatAmount(6_448_000)).toBe(text.number.unit("645", units.tenThousand))
+    expect(formatAmount(12_480_000)).toBe(text.number.unit("1,248", units.tenThousand))
+    expect(formatAmount(250_000_000)).toBe(text.number.unit("2.5", units.hundredMillion))
+  })
+
+  it("rounds up what is needed and down what there is", () => {
+    expect(formatAmount(2_661_000, "up")).toBe("2.7M")
+    expect(formatAmount(2_669_000, "down")).toBe("2.6M")
+    expect(formatAmount(1_234.2, "up")).toBe("1,235")
+    expect(formatAmount(1_100_000, "up")).toBe("1.1M")
+  })
+
+  it("moves to the next unit when rounding reaches it", () => {
+    expect(formatAmount(999_000)).toBe("999K")
+    expect(formatAmount(999_960)).toBe("1M")
+    expect(formatAmount(999_001, "up")).toBe("1M")
+    expect(formatAmount(999_950_000)).toBe("1B")
+    setNumberStyle("wan")
+    expect(formatAmount(9_999_500)).toBe(text.number.unit("1,000", units.tenThousand))
+    expect(formatAmount(99_995_000)).toBe(text.number.unit("1", units.hundredMillion))
+    expect(formatAmount(99_990_001, "up")).toBe(text.number.unit("1", units.hundredMillion))
   })
 
   it("keeps the minus sign of negative amounts", () => {
     expect(formatAmount(-9_999)).toBe("-9,999")
-    expect(formatAmount(-12_480_000)).toBe(text.number.tenThousand("-1,248.0"))
+    expect(formatAmount(-12_480_000)).toBe("-12.5M")
+  })
+})
+
+describe("formatAmounts", () => {
+  const { units } = text.number
+
+  it("writes as formatAmount when that tells the values apart", () => {
+    expect(formatAmounts([13_100_000, 12_700_000, 12_300_000])).toEqual(["13.1M", "12.7M", "12.3M"])
+  })
+
+  it("adds decimals until no two values read the same", () => {
+    expect(formatAmounts([3_210_000, 3_170_000, 3_130_000, 3_090_000])).toEqual([
+      "3.21M",
+      "3.17M",
+      "3.13M",
+      "3.09M",
+    ])
+    setNumberStyle("wan")
+    expect(formatAmounts([131_240_000, 129_760_000])).toEqual([
+      text.number.unit("1.31", units.hundredMillion),
+      text.number.unit("1.3", units.hundredMillion),
+    ])
   })
 })
 
@@ -90,15 +149,14 @@ describe("formatDelta", () => {
     expect(formatDelta(160)).toBe("+160")
     expect(formatDelta(-3)).toBe("-3")
     expect(formatDelta(0)).toBe("0")
-    expect(formatDelta(126_000)).toBe(`+${text.number.tenThousand("12.6")}`)
-    expect(formatDelta(-140_000)).toBe(`-${text.number.tenThousand("14.0")}`)
+    expect(formatDelta(126_000)).toBe("+126K")
+    expect(formatDelta(-14_000)).toBe("-14K")
   })
 
-  it("groups thousands on both sides of ten thousand", () => {
+  it("groups thousands below ten thousand", () => {
     expect(formatDelta(9_999)).toBe("+9,999")
     expect(formatDelta(-1_234)).toBe("-1,234")
-    expect(formatDelta(12_480_000)).toBe(`+${text.number.tenThousand("1,248.0")}`)
-    expect(formatDelta(-12_480_000)).toBe(`-${text.number.tenThousand("1,248.0")}`)
+    expect(formatDelta(-12_480_000)).toBe("-12.5M")
   })
 })
 

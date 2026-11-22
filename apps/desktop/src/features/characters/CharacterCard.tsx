@@ -4,7 +4,7 @@
 import { ChevronRight } from "lucide-react"
 import { Fragment, type ReactNode } from "react"
 import { GameIcon } from "@/components/GameIcon"
-import { RARITY_TONES, RarityChip } from "@/components/RarityChip"
+import { iconTone, RarityChip } from "@/components/RarityChip"
 import { SetEffectTooltip } from "@/components/SetEffectTooltip"
 import { WeaponTooltip } from "@/components/WeaponTooltip"
 import type { Character } from "@/domain/good"
@@ -107,11 +107,7 @@ export function ItemIcon({ icon, label, rarity, className }: IconProps) {
       <GameIcon
         icon={icon}
         label={label}
-        className={cn(
-          "rounded-[6px] text-[11px]",
-          (rarity !== undefined && RARITY_TONES[rarity]) || "bg-surface-secondary",
-          className,
-        )}
+        className={cn("rounded-[6px] text-[11px]", iconTone(rarity), className)}
       />
     </span>
   )

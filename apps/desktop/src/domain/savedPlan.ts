@@ -6,7 +6,16 @@
 import { familyOptions, SLOTS } from "@/domain/customCharacter"
 import { CUSTOM_WEAPON_RARITIES, WEAPON_SLOTS, weaponFamilyOptions } from "@/domain/customWeapon"
 import { isWeaponType } from "@/domain/elements"
-import { EMPTY_PLAN, FOCUSES, type Goal, type Plan } from "@/domain/plan"
+import {
+  EMPTY_PLAN,
+  FOCUSES,
+  type Goal,
+  MORA_EXP_GROUP,
+  type Plan,
+  SPECIALTY_GROUP,
+  WEEKLY_BOSS_GROUP,
+  WORLD_BOSS_GROUP,
+} from "@/domain/plan"
 import { DEFAULTS, type Defaults } from "@/domain/planDefaults"
 import {
   type CharacterState,
@@ -19,6 +28,7 @@ import {
   type Talent,
   weaponCaps,
 } from "@/domain/planner"
+import names from "@/generated/names.json"
 import { isOneOf, isRecord } from "@/lib/backend/shared"
 
 const isLevel = (value: unknown, max: number): value is number =>
@@ -144,10 +154,26 @@ function parseDefaults(value: unknown): Defaults {
   }
 }
 
+const GROUPS = new Set([
+  MORA_EXP_GROUP,
+  SPECIALTY_GROUP,
+  WEEKLY_BOSS_GROUP,
+  WORLD_BOSS_GROUP,
+  ...names.materialTypes.filter(t => t.tab !== "specialty").map(t => t.name),
+])
+
+/** The summary's order without groups the data no longer has, or repeats; none when empty. */
+function parseSummaryOrder(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const ids = new Set(value.filter((id): id is string => typeof id === "string" && GROUPS.has(id)))
+  return ids.size > 0 ? [...ids] : undefined
+}
+
 /** A saved plan; goals that no longer check out, such as a removed weapon's, are left out. */
 export function parsePlan(value: unknown): Plan {
   if (!isRecord(value)) return EMPTY_PLAN
   const goals = Array.isArray(value.goals) ? value.goals.flatMap(g => parseGoal(g) ?? []) : []
   const focus = isOneOf(FOCUSES, value.focus) ? value.focus : EMPTY_PLAN.focus
-  return { goals, focus, defaults: parseDefaults(value.defaults) }
+  const summaryOrder = parseSummaryOrder(value.summaryOrder)
+  return { goals, focus, defaults: parseDefaults(value.defaults), summaryOrder }
 }

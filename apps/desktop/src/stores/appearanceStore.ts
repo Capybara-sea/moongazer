@@ -2,14 +2,15 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { create } from "zustand"
+import { type NumberStyle, setNumberStyle } from "@/lib/format"
 import { revealFrom } from "@/lib/motion"
 import { readStored, writeStored } from "@/lib/storage"
 
 /**
  * Theme, glass and motion, applied to <html>. public/theme.js applies the
  * same saved values before the first paint, so the two must read the same
- * keys the same way. Whether UIDs start masked is kept here too; it changes
- * nothing on <html>. The theme keeps HeroUI's "heroui-theme" key so earlier
+ * keys the same way. Whether UIDs start masked and how large numbers are
+ * written are kept here too; they change nothing on <html>. The theme keeps HeroUI's "heroui-theme" key so earlier
  * choices carry over; one store instead of HeroUI's useTheme lets the side
  * menu and the settings page share it.
  */
@@ -20,17 +21,20 @@ const THEME_KEY = "heroui-theme"
 const GLASS_KEY = "moongazer:ui:glass"
 const MOTION_KEY = "moongazer:ui:motion"
 const MASK_UID_KEY = "moongazer:ui:maskUid"
+const NUMBERS_KEY = "moongazer:ui:numbers"
 
 type AppearanceState = {
   theme: ThemeMode
   glass: boolean
   motion: boolean
   maskUid: boolean
+  numbers: NumberStyle
   /** A new look spreads from `from`, a control's bounding box, when given. */
   setTheme: (theme: ThemeMode, from?: DOMRect) => void
   setGlass: (on: boolean) => void
   setMotion: (on: boolean) => void
   setMaskUid: (on: boolean) => void
+  setNumbers: (style: NumberStyle) => void
 }
 
 function readTheme(): ThemeMode {
@@ -70,6 +74,8 @@ export const useAppearanceStore = create<AppearanceState>((set, get) => ({
   motion: readStored(MOTION_KEY) !== "off",
   // Shown unless set to masked.
   maskUid: readStored(MASK_UID_KEY) === "on",
+  // The Chinese units unless set to K, M and B.
+  numbers: readStored(NUMBERS_KEY) === "kmb" ? "kmb" : "wan",
 
   setTheme(theme, from) {
     writeStored(THEME_KEY, theme)
@@ -98,14 +104,21 @@ export const useAppearanceStore = create<AppearanceState>((set, get) => ({
     writeStored(MASK_UID_KEY, on ? "on" : "off")
     set({ maskUid: on })
   },
+
+  setNumbers(style) {
+    writeStored(NUMBERS_KEY, style)
+    setNumberStyle(style)
+    set({ numbers: style })
+  },
 }))
 
 // public/theme.js has applied these already, unless storage failed there.
 {
-  const { theme, glass, motion } = useAppearanceStore.getState()
+  const { theme, glass, motion, numbers } = useAppearanceStore.getState()
   applyTheme(theme)
   applyGlass(glass)
   applyMotion(motion)
+  setNumberStyle(numbers)
 }
 
 darkScheme.addEventListener("change", () => {

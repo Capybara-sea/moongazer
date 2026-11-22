@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { Check } from "lucide-react"
+import type { ReactNode } from "react"
 import { GameIcon } from "@/components/GameIcon"
-import { RARITY_TONES } from "@/components/RarityChip"
+import { iconTone } from "@/components/RarityChip"
+import { Tip } from "@/components/Tip"
 import { familyOptions, isUnknown, unknownSlot } from "@/domain/customCharacter"
 import { weaponFamilyOptions } from "@/domain/customWeapon"
 import { characterData, materialData, weaponData } from "@/domain/names"
@@ -12,6 +13,7 @@ import {
   type CharacterGoal,
   type CustomGoal,
   isWeaponGoal,
+  type MaterialTotal,
   talentOrder,
 } from "@/domain/plan"
 import {
@@ -29,6 +31,7 @@ import { cn } from "@/lib/cn"
 import { text } from "@/text/zh"
 import { type CardDrag, dimmed, GoalHeader } from "./GoalHeader"
 import { MaterialCell } from "./MaterialCell"
+import { RankBadge } from "./RankBadge"
 
 const t = text.planner
 
@@ -54,8 +57,18 @@ function byKind(a: Line, b: Line) {
   return rank(keyA) - rank(keyB) || tierOf(keyA) - tierOf(keyB) || keyA.localeCompare(keyB)
 }
 
+/** The Mora cell's note: whose passive halved the ascensions, while any are left to do. */
+export function moraNote(card: Card) {
+  const { goal, from, moraDiscount } = card
+  const to = isWeaponGoal(goal) ? goal.to : goal.to.stage
+  if (!moraDiscount || to.phase <= from.stage.phase) return undefined
+  return t.moraHalved(characterData(moraDiscount).name)
+}
+
 type Props = {
   card: Card
+  /** Every card's materials, for who else needs each. */
+  totals: ReadonlyMap<string, MaterialTotal>
   weekday: number
   drag?: CardDrag
   onEdit: () => void
@@ -68,14 +81,10 @@ type Props = {
  * any part but its controls; the row of goals, which opens the editor on a
  * click, counts as a part.
  */
-export function GoalCard({ card, weekday, drag, onEdit, onReplace }: Props) {
+export function GoalCard({ card, totals, weekday, drag, onEdit, onReplace }: Props) {
   const { goal, from, caps, lines, stageKeys, off } = card
   const toStage = isWeaponGoal(goal) ? goal.to : goal.to.stage
-  // The passive halves ascensions only, so it says nothing while none are left.
-  const halvedBy =
-    card.moraDiscount && toStage.phase > from.stage.phase
-      ? t.moraHalved(characterData(card.moraDiscount).name)
-      : undefined
+  const halvedBy = moraNote(card)
   const sorted = lines.toSorted(byKind)
   const rest = sorted.filter(l => l.key !== "Mora" && !isExp(l.key))
   const ascension = rest.filter(l => stageKeys.has(l.key))
@@ -103,7 +112,7 @@ export function GoalCard({ card, weekday, drag, onEdit, onReplace }: Props) {
         >
           <Target
             label={t.level}
-            title={t.stageTitle(
+            tip={t.stageTitle(
               `${from.stage.level}/${caps[from.stage.phase] ?? ""}`,
               `${toStage.level}/${caps[toStage.phase] ?? ""}`,
               Math.max(0, toStage.phase - from.stage.phase),
@@ -113,13 +122,13 @@ export function GoalCard({ card, weekday, drag, onEdit, onReplace }: Props) {
             state={targetState(compareStages(from.stage, toStage))}
           />
           {isWeaponGoal(goal) && goal.expBoost && (
-            <span
+            <Tip
               data-rise
-              title={t.expBoostTip}
+              content={t.expBoostTip}
               className="flex-none self-center rounded-[6px] bg-default/60 px-1.5 text-[11px] text-muted leading-[18px]"
             >
               {t.expBoostTag}
-            </span>
+            </Tip>
           )}
           {!isWeaponGoal(goal) && (
             <>
@@ -131,8 +140,13 @@ export function GoalCard({ card, weekday, drag, onEdit, onReplace }: Props) {
                 return (
                   <Target
                     key={talent}
-                    label={`${t.rank[order.indexOf(talent)] ?? ""}${t.talents[talent]}`}
-                    title={t.talentTitle(t.talents[talent], now, aim)}
+                    label={
+                      <>
+                        {order.includes(talent) && <RankBadge rank={order.indexOf(talent)} />}
+                        {t.talents[talent]}
+                      </>
+                    }
+                    tip={t.talentTitle(t.talents[talent], now, aim)}
                     from={String(now)}
                     to={String(aim)}
                     state={aim === 0 ? "off" : targetState(now - aim)}
@@ -146,12 +160,15 @@ export function GoalCard({ card, weekday, drag, onEdit, onReplace }: Props) {
       {rows.map(([label, list]) =>
         list.length === 0 ? null : (
           <div key={label} data-rise className="flex items-start gap-2">
-            <span className="w-8 flex-none pt-3 text-[12px] text-muted">{label}</span>
+            <span className="w-8 flex-none whitespace-nowrap pt-3 pl-[2.5px] text-[12px] text-muted">
+              {label}
+            </span>
             <ul className="flex flex-wrap gap-x-1.5 gap-y-2">
               {list.map(line => (
                 <MaterialCell
                   key={line.key}
                   line={line}
+                  goals={totals.get(line.key)?.goals ?? []}
                   note={line.key === "Mora" ? halvedBy : undefined}
                 />
               ))}
@@ -170,19 +187,18 @@ function targetState(compared: number): TargetState {
   return compared >= 0 ? "done" : "todo"
 }
 
-type TargetProps = { label: string; title: string; from: string; to: string; state: TargetState }
+type TargetProps = { label: ReactNode; tip: string; from: string; to: string; state: TargetState }
 
-/** One goal: "now → goal", the goal alone with a tick when reached. */
-function Target({ label, title, from, to, state }: TargetProps) {
+/** One goal: "now → goal", the goal alone in green when reached. */
+function Target({ label, tip, from, to, state }: TargetProps) {
   return (
-    <span title={title} className="flex min-w-0 flex-col gap-0.5">
-      <span className="whitespace-nowrap text-[11px] text-muted">{label}</span>
+    <Tip content={tip} className="flex min-w-0 flex-col gap-0.5">
+      <span className="flex items-center gap-1 whitespace-nowrap text-[11px] text-muted">
+        {label}
+      </span>
       <span className="tabular whitespace-nowrap text-[17px] leading-tight">
         {state === "done" ? (
-          <span className="inline-flex items-center gap-0.5 font-semibold text-success">
-            {to}
-            <Check aria-hidden size={14} />
-          </span>
+          <span className="font-semibold text-success">{to}</span>
         ) : state === "off" ? (
           <span className="text-muted">{from}</span>
         ) : (
@@ -193,7 +209,7 @@ function Target({ label, title, from, to, state }: TargetProps) {
           </>
         )}
       </span>
-    </span>
+    </Tip>
   )
 }
 
@@ -215,10 +231,7 @@ function Avatar({ card }: { card: Card }) {
       icon={data.icon}
       label={data.name}
       placeholder={goal.kind === "custom" || goal.kind === "customWeapon" ? "?" : undefined}
-      className={cn(
-        "size-14 rounded-[14px] text-[20px]",
-        RARITY_TONES[data.rarity ?? 0] ?? "bg-surface-secondary",
-      )}
+      className={cn("size-14 rounded-[14px] text-[20px]", iconTone(data.rarity))}
     />
   )
 }
@@ -258,15 +271,16 @@ function Footer({ card, weekday }: { card: Card; weekday: number }) {
     return slot?.of === "weapon" ? slot.slot === "weapon" : slot?.slot === "book"
   })
   const status = cardStatus(card)
+  // At the card's bottom, level with the footers of the cards beside it.
   return (
-    <div className="flex items-center gap-2 border-border border-t pt-2.5 text-[12px]">
+    <div className="mt-auto flex items-center gap-2 border-border border-t pt-2.5 text-[12px]">
       {daysUnknown ? (
         <span className="text-muted">{t.daysUnknown(what)}</span>
       ) : (
         days && (
-          <span title={t.abundance} className={today ? "text-(--accent-text)" : "text-muted"}>
+          <Tip content={t.abundance} className={today ? "text-(--accent-text)" : "text-muted"}>
             {days}
-          </span>
+          </Tip>
         )
       )}
       <span className="flex-1" />

@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react"
 import { useEffect, useId, useMemo, useState } from "react"
 import { LabeledList } from "@/components/Delta"
 import { Panel } from "@/components/Panel"
+import { Tip } from "@/components/Tip"
 import { type ChangeRow, changeRows } from "@/domain/changes"
 import { type Snapshot, toBackendError } from "@/lib/backend"
 import { getSessionTimeline } from "@/lib/backend/sync"
@@ -105,9 +106,9 @@ function SnapshotRow({ snapshot, older, now }: RowProps) {
   return (
     <div data-rise className="flex flex-col gap-1 border-(--separator) border-t py-2.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold text-[13px]" title={formatDateTime(snapshot.takenAt)}>
+        <Tip className="font-semibold text-[13px]" content={formatDateTime(snapshot.takenAt)}>
           {formatWhen(snapshot.takenAt, now)}
-        </span>
+        </Tip>
         <span className="flex flex-none items-center gap-1.5">
           {snapshot.review && <span className={REVIEW_BADGE}>{text.review.badge}</span>}
           <span className={BADGE}>{sourceLabel(snapshot)}</span>
@@ -146,9 +147,9 @@ function SessionRow({ item, now }: { item: SessionItem; now: number }) {
                 open && "rotate-90",
               )}
             />
-            <span className="font-semibold text-[13px]" title={formatDateTime(oldest.takenAt)}>
+            <Tip className="font-semibold text-[13px]" content={formatDateTime(oldest.takenAt)}>
               {formatWhen(oldest.takenAt, now)}
-            </span>
+            </Tip>
             <span className="truncate text-[12px] text-muted tabular">
               {from === to ? from : t.span(from, to)}
             </span>

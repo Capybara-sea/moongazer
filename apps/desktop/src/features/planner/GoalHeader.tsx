@@ -5,6 +5,7 @@ import { Button, Popover } from "@heroui/react"
 import { GripVertical, Trash2 } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
 import { Switch } from "@/components/Switch"
+import { Tip } from "@/components/Tip"
 import { characterData, lookup } from "@/domain/names"
 import { type Card, goalName, type Plan } from "@/domain/plan"
 import { setGoalOff } from "@/domain/planEdits"
@@ -50,25 +51,27 @@ export function GoalHeader({ card, drag, onReplace }: Props) {
   return (
     <div className="flex items-center gap-2">
       {drag && (
-        <button
-          type="button"
-          {...drag.handle}
-          aria-label={t.dragLabel(name)}
-          title={t.dragHint}
-          className="-ml-1.5 flex h-7 w-5 flex-none cursor-grab items-center justify-center rounded-[6px] text-muted transition-colors duration-150 hover:bg-default/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 motion-reduce:transition-none"
-        >
-          <GripVertical aria-hidden size={15} />
-        </button>
+        <Tip content={t.priorityHint} className="contents">
+          <button
+            type="button"
+            {...drag.handle}
+            aria-label={t.dragLabel(name)}
+            aria-description={t.priorityHint}
+            className="-ml-1.5 flex h-7 w-5 flex-none cursor-grab items-center justify-center rounded-[6px] text-muted transition-colors duration-150 hover:bg-default/60 hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 motion-reduce:transition-none"
+          >
+            <GripVertical aria-hidden size={15} />
+          </button>
+        </Tip>
       )}
       <div className={cn("flex min-w-0 flex-1 items-center gap-2", dimmed(off))}>
         <h3 className="truncate font-semibold text-[15px]">{name}</h3>
         {tag && (
-          <span
-            title={standing === "otherElement" ? t.otherElementTip : undefined}
+          <Tip
+            content={standing === "otherElement" ? t.otherElementTip : undefined}
             className="flex-none rounded-[6px] bg-default/60 px-1.5 text-[11px] text-muted leading-[18px]"
           >
             {tag}
-          </span>
+          </Tip>
         )}
         {holder && (
           <GameIcon

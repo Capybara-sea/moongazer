@@ -109,6 +109,38 @@
   }
 
   /*
+   * Icon boxes by rarity (RarityChip's iconTone): the game's item card colors,
+   * half see-through in the dark theme so they sit softly in its cards.
+   */
+  :root,
+  .light,
+  [data-theme="light"] {
+    --rarity-5-from: #945c2c;
+    --rarity-5-to: #b27330;
+    --rarity-4-from: #5e5789;
+    --rarity-4-to: #9c75b7;
+    --rarity-3-from: #567496;
+    --rarity-3-to: #5392b8;
+    --rarity-2-from: #4b6c67;
+    --rarity-2-to: #519072;
+    --rarity-1-from: #6a6d74;
+    --rarity-1-to: #868586;
+  }
+  .dark,
+  [data-theme="dark"] {
+    --rarity-5-from: rgb(148 92 44 / 0.5);
+    --rarity-5-to: rgb(178 115 48 / 0.5);
+    --rarity-4-from: rgb(94 87 137 / 0.5);
+    --rarity-4-to: rgb(156 117 183 / 0.5);
+    --rarity-3-from: rgb(86 116 150 / 0.5);
+    --rarity-3-to: rgb(83 146 184 / 0.5);
+    --rarity-2-from: rgb(75 108 103 / 0.5);
+    --rarity-2-to: rgb(81 144 114 / 0.5);
+    --rarity-1-from: rgb(106 109 116 / 0.5);
+    --rarity-1-to: rgb(134 133 134 / 0.5);
+  }
+
+  /*
    * The 4-star purple, and the elements: text colours per theme, and tinted
    * backgrounds and borders (the same in both) for avatars and filters.
    */

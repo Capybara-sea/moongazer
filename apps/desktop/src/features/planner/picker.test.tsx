@@ -5,7 +5,13 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
 import { characterData, weaponData } from "@/domain/names"
-import { type CustomWeaponGoal, EMPTY_PLAN, type Plan, planCards } from "@/domain/plan"
+import {
+  type CustomWeaponGoal,
+  EMPTY_PLAN,
+  materialTotals,
+  type Plan,
+  planCards,
+} from "@/domain/plan"
 import { DEFAULTS } from "@/domain/planDefaults"
 import { defaultOrder, plannerBag } from "@/domain/planner"
 import { text } from "@/text/zh"
@@ -20,6 +26,7 @@ import {
 } from "./addOptions"
 import { GoalCard } from "./GoalCard"
 import { GoalPicker } from "./GoalPicker"
+import { lineView } from "./MaterialCell"
 
 const t = text.planner
 const EMPTY: Account = {
@@ -130,7 +137,10 @@ describe("the picker", () => {
       />,
     )
     expect(html).not.toContain(t.addCustom.weapon)
-    expect(html).toContain(`title="${weaponData("StaffOfHoma").name} · ${t.planned}"`)
+    const homa = html.split("<li").find(tile => tile.includes(weaponData("StaffOfHoma").name))
+    expect(homa).toContain('disabled=""')
+    expect(homa).toContain(`>${t.planned}<`)
+    expect(html).not.toContain("title=")
   })
 })
 
@@ -147,13 +157,20 @@ describe("a custom weapon's card", () => {
     const [card] = planCards({ goals: [goal], focus: "important" }, EMPTY, plannerBag(new Map()))
     if (!card) throw new Error("no card")
     const html = renderToStaticMarkup(
-      <GoalCard card={card} weekday={0} onEdit={noop} onReplace={noop} />,
+      <GoalCard
+        card={card}
+        totals={materialTotals([card])}
+        weekday={0}
+        onEdit={noop}
+        onReplace={noop}
+      />,
     )
     expect(html).toContain("Newblade")
     expect(html).toContain(t.tags.custom)
     expect(html).toContain(t.replace.weapon)
     expect(html).toContain(t.daysUnknown(t.weaponMaterials))
-    expect(html).toContain(t.unknownSlot(t.weaponSlots.elite))
-    expect(html).toContain("—/")
+    const names = card.lines.map(line => lineView(line.key).name)
+    expect(names).toContain(t.unknownSlot(t.weaponSlots.elite))
+    expect(html).not.toContain(t.satisfied)
   })
 })

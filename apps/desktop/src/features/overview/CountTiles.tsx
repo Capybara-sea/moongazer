@@ -3,6 +3,7 @@
 
 import { ChevronRight } from "lucide-react"
 import { Delta } from "@/components/Delta"
+import { Tip } from "@/components/Tip"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
@@ -51,17 +52,17 @@ function TileContent({ tile }: { tile: Tile }) {
         {tile.page && <ChevronRight aria-hidden size={14} className="flex-none" />}
       </span>
       {/* Keyed by what they show, so a changed value fades in when another snapshot is picked. */}
-      <span
+      <Tip
         key={tile.value}
         data-rise
-        title={tile.hint}
+        content={tile.hint}
         className={cn(
           "font-semibold text-[24px] leading-[1.3] tabular",
           tile.hint && "font-normal text-[15px] text-muted leading-[31px]",
         )}
       >
         {tile.value}
-      </span>
+      </Tip>
       {tile.change && <ChangeLine change={tile.change} />}
     </>
   )

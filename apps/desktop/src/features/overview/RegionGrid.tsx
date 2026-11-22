@@ -3,6 +3,7 @@
 
 import { Bar } from "@/components/Bar"
 import { Panel } from "@/components/Panel"
+import { Tip } from "@/components/Tip"
 import type { Account } from "@/domain/account"
 import { text } from "@/text/zh"
 import { formatExploration, regionTiles } from "./regions"
@@ -36,9 +37,9 @@ export function RegionGrid({ account }: { account: Account }) {
                 className="h-1"
               />
               <span className="tabular truncate text-[11px] text-muted">{tile.levels}</span>
-              <span className="tabular truncate text-[11px] text-muted" title={tile.offerings}>
+              <Tip className="tabular truncate text-[11px] text-muted" content={tile.offerings}>
                 {tile.offerings}
-              </span>
+              </Tip>
             </Panel>
           ))}
         </div>

@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react"
 import { useMemo } from "react"
 import { Bar } from "@/components/Bar"
 import { Panel } from "@/components/Panel"
+import { Tip } from "@/components/Tip"
 import type { Account } from "@/domain/account"
 import { ANECDOTE_REWARD, type AnecdoteView, anecdoteView } from "@/domain/anecdotes"
 import { PARTS } from "@/features/collection/parts"
@@ -106,9 +107,9 @@ function LastWish({ at }: { at: number | undefined }) {
     <div className="flex min-w-0 flex-[0_1_200px] flex-col gap-1.5">
       <span className="text-[13px] text-muted">{text.anecdotes.lastWish}</span>
       {at ? (
-        <span className="tabular font-semibold text-[15px]" title={formatDateTime(at)}>
+        <Tip className="tabular font-semibold text-[15px]" content={formatDateTime(at)}>
           {`${formatMonthDay(at)} ${formatTime(at)}`}
-        </span>
+        </Tip>
       ) : (
         <span className="font-semibold text-[15px] text-muted">{text.anecdotes.never}</span>
       )}

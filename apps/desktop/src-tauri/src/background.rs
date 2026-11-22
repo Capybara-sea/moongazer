@@ -32,6 +32,15 @@ pub fn show_main(app: &AppHandle) {
     }
 }
 
+/// The app's name in the tray's tooltip, marked in a test build.
+fn tray_name(app: &AppHandle) -> String {
+    if crate::update::is_test_build(&app.config().identifier) {
+        format!("{} {}", text::APP_NAME, text::TEST_BUILD)
+    } else {
+        text::APP_NAME.to_owned()
+    }
+}
+
 /// The tray icon: a left click shows the window; the menu opens it or quits.
 pub fn tray(app: &AppHandle) -> tauri::Result<()> {
     let open = MenuItem::with_id(app, OPEN, text::TRAY_OPEN, true, None::<&str>)?;
@@ -55,7 +64,7 @@ pub fn tray(app: &AppHandle) -> tauri::Result<()> {
     #[cfg(not(feature = "capture"))]
     let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &quit])?;
     let mut builder = TrayIconBuilder::with_id("main")
-        .tooltip(text::APP_NAME)
+        .tooltip(tray_name(app))
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
@@ -98,10 +107,11 @@ pub fn sync_status(app: &AppHandle, status: &crate::capture::service::Status) {
         Phase::Connected => text::sync::CONNECTED,
         Phase::Interrupted => text::sync::INTERRUPTED,
     };
+    let name = tray_name(app);
     let tooltip = match status.phase {
-        Phase::Connected => format!("{} · {}", text::APP_NAME, text::sync::CONNECTED_SHORT),
-        Phase::Interrupted => format!("{} · {}", text::APP_NAME, text::sync::INTERRUPTED_SHORT),
-        _ => text::APP_NAME.to_owned(),
+        Phase::Connected => format!("{name} · {}", text::sync::CONNECTED_SHORT),
+        Phase::Interrupted => format!("{name} · {}", text::sync::INTERRUPTED_SHORT),
+        _ => name,
     };
     let handle = app.clone();
     let queued = app.run_on_main_thread(move || {

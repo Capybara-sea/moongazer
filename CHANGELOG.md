@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Hidden achievements show their description too, finished or not.
+- Settings can write large numbers in K, M and B instead of the Chinese units.
+- Hover tips use the app's own popup instead of the system's.
+- Icons sit on the game's rarity colors, easier to tell apart.
 
 ## [0.2.0] - 2026-11-21
 

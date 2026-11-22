@@ -5,7 +5,8 @@ import { Lock } from "lucide-react"
 import { memo, type ReactNode } from "react"
 import { EmptyState } from "@/components/EmptyState"
 import { GameIcon } from "@/components/GameIcon"
-import { RARITY_TONES, RarityChip } from "@/components/RarityChip"
+import { iconTone, RarityChip } from "@/components/RarityChip"
+import { Tip } from "@/components/Tip"
 import { WeaponTooltip } from "@/components/WeaponTooltip"
 import { levelCap } from "@/domain/builds"
 import { cn } from "@/lib/cn"
@@ -44,10 +45,7 @@ function WeaponCard({ row }: { row: WeaponRow }) {
             <GameIcon
               icon={row.icon}
               label={row.name}
-              className={cn(
-                "size-[52px] rounded-[12px] text-[20px]",
-                (rarity !== undefined && RARITY_TONES[rarity]) || "bg-surface-secondary",
-              )}
+              className={cn("size-[52px] rounded-[12px] text-[20px]", iconTone(rarity))}
             />
           </WeaponTooltip>
         </span>
@@ -61,9 +59,9 @@ function WeaponCard({ row }: { row: WeaponRow }) {
           </span>
         </div>
         {weapon.lock && (
-          <span title={t.locked} className="flex flex-none self-start text-muted">
+          <Tip content={t.locked} className="flex flex-none self-start text-muted">
             <Lock role="img" aria-label={t.locked} className="size-[15px]" />
-          </span>
+          </Tip>
         )}
       </div>
       <div className="grid grid-cols-2 gap-1.5">

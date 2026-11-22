@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn"
 import { usePlannerStore } from "@/stores/plannerStore"
 import { text } from "@/text/zh"
 import { stageLabel } from "./GoalCard"
+import { RankBadge } from "./RankBadge"
 
 const t = text.planner
 const RANKS = [0, 1, 2] as const
@@ -104,7 +105,8 @@ export function PlannerSettings({ plan }: { plan: Plan }) {
               {RANKS.map(rank => (
                 <LabeledSelect
                   key={rank}
-                  label={t.rank[rank] ?? ""}
+                  label={t.rankLabel(rank + 1)}
+                  mark={<RankBadge rank={rank} />}
                   value={String(defaults.character.talents[rank])}
                   options={TALENT_LEVELS}
                   onChange={value => talent(rank, Number(value))}

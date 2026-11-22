@@ -5,6 +5,7 @@ import { Lock, Star } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
 import { SetEffectTooltip } from "@/components/SetEffectTooltip"
+import { Tip } from "@/components/Tip"
 import { artifactIcon, formatStat, mainStatValue, statName } from "@/domain/builds"
 import type { Artifact, Substat } from "@/domain/good"
 import { lookup } from "@/domain/names"
@@ -84,19 +85,19 @@ function Piece({ artifact, equipped }: { artifact: Artifact; equipped: number })
           </span>
           <span className="flex items-center gap-1 text-[11px] text-muted">
             {artifact.astralMark && (
-              <span title={t.astralMark} className="flex text-(--gold-fg)">
+              <Tip content={t.astralMark} className="flex text-(--gold-fg)">
                 <Star
                   role="img"
                   aria-label={t.astralMark}
                   fill="currentColor"
                   className="size-[13px]"
                 />
-              </span>
+              </Tip>
             )}
             {artifact.lock && (
-              <span title={t.locked} className="flex">
+              <Tip content={t.locked} className="flex">
                 <Lock role="img" aria-label={t.locked} className="size-[13px]" />
-              </span>
+              </Tip>
             )}
             <span className="tabular">{t.artifactLevel(level)}</span>
           </span>

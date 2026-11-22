@@ -61,8 +61,8 @@ describe("countTiles", () => {
     const now = snapshot(2, { mora: 127_000, characters: 11, weapons: 19, artifacts: 30 })
     expect(byLabel(now, older, tiles.mora)).toEqual({
       label: tiles.mora,
-      value: text.number.tenThousand("12.7"),
-      change: since(signed(`+${text.number.tenThousand("12.6")}`, "gain")),
+      value: text.number.unit("12.7", text.number.units.tenThousand),
+      change: since(signed(`+${text.number.unit("12.6", text.number.units.tenThousand)}`, "gain")),
     })
     expect(byLabel(now, older, tiles.characters)?.change).toEqual(since(signed("+1", "gain")))
     expect(byLabel(now, older, tiles.weapons)?.change).toEqual(since(signed("-1", "loss")))
@@ -87,7 +87,7 @@ describe("countTiles", () => {
     const tile = byLabel(snapshot(2, { mora: null }), older, tiles.mora)
     expect(tile).toEqual({
       label: tiles.mora,
-      value: text.number.tenThousand("12.7"),
+      value: text.number.unit("12.7", text.number.units.tenThousand),
       change: noted(tiles.borrowed("11-15 21:04")),
     })
   })

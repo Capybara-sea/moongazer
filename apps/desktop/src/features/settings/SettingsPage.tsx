@@ -15,17 +15,61 @@ import {
   toBackendError,
 } from "@/lib/backend"
 import { cn } from "@/lib/cn"
+import type { NumberStyle } from "@/lib/format"
 import { type ThemeMode, useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useMessageStore } from "@/stores/messageStore"
 import { useRestartStore } from "@/stores/restartStore"
 import { text } from "@/text/zh"
 
-const THEMES: { theme: ThemeMode; label: string }[] = [
-  { theme: "system", label: text.theme.system },
-  { theme: "light", label: text.theme.light },
-  { theme: "dark", label: text.theme.dark },
+const THEMES: { value: ThemeMode; label: string }[] = [
+  { value: "system", label: text.theme.system },
+  { value: "light", label: text.theme.light },
+  { value: "dark", label: text.theme.dark },
 ]
+
+const NUMBER_STYLES: { value: NumberStyle; label: string }[] = [
+  { value: "wan", label: text.settings.numberStyles.wan },
+  { value: "kmb", label: text.settings.numberStyles.kmb },
+]
+
+type SegmentsProps<T extends string> = {
+  label: string
+  value: T
+  options: readonly { value: T; label: string }[]
+  /** `from` is the picked button's bounding box. */
+  onPick: (value: T, from: DOMRect) => void
+}
+
+/** A row picking one of a few options. */
+function Segments<T extends string>({ label, value, options, onPick }: SegmentsProps<T>) {
+  return (
+    <div className="flex items-center justify-between gap-6 border-(--separator) border-t py-3.5">
+      <span className="font-medium text-sm">{label}</span>
+      <fieldset
+        aria-label={label}
+        className="flex flex-none gap-0.5 rounded-[9px] bg-surface-secondary p-0.5"
+      >
+        {options.map(option => (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={option.value === value}
+            onClick={e => onPick(option.value, e.currentTarget.getBoundingClientRect())}
+            className={cn(
+              "h-8 cursor-pointer rounded-[7px] px-3 text-[13px] transition-colors motion-reduce:transition-none",
+              option.value === value
+                ? "bg-surface font-semibold text-foreground shadow-sm"
+                : "text-muted hover:text-foreground",
+            )}
+          >
+            {option.label}
+          </button>
+        ))}
+      </fieldset>
+    </div>
+  )
+}
 
 export function SettingsPage() {
   return (
@@ -203,33 +247,22 @@ function AppearancePanel() {
   const glass = useAppearanceStore(s => s.glass)
   const motion = useAppearanceStore(s => s.motion)
   const maskUid = useAppearanceStore(s => s.maskUid)
+  const numbers = useAppearanceStore(s => s.numbers)
   const store = useAppearanceStore.getState
   return (
     <Section title={text.settings.ui}>
-      <div className="flex items-center justify-between gap-6 border-(--separator) border-t py-3.5">
-        <span className="font-medium text-sm">{text.settings.theme}</span>
-        <fieldset
-          aria-label={text.settings.theme}
-          className="flex flex-none gap-0.5 rounded-[9px] bg-surface-secondary p-0.5"
-        >
-          {THEMES.map(option => (
-            <button
-              key={option.theme}
-              type="button"
-              aria-pressed={option.theme === theme}
-              onClick={e => store().setTheme(option.theme, e.currentTarget.getBoundingClientRect())}
-              className={cn(
-                "h-8 cursor-pointer rounded-[7px] px-3 text-[13px] transition-colors motion-reduce:transition-none",
-                option.theme === theme
-                  ? "bg-surface font-semibold text-foreground shadow-sm"
-                  : "text-muted hover:text-foreground",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </fieldset>
-      </div>
+      <Segments
+        label={text.settings.theme}
+        value={theme}
+        options={THEMES}
+        onPick={(picked, from) => store().setTheme(picked, from)}
+      />
+      <Segments
+        label={text.settings.numbers}
+        value={numbers}
+        options={NUMBER_STYLES}
+        onPick={picked => store().setNumbers(picked)}
+      />
       <Row title={text.settings.glass} hint={text.settings.glassHint}>
         <Switch checked={glass} label={text.settings.glass} onChange={on => store().setGlass(on)} />
       </Row>

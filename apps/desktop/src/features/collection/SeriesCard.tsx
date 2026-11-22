@@ -4,6 +4,7 @@
 import { toast } from "@heroui/react"
 import { Check, Search } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
+import { Tip, useTip } from "@/components/Tip"
 import type { AchievementRow, AchievementSeries } from "@/domain/achievements"
 import { lookup } from "@/domain/names"
 import { openVideoSearch, toBackendError } from "@/lib/backend"
@@ -101,9 +102,9 @@ function Tier({ row, lead, quest, goalName, version }: TierProps) {
           {info.hidden && <span className={PLAIN}>{t.hidden}</span>}
           {goalName && <span className={PLAIN}>{goalName}</span>}
           {version && (
-            <span title={t.version(version)} className={cn(PLAIN, "tabular")}>
+            <Tip content={t.version(version)} className={cn(PLAIN, "tabular")}>
               {version}
-            </span>
+            </Tip>
           )}
           {lead && <SearchButton title={info.title} />}
         </span>
@@ -120,11 +121,12 @@ function Tier({ row, lead, quest, goalName, version }: TierProps) {
 /** Opens Bilibili's video search for the achievement in the browser. */
 function SearchButton({ title }: { title: string }) {
   const label = t.searchVideo(title)
+  const tip = useTip<HTMLButtonElement>(label)
   return (
     <button
+      {...tip.props}
       type="button"
       aria-label={label}
-      title={label}
       onClick={() => {
         openVideoSearch(t.searchKeyword(title)).catch((error: unknown) => {
           toast(t.searchFailed, { description: toBackendError(error).message })
@@ -133,6 +135,7 @@ function SearchButton({ title }: { title: string }) {
       className="flex size-5 flex-none cursor-pointer items-center justify-center self-center rounded-[5px] text-muted transition-colors duration-150 hover:bg-default/60 hover:text-foreground motion-reduce:transition-none"
     >
       <Search size={13} aria-hidden />
+      {tip.bubble}
     </button>
   )
 }

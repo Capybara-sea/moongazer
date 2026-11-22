@@ -3,7 +3,7 @@
 
 import { Lock } from "lucide-react"
 import { GameIcon } from "@/components/GameIcon"
-import { RARITY_TONES } from "@/components/RarityChip"
+import { iconTone } from "@/components/RarityChip"
 import { WeaponTooltip } from "@/components/WeaponTooltip"
 import { levelCap } from "@/domain/builds"
 import { cn } from "@/lib/cn"
@@ -60,10 +60,7 @@ function Row({ row }: { row: WeaponRow }) {
             <GameIcon
               icon={row.icon}
               label={row.name}
-              className={cn(
-                "size-[34px] rounded-[8px] text-[13px]",
-                (rarity !== undefined && RARITY_TONES[rarity]) || "bg-surface-secondary",
-              )}
+              className={cn("size-[34px] rounded-[8px] text-[13px]", iconTone(rarity))}
             />
           </WeaponTooltip>
         </span>

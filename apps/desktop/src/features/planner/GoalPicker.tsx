@@ -4,7 +4,8 @@
 import type { ReactNode } from "react"
 import { FilterChip } from "@/components/FilterChip"
 import { GameIcon } from "@/components/GameIcon"
-import { RARITY_TONES } from "@/components/RarityChip"
+import { iconTone } from "@/components/RarityChip"
+import { useTip } from "@/components/Tip"
 import { ELEMENT_ICONS, ELEMENTS, WEAPON_TYPES } from "@/domain/elements"
 import { characterData, lookup } from "@/domain/names"
 import { cn } from "@/lib/cn"
@@ -150,12 +151,19 @@ function Tile({
   disabled,
   onPick,
 }: TileProps) {
+  const more = detail ?? note
+  const tip = useTip<HTMLLIElement>(
+    <>
+      <span className="font-semibold">{name}</span>
+      {more && <span>{more}</span>}
+    </>,
+  )
   return (
-    <li>
+    <li {...tip.props}>
       <button
         type="button"
         disabled={disabled}
-        title={[name, detail ?? note].filter(Boolean).join(" · ")}
+        aria-description={detail}
         onClick={onPick}
         className="flex w-full cursor-pointer flex-col items-center gap-1 rounded-[12px] p-1.5 transition-colors duration-150 hover:bg-default/50 disabled:cursor-default disabled:opacity-50 motion-reduce:transition-none"
       >
@@ -164,10 +172,7 @@ function Tile({
             icon={icon}
             label={name}
             placeholder={placeholder}
-            className={cn(
-              "aspect-square w-full rounded-[12px] text-[22px]",
-              RARITY_TONES[rarity ?? 0] ?? "bg-surface-secondary",
-            )}
+            className={cn("aspect-square w-full rounded-[12px] text-[22px]", iconTone(rarity))}
           />
           {badge}
         </span>
@@ -176,6 +181,7 @@ function Tile({
           {note}
         </span>
       </button>
+      {tip.bubble}
     </li>
   )
 }

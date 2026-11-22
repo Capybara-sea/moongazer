@@ -2,8 +2,9 @@
 // Copyright (c) 2026 Capybara_sea
 
 /**
- * Changes to a plan past a goal's own targets: moving a goal, switching it
- * off, and turning a custom goal into the released character's or weapon's.
+ * Changes to a plan past a goal's own targets: moving a goal or a summary
+ * group, switching a goal off, and turning a custom goal into the released
+ * character's or weapon's.
  */
 
 import type { Account } from "@/domain/account"
@@ -16,6 +17,30 @@ export function moveGoal(plan: Plan, from: number, to: number): Plan {
   const goal = plan.goals[from]
   if (goal === undefined || from === to || to < 0 || to >= plan.goals.length) return plan
   return { ...plan, goals: plan.goals.toSpliced(from, 1).toSpliced(to, 0, goal) }
+}
+
+/**
+ * The plan with the summary group at `from` of those `shown` moved to `to`.
+ * Every group shown keeps its new place; a group moved before and not shown
+ * now goes right after the one it came after, or first when it came first.
+ * As it was when either is out of range.
+ */
+export function moveSummaryGroup(
+  plan: Plan,
+  shown: readonly string[],
+  from: number,
+  to: number,
+): Plan {
+  const id = shown[from]
+  if (id === undefined || from === to || to < 0 || to >= shown.length) return plan
+  const order = shown.toSpliced(from, 1).toSpliced(to, 0, id)
+  const saved = plan.summaryOrder ?? []
+  for (const [at, group] of saved.entries()) {
+    if (shown.includes(group)) continue
+    const before = saved[at - 1]
+    order.splice(before === undefined ? 0 : order.indexOf(before) + 1, 0, group)
+  }
+  return { ...plan, summaryOrder: order }
 }
 
 /** The plan with a goal switched off, or back on. */

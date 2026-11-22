@@ -4,17 +4,26 @@
 import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
 import type { Character, Weapon } from "@/domain/good"
+import { materialData } from "@/domain/names"
 import {
   type CharacterGoal,
   type CustomGoal,
   type CustomWeaponGoal,
   EMPTY_PLAN,
   type Goal,
+  MORA_EXP_GROUP,
+  orderGroups,
   type Plan,
   planCards,
   type WeaponGoal,
 } from "@/domain/plan"
-import { moveGoal, replaceCustom, replaceCustomWeapon, setGoalOff } from "@/domain/planEdits"
+import {
+  moveGoal,
+  moveSummaryGroup,
+  replaceCustom,
+  replaceCustomWeapon,
+  setGoalOff,
+} from "@/domain/planEdits"
 import { START, type Stage, weaponNeed } from "@/domain/planner"
 import { parsePlan } from "@/domain/savedPlan"
 
@@ -184,5 +193,70 @@ describe("saved goals", () => {
     const [turned] = replaceCustomWeapon(boosted, "w", { key: "TheAlleyFlash" }, account()).goals
     expect(turned).toMatchObject({ kind: "weapon", off: true, expBoost: true })
     expect(turned && "type" in turned).toBe(false)
+  })
+})
+
+describe("moving summary groups", () => {
+  it("saves the groups shown in their new order", () => {
+    expect(moveSummaryGroup(EMPTY_PLAN, ["a", "b", "c"], 2, 0).summaryOrder).toEqual([
+      "c",
+      "a",
+      "b",
+    ])
+    expect(moveSummaryGroup(EMPTY_PLAN, ["a", "b", "c"], 0, 1).summaryOrder).toEqual([
+      "b",
+      "a",
+      "c",
+    ])
+  })
+
+  it("keeps groups moved before and not shown now where they were among them", () => {
+    const before: Plan = { ...EMPTY_PLAN, summaryOrder: ["x", "a", "b"] }
+    const moved = moveSummaryGroup(before, ["a", "b", "c"], 2, 0)
+    expect(moved.summaryOrder).toEqual(["x", "c", "a", "b"])
+    expect(orderGroups(["a", "b", "c", "x"], moved.summaryOrder)).toEqual(["x", "c", "a", "b"])
+  })
+
+  it("keeps a group not shown now after the one it came after", () => {
+    const before: Plan = { ...EMPTY_PLAN, summaryOrder: ["a", "b", "x"] }
+    const moved = moveSummaryGroup(before, ["a", "b", "c"], 2, 0)
+    expect(moved.summaryOrder).toEqual(["c", "a", "b", "x"])
+    expect(orderGroups(["a", "b", "c", "x"], moved.summaryOrder)).toEqual(["c", "a", "b", "x"])
+    const apart: Plan = { ...EMPTY_PLAN, summaryOrder: ["a", "x", "y", "b"] }
+    expect(moveSummaryGroup(apart, ["a", "b"], 0, 1).summaryOrder).toEqual(["b", "a", "x", "y"])
+  })
+
+  it("leaves the plan as it was in place or out of range", () => {
+    const before: Plan = { ...EMPTY_PLAN, summaryOrder: ["b", "a"] }
+    for (const [from, to] of [
+      [1, 1],
+      [-1, 0],
+      [2, 0],
+      [0, -1],
+      [0, 2],
+    ] as const) {
+      expect(moveSummaryGroup(before, ["a", "b"], from, to)).toBe(before)
+    }
+  })
+
+  it("read back once each, groups the data does not have left out", () => {
+    const type = materialData("PhilosophiesOfElegance").type ?? ""
+    const SPECIALTY = "specialty"
+    const saved = [type, MORA_EXP_GROUP, 3, "nonsense", type, "unknown", SPECIALTY]
+    expect(parsePlan({ goals: [], summaryOrder: saved }).summaryOrder).toEqual([
+      type,
+      MORA_EXP_GROUP,
+      SPECIALTY,
+    ])
+    expect(parsePlan({ goals: [] }).summaryOrder).toBeUndefined()
+    expect(parsePlan({ goals: [], summaryOrder: MORA_EXP_GROUP }).summaryOrder).toBeUndefined()
+    expect(parsePlan({ goals: [], summaryOrder: ["nonsense"] }).summaryOrder).toBeUndefined()
+  })
+
+  it("read back the specialties as one group, not by region", () => {
+    const region = materialData("Cecilia").type ?? ""
+    expect(parsePlan({ goals: [], summaryOrder: [region, "specialty"] }).summaryOrder).toEqual([
+      "specialty",
+    ])
   })
 })

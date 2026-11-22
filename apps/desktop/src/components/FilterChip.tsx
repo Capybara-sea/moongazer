@@ -3,6 +3,7 @@
 
 import type { ReactNode } from "react"
 import { cn } from "@/lib/cn"
+import { useTip } from "./Tip"
 
 type Props = {
   pressed: boolean
@@ -17,12 +18,13 @@ type Props = {
 
 /** A rounded toggle in a row of filters, as in the design. */
 export function FilterChip({ pressed, onPress, selected, label, className, children }: Props) {
+  const tip = useTip<HTMLButtonElement>(label)
   return (
     <button
+      {...tip.props}
       type="button"
       aria-pressed={pressed}
       aria-label={label}
-      title={label}
       onClick={onPress}
       className={cn(
         "flex h-[34px] cursor-pointer items-center gap-1.5 rounded-full border border-border bg-surface px-3 text-[13px] transition-colors duration-150 ease-(--ease-out-soft) motion-reduce:transition-none",
@@ -33,6 +35,7 @@ export function FilterChip({ pressed, onPress, selected, label, className, child
       )}
     >
       {children}
+      {tip.bubble}
     </button>
   )
 }

@@ -5,6 +5,7 @@ import { Heart } from "lucide-react"
 import type { ReactNode } from "react"
 import { Panel } from "@/components/Panel"
 import { RarityChip } from "@/components/RarityChip"
+import { Tip } from "@/components/Tip"
 import { levelCap } from "@/domain/builds"
 import type { Character, CharacterInfo } from "@/domain/good"
 import { characterData, characterProfile } from "@/domain/names"
@@ -70,19 +71,20 @@ export function InfoCard({ character, info }: Props) {
             {text.characterDetail.levelCap(levelCap(character.ascension))}
           </span>
           {ascended(character.level, character.ascension) && (
-            // Drawn after the game's own star (UI_IconKira), which the icon hosts do not serve.
-            <svg
-              role="img"
-              aria-label={text.characterDetail.ascended(character.ascension)}
-              viewBox="0 0 24 24"
-              className="ml-1.5 inline size-3.5 align-[-1px] text-(--gold-fg)"
-            >
-              <title>{text.characterDetail.ascended(character.ascension)}</title>
-              <path
-                fill="currentColor"
-                d="M12 0Q13.2 10.8 24 12Q13.2 13.2 12 24Q10.8 13.2 0 12Q10.8 10.8 12 0Z"
-              />
-            </svg>
+            <Tip content={text.characterDetail.ascended(character.ascension)} className="contents">
+              {/* Drawn after the game's own star (UI_IconKira), which the icon hosts do not serve. */}
+              <svg
+                role="img"
+                aria-label={text.characterDetail.ascended(character.ascension)}
+                viewBox="0 0 24 24"
+                className="ml-1.5 inline size-3.5 align-[-1px] text-(--gold-fg)"
+              >
+                <path
+                  fill="currentColor"
+                  d="M12 0Q13.2 10.8 24 12Q13.2 13.2 12 24Q10.8 13.2 0 12Q10.8 10.8 12 0Z"
+                />
+              </svg>
+            </Tip>
           )}
         </Stat>
         <Stat label={text.characterDetail.constellation}>

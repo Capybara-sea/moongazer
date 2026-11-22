@@ -6,6 +6,7 @@ import { type ReactNode, useState } from "react"
 import { cn } from "@/lib/cn"
 import { maskUid } from "@/lib/format"
 import { text } from "@/text/zh"
+import { useTip } from "./Tip"
 
 type Props = {
   uid: number | undefined
@@ -23,6 +24,7 @@ export function UidLine({ uid, masked, className, buttonClassName, children }: P
   const [shown, setShown] = useState(!masked)
   const label = shown ? text.account.hideUid : text.account.showUid
   const Icon = shown ? EyeOff : Eye
+  const tip = useTip<HTMLButtonElement>(label)
   return (
     <span className={cn("flex items-center gap-1.5 tabular", className)}>
       <span>{text.account.uid}</span>
@@ -31,9 +33,9 @@ export function UidLine({ uid, masked, className, buttonClassName, children }: P
       </span>
       {uid !== undefined && (
         <button
+          {...tip.props}
           type="button"
           aria-label={label}
-          title={label}
           onClick={() => setShown(!shown)}
           className={cn(
             "flex flex-none cursor-pointer items-center justify-center rounded-[6px] transition-colors hover:bg-default/60 hover:text-foreground motion-reduce:transition-none",
@@ -41,6 +43,7 @@ export function UidLine({ uid, masked, className, buttonClassName, children }: P
           )}
         >
           <Icon aria-hidden className="size-[15px]" />
+          {tip.bubble}
         </button>
       )}
       {children}

@@ -26,7 +26,7 @@ import { useDragOrder } from "@/lib/useDragOrder"
 import { usePlannerStore } from "@/stores/plannerStore"
 import { text } from "@/text/zh"
 import {
-  amountLines,
+  amountTip,
   lineView,
   MaterialIcon,
   materialTip,
@@ -87,9 +87,8 @@ export function TotalCell({ total }: { total: MaterialTotal }) {
   const view = lineView(total.key)
   const bag = useBagHolds(total.key)
   const short = !view.unknown && total.have < total.need
-  const tip = useTip<HTMLLIElement>(
-    materialTip(view.name, amountLines(total.key, total.have, total.need, bag), total.goals),
-  )
+  const { amount, lines } = amountTip(total.key, total.have, total.need, bag)
+  const tip = useTip<HTMLLIElement>(materialTip(view.name, amount, lines, total.goals))
   return (
     <li {...tip.props} className="flex w-[48px] flex-col items-center gap-0.5">
       <MaterialIcon view={view} className="size-11 rounded-[10px] text-[16px]" />

@@ -90,18 +90,22 @@ export function useBagHolds(key: string) {
 }
 
 /**
- * A cell's tip on its amount: "have/need", what the bag holds before the cards share it, then
- * what is short or that it is enough; for what conversions are paid in, what they spend first.
+ * A cell's tip on its amount: "have/need" to go beside the name, then what the bag holds before
+ * the cards share it; for what conversions are paid in, what they spend in place of "have/need".
  * The bag rounds down, unless "have", which rounds up once it is enough, would then read as more.
  */
-export function amountLines(key: string, have: number, need: number, bag?: number) {
+export function amountTip(
+  key: string,
+  have: number,
+  need: number,
+  bag?: number,
+): { amount?: string; lines: (string | undefined)[] } {
   const view = lineView(key)
   const up = have >= need && bag !== undefined && view.count(bag, true) === view.count(have, true)
   const held =
     bag === undefined || view.unknown ? undefined : t.inBag(view.count(bag, up), key === "Mora")
-  if (isConvertCost(key)) return [t.convertSpend(view.count(need, true)), held]
-  const status = have < need ? t.stillShort(view.count(need - have, true)) : t.satisfied
-  return [haveOfNeed(key, have, need), held, view.unknown ? undefined : status]
+  if (isConvertCost(key)) return { lines: [t.convertSpend(view.count(need, true)), held] }
+  return { amount: haveOfNeed(key, have, need), lines: [held] }
 }
 
 /**
@@ -130,16 +134,23 @@ export function neededBy(goals: readonly string[]) {
   return goals.length === 0 ? undefined : t.neededBy(goals.slice(0, NAMED), goals.length)
 }
 
-/** A material's tip: its name, then each of `lines` given, then the goals that need it. */
+/**
+ * A material's tip: its name with `amount` beside it, then each of `lines` given, then the goals
+ * that need it.
+ */
 export function materialTip(
   name: string,
+  amount: string | undefined,
   lines: readonly (string | undefined)[],
   goals: readonly string[],
 ) {
   const who = neededBy(goals)
   return (
     <>
-      <span className="font-semibold">{name}</span>
+      <span>
+        <span className="font-semibold">{name}</span>
+        {amount && <span className="tabular">{t.besideName(amount)}</span>}
+      </span>
       {lines.map(line => line && <span key={line}>{line}</span>)}
       {who && <span className="text-muted">{who}</span>}
     </>
@@ -168,12 +179,9 @@ export function MaterialCell({ line, goals, note }: CellProps) {
   const bag = useBagHolds(line.key)
   const short = !view.unknown && line.have < line.need
   const mark = !short && (line.converted ? t.convertMark : line.made > 0 && t.combineMark)
+  const { amount, lines } = amountTip(line.key, line.have, line.need, bag)
   const tip = useTip<HTMLLIElement>(
-    materialTip(
-      view.name,
-      [...amountLines(line.key, line.have, line.need, bag), combinedNote(line), note],
-      goals,
-    ),
+    materialTip(view.name, amount, [...lines, combinedNote(line), note], goals),
   )
   return (
     <li {...tip.props} className="flex w-[52px] flex-col items-center gap-1">

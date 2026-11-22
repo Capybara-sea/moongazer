@@ -83,7 +83,7 @@ export const planner = {
   convertMark: "换",
   convertSpend: (count: string) => `转换消耗 ${count}`,
   inBag: (count: string, mora = false) => (mora ? `当前拥有 ${count}` : `当前拥有 ${count} 个`),
-  stillShort: (count: string) => `缺 ${count}`,
+  besideName: (amount: string) => `（${amount}）`,
   satisfied: "已满足",
   neededBy: (names: readonly string[], total: number) =>
     `用于：${names.join("、")}${total > names.length ? ` 等 ${n(total)} 个` : ""}`,

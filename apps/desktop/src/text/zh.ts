@@ -587,7 +587,6 @@ export const text = {
   sync: {
     title: "自动同步",
     panel: "连接状态",
-    close: "关闭面板",
     phases: {
       off: "未开启",
       starting: "正在开启",

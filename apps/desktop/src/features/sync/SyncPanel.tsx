@@ -6,7 +6,6 @@ import { Check, ChevronRight, TriangleAlert, X } from "lucide-react"
 import { LabeledList } from "@/components/Delta"
 import { ProfileAvatar } from "@/components/ProfileAvatar"
 import { StatusDot, TONE_SOFT } from "@/components/StatusDot"
-import { useTip } from "@/components/Tip"
 import { UidLine } from "@/components/UidLine"
 import { changeRows } from "@/domain/changes"
 import type { CaptureStatus } from "@/lib/backend/sync"
@@ -42,7 +41,6 @@ const close = () => useCaptureStore.getState().setPanelOpen(false)
 export function SyncPanel({ now }: { now: number }) {
   const status = useCaptureStore(s => s.status)
   const error = useCaptureStore(s => s.error)
-  const closeTip = useTip<HTMLButtonElement>(t.close)
   if (!status) return null
   const tone = PHASE_TONE[status.phase]
   const note = problemNote(status)
@@ -60,16 +58,6 @@ export function SyncPanel({ now }: { now: number }) {
         >
           {t.phases[status.phase]}
         </StatusDot>
-        <button
-          {...closeTip.props}
-          type="button"
-          aria-label={t.close}
-          onClick={close}
-          className="ml-auto flex size-[30px] flex-none cursor-pointer items-center justify-center rounded-[8px] text-muted transition-colors hover:bg-default/60 hover:text-foreground motion-reduce:transition-none"
-        >
-          <X aria-hidden className="size-4" />
-          {closeTip.bubble}
-        </button>
       </div>
       {withAccount && status.account && <AccountBlock status={status} now={now} />}
       <p key={summaryText(status)} data-rise className="text-[13px] text-muted">

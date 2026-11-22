@@ -46,7 +46,7 @@ export function ArtifactsPage() {
   const { snapshot, entry, account } = useCurrentAccount()
   const rows = useMemo(() => account && artifactRows(account.artifacts), [account])
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-4 p-6">
+    <div className="flex flex-col gap-4 p-6">
       <div className="flex flex-col">
         <h1 className="font-semibold text-[20px] leading-[1.3]">{t.title}</h1>
         {rows && snapshot && (

@@ -24,8 +24,8 @@ import { WeaponTable } from "./WeaponTable"
 const t = text.weapons
 
 const VIEWS: readonly { value: WeaponView; label: string; icon: LucideIcon }[] = [
-  { value: "table", label: text.views.table, icon: Table },
   { value: "cards", label: text.views.cards, icon: LayoutGrid },
+  { value: "table", label: text.views.table, icon: Table },
 ]
 
 /**

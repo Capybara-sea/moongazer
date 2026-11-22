@@ -5,7 +5,7 @@ import { create } from "zustand"
 import type { WeaponType } from "@/domain/elements"
 
 export type WeaponSort = "rarity" | "level" | "refinement"
-export type WeaponView = "table" | "cards"
+export type WeaponView = "cards" | "table"
 
 /** How the weapons are shown, filtered and sorted. */
 type WeaponListState = {
@@ -24,7 +24,7 @@ export const useWeaponListStore = create<WeaponListState>(set => ({
   type: null,
   onlyFree: false,
   sort: "rarity",
-  view: "table",
+  view: "cards",
   setType: type => set({ type }),
   setOnlyFree: onlyFree => set({ onlyFree }),
   setSort: sort => set({ sort }),

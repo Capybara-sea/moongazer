@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - On wide screens the character, weapon, artifact, bag and planner pages fill the window's width.
+- The weapon page opens with cards, and its view buttons are in the same order as the character page's.
 
 ## [0.3.0] - 2026-11-22
 

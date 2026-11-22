@@ -17,6 +17,7 @@ import {
   type AnecdoteView,
   anecdoteName,
   anecdoteView,
+  hasAnecdoteIn,
   PER_DAY,
 } from "@/domain/anecdotes"
 import { cn } from "@/lib/cn"
@@ -254,10 +255,20 @@ function HowPopover({ view }: { view: AnecdoteView }) {
   )
 }
 
-/** Every area with its recorded and total, greyed until the account unlocks its page. */
+/**
+ * Every area with its recorded and total, greyed until the account unlocks its page. Picking
+ * one lets go of a character who has no anecdote there.
+ */
 function Areas({ view }: { view: AnecdoteView }) {
   const area = useAnecdoteListStore(s => s.area)
-  const { setArea } = useAnecdoteListStore.getState()
+  const character = useAnecdoteListStore(s => s.character)
+  const { setArea, setCharacter } = useAnecdoteListStore.getState()
+  const pick = (id: number | null) => {
+    setArea(id)
+    if (id !== null && character !== null && !hasAnecdoteIn(view.rows, character, id)) {
+      setCharacter(null)
+    }
+  }
   // An export that lists no unlocked area greys none.
   const unlocked = view.unlockedAreas.size > 0 ? view.unlockedAreas : null
   const counted = view.rows.filter(r => r.status !== "absent")
@@ -275,7 +286,7 @@ function Areas({ view }: { view: AnecdoteView }) {
           <FilterChip
             key={chip.id ?? "all"}
             pressed={area === chip.id}
-            onPress={() => setArea(chip.id)}
+            onPress={() => pick(chip.id)}
             className={cn(locked && area !== chip.id && "opacity-50")}
           >
             {chip.name}

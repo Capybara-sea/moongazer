@@ -96,6 +96,7 @@ function Row({ character, info }: { character: Character; info: CardInfo }) {
                     icon={ELEMENT_ICONS[data.element]}
                     label={text.game.elementLong(text.game.elements[data.element])}
                     className="size-3 text-[8px]"
+                    glyph
                   />
                 </span>
               )}

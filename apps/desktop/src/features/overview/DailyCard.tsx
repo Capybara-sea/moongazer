@@ -51,13 +51,16 @@ export function DailyCard({ account, takenAt }: { account: Account; takenAt: num
         <h2 className="font-semibold text-base">{t.title}</h2>
         <span className="tabular text-[12px] text-muted">{t.asOf(monthDayTime(takenAt))}</span>
       </div>
-      <Resin resin={tasks?.resin} now={now} />
-      <Commissions commissions={tasks?.commissions} takenAt={takenAt} now={now} />
-      <Realm realm={tasks?.realm} />
-      <Bosses bosses={tasks?.weeklyBosses} takenAt={takenAt} now={now} />
-      <Expeditions expeditions={tasks?.expeditions} now={now} />
-      <Transformer transformer={tasks?.transformer} now={now} />
-      <Welkin welkin={tasks?.welkin} takenAt={takenAt} now={now} />
+      {/* One grid for all rows, so the values take one width and the bars end together. */}
+      <div className="grid grid-cols-[76px_minmax(0,1fr)_auto] gap-x-3.5">
+        <Resin resin={tasks?.resin} now={now} />
+        <Commissions commissions={tasks?.commissions} takenAt={takenAt} now={now} />
+        <Realm realm={tasks?.realm} />
+        <Bosses bosses={tasks?.weeklyBosses} takenAt={takenAt} now={now} />
+        <Expeditions expeditions={tasks?.expeditions} now={now} />
+        <Transformer transformer={tasks?.transformer} now={now} />
+        <Welkin welkin={tasks?.welkin} takenAt={takenAt} now={now} />
+      </div>
     </Panel>
   )
 }
@@ -77,13 +80,16 @@ function Row({ label, value, tip, className, children }: RowProps) {
       as="div"
       content={tip}
       className={cn(
-        "grid min-h-[46px] grid-cols-[76px_minmax(0,1fr)_auto] items-center gap-3.5 border-(--separator) border-t py-1.5 text-[13px]",
+        "col-span-full grid min-h-[46px] grid-cols-subgrid items-center border-(--separator) border-t py-1.5 text-[13px]",
         className,
       )}
     >
       <span className="whitespace-nowrap text-muted">{label}</span>
       {children}
-      <span className="tabular whitespace-nowrap text-right font-semibold">{value}</span>
+      {/* Pinned to the value column: a row may leave the middle empty (Welkin with no days). */}
+      <span className="tabular col-start-3 whitespace-nowrap text-right font-semibold">
+        {value}
+      </span>
     </Tip>
   )
 }

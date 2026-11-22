@@ -5,9 +5,11 @@ import { describe, expect, it } from "vitest"
 import type { StygianRecord, Theater } from "@/domain/account"
 import { text } from "@/text/zh"
 import {
+  allStars,
   currentAbyssPeriod,
   currentStygian,
   fightTime,
+  stygianFullClear,
   stygianSummary,
   theaterActs,
   timeLeft,
@@ -85,6 +87,15 @@ describe("theater acts", () => {
   })
 })
 
+describe("all stars", () => {
+  it("is done at the period's full stars, not before and not without a known total", () => {
+    expect(allStars(36, 36)).toBe(true)
+    expect(allStars(12, 12)).toBe(true)
+    expect(allStars(35, 36)).toBe(false)
+    expect(allStars(0, 0)).toBe(false)
+  })
+})
+
 describe("stygian onslaught", () => {
   const seasons = [
     { season: 1, end: 10 * DAY },
@@ -135,6 +146,20 @@ describe("stygian onslaught", () => {
       totalTime: 132,
       team: ["A", "B", "Traveler", "C", "D"],
     })
+  })
+
+  it("counts a full clear only with every fight won at the hardest difficulty", () => {
+    const fights = (...done: boolean[]) => done.map(won => ({ time: 60, done: won, team: [] }))
+    const run = (difficulty: number, won: boolean[]): StygianRecord => ({
+      season: 1,
+      difficulty,
+      at: 0,
+      fights: fights(...won),
+    })
+    expect(stygianFullClear(run(6, [true, true, true]))).toBe(true)
+    expect(stygianFullClear(run(6, [true, false, true]))).toBe(false)
+    expect(stygianFullClear(run(5, [true, true, true]))).toBe(false)
+    expect(stygianFullClear(run(6, []))).toBe(false)
   })
 
   it("has no fastest or total time when no fight was won", () => {

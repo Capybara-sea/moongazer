@@ -11,6 +11,8 @@ const HOUR = 3_600_000
 const DAY = 24 * HOUR
 /** No difficulty has more acts. Lunar Mode's two extra bouts add to maxStars but are not acts. */
 const MAX_ACTS = 10
+/** The hardest Stygian Onslaught difficulty: the game's table has six (7.1, per Capture). */
+const STYGIAN_TOP = 6
 
 export type ActState = "starred" | "passed" | "ahead"
 
@@ -71,6 +73,20 @@ export function currentStygian(
     if (ofRunning && (!record || r.at > record.at)) record = r
   }
   return { end: running?.end, record }
+}
+
+/** Every star the period offers is won: the Abyss's 36, or the chosen theater difficulty's. */
+export function allStars(stars: number, maxStars: number) {
+  return maxStars > 0 && stars >= maxStars
+}
+
+/** Every fight won at the hardest difficulty, the most a Stygian season offers. */
+export function stygianFullClear(record: StygianRecord) {
+  return (
+    record.difficulty >= STYGIAN_TOP &&
+    record.fights.length > 0 &&
+    record.fights.every(fight => fight.done)
+  )
 }
 
 /** Fights won, the fastest won fight in seconds, and everyone who fought, in order. */

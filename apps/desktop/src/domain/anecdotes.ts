@@ -312,6 +312,16 @@ export function byCharacter(rows: readonly AnecdoteRow[]): CharacterGroup[] {
     })
 }
 
+/** The characters with anecdotes in an area, every character for null; the counts are the area's. */
+export function byCharacterIn(rows: readonly AnecdoteRow[], area: number | null) {
+  return byCharacter(area === null ? rows : rows.filter(r => r.info.area === area))
+}
+
+/** Whether a character has any anecdote in an area. */
+export function hasAnecdoteIn(rows: readonly AnecdoteRow[], character: string, area: number) {
+  return rows.some(r => r.info.character === character && r.info.area === area)
+}
+
 export type AnecdoteFilters = {
   onlyTodo: boolean
   onlyHidden: boolean

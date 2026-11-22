@@ -34,7 +34,6 @@ export function RegionGrid({ account }: { account: Account }) {
               <Bar
                 value={tile.fraction ?? 0}
                 tone={(tile.fraction ?? 0) >= 1 ? "gold" : "accent"}
-                className="h-1"
               />
               <span className="tabular truncate text-[11px] text-muted">{tile.levels}</span>
               <Tip className="tabular truncate text-[11px] text-muted" content={tile.offerings}>

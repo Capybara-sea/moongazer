@@ -11,6 +11,8 @@ import {
   type AnecdoteView,
   anecdoteView,
   byCharacter,
+  byCharacterIn,
+  hasAnecdoteIn,
   visibleRows,
 } from "./anecdotes"
 
@@ -184,6 +186,26 @@ describe("byCharacter and visibleRows", () => {
     const groups = byCharacter(view({}).rows)
     const newest = groups.map(g => Math.max(...g.rows.map(r => r.info.id)))
     expect(newest).toEqual(newest.toSorted((a, b) => b - a))
+  })
+
+  it("narrows the characters to an area's, with the area's counts", () => {
+    const rows = view({}).rows
+    const areasOf = (character: string) =>
+      new Set(all.filter(a => a.character === character).map(a => a.area))
+    const both = byCharacter(rows).find(g => areasOf(g.character).size > 1)
+    if (!both) throw new Error("no character in two areas")
+    const [area, other] = [...areasOf(both.character)]
+    if (area === undefined || other === undefined) throw new Error("no two areas")
+    const groups = byCharacterIn(rows, area)
+    expect(groups.every(g => g.rows.every(r => r.info.area === area))).toBe(true)
+    const elsewhere = byCharacter(rows).find(g => !areasOf(g.character).has(area))
+    expect(groups.some(g => g.character === elsewhere?.character)).toBe(false)
+    const narrowed = groups.find(g => g.character === both.character)
+    expect(narrowed?.rows.length).toBeLessThan(both.rows.length)
+    expect(narrowed?.todo).toBe(narrowed?.rows.length)
+    expect(hasAnecdoteIn(rows, both.character, other)).toBe(true)
+    if (elsewhere) expect(hasAnecdoteIn(rows, elsewhere.character, area)).toBe(false)
+    expect(byCharacterIn(rows, null)).toEqual(byCharacter(rows))
   })
 
   it("keeps what is left to do, and searches a summary only once recorded", () => {

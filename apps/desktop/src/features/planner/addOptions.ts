@@ -41,6 +41,8 @@ export type Option = {
   rarity?: number
   element?: Element
   weapon?: WeaponType
+  /** The level now, which owned ones are sorted by. */
+  level?: number
   note: string
   /** The whole note, for hover, where `note` leaves some out. */
   detail?: string
@@ -79,6 +81,10 @@ export function withExpBoost(goal: NewGoal, on: boolean): NewGoal {
 const byRarityThenName = (a: Option, b: Option) =>
   (b.rarity ?? 0) - (a.rarity ?? 0) || a.name.localeCompare(b.name, "zh")
 
+/** Owned ones first, the highest level first; then by rarity and name. */
+const byOwnedThenLevel = (a: Option, b: Option) =>
+  Number(b.owned) - Number(a.owned) || (b.level ?? 0) - (a.level ?? 0) || byRarityThenName(a, b)
+
 export function characterOptions(account: Account, plan: Plan): Option[] {
   return plannableKeys("character")
     .map((key): Option => {
@@ -91,6 +97,7 @@ export function characterOptions(account: Account, plan: Plan): Option[] {
         rarity: data.rarity,
         element: data.element,
         weapon: data.weapon,
+        level: from.stage.level,
         note:
           standing === "owned"
             ? `Lv.${from.stage.level}`
@@ -106,7 +113,7 @@ export function characterOptions(account: Account, plan: Plan): Option[] {
         }),
       }
     })
-    .toSorted((a, b) => Number(b.owned) - Number(a.owned) || byRarityThenName(a, b))
+    .toSorted(byOwnedThenLevel)
 }
 
 export function weaponOptions(account: Account, plan: Plan): Option[] {
@@ -128,6 +135,7 @@ export function weaponOptions(account: Account, plan: Plan): Option[] {
         icon: data.icon,
         rarity: data.rarity,
         weapon: data.type,
+        level: w.level,
         note,
         detail: `${note} · ${holder}`,
         wielder: w.location,
@@ -140,7 +148,7 @@ export function weaponOptions(account: Account, plan: Plan): Option[] {
         }),
       }
     })
-    .toSorted(byRarityThenName)
+    .toSorted(byOwnedThenLevel)
   const ownedKeys = new Set(account.weapons.map(w => w.key))
   const rest = [...plannable]
     .filter(key => !ownedKeys.has(key))

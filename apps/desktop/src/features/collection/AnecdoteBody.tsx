@@ -15,6 +15,7 @@ import {
   type AnecdoteView,
   anecdoteName,
   byCharacter,
+  byCharacterIn,
   type CharacterGroup,
   characterName,
   type Need,
@@ -29,14 +30,17 @@ import { text } from "@/text/zh"
 const t = text.anecdotePage
 const AREA_NAMES = new Map(ANECDOTE_AREAS.map(a => [a.id, a.name]))
 
-/** The characters' grid on the left, the anecdotes by character on the right. */
+/**
+ * The characters' grid on the left, the anecdotes by character on the right; both only the
+ * area's when one is picked.
+ */
 export function AnecdoteBody({ view }: { view: AnecdoteView }) {
   const onlyTodo = useAnecdoteListStore(s => s.onlyTodo)
   const onlyHidden = useAnecdoteListStore(s => s.onlyHidden)
   const area = useAnecdoteListStore(s => s.area)
   const character = useAnecdoteListStore(s => s.character)
   const query = useAnecdoteListStore(s => s.query)
-  const groups = useMemo(() => byCharacter(view.rows), [view])
+  const groups = useMemo(() => byCharacterIn(view.rows, area), [view, area])
   const sections = useMemo(() => {
     const rows = visibleRows(view.rows, { onlyTodo, onlyHidden, area, character, query })
     const shown = new Map(byCharacter(rows).map(g => [g.character, g.rows]))

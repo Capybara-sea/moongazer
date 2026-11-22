@@ -249,6 +249,7 @@ export const text = {
     stygianDifficulty: (n: number) => `难度 ${n}`,
     stygianMissing: "需先在游戏中打开危战菜单",
     notStarted: "本期未挑战",
+    done: "已完成",
     blessing: "本期月相",
     elements: "元素",
     guests: "特邀",

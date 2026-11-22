@@ -34,8 +34,9 @@ type Props = {
 }
 
 /**
- * Tiles of the account's characters or weapons first, then the game's others,
- * to pick one; one not out yet heads them, and planned ones are left out. A
+ * Tiles of the account's characters or weapons first, the highest level first,
+ * then the game's others, to pick one; one not out yet heads them, and planned
+ * ones are left out. A
  * custom goal keeps its EXP boost when it turns into a real one, so the boost
  * is offered only for a new weapon.
  */
@@ -69,7 +70,8 @@ export function AddGoal({ adding, account, plan, onClose, onAdd }: Props) {
     >
       <AlertDialog.Backdrop isDismissable isKeyboardDismissDisabled={false}>
         <AlertDialog.Container>
-          <AlertDialog.Dialog className="max-w-[720px]">
+          {/* A fixed size, with the grid's height in GoalPicker, so searching does not move it. */}
+          <AlertDialog.Dialog className="w-[720px] max-w-full">
             <AlertDialog.Header>
               <AlertDialog.Heading>
                 {kind && (replacing ? t.replace[kind] : t.addTitle[kind])}

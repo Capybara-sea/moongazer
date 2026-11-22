@@ -188,10 +188,11 @@ function Goals({ view, goal, hits }: GoalsProps) {
       return counts && hits.has(g.id) ? [{ id: g.id, name: g.name, icon: g.icon, ...counts }] : []
     }),
   ]
+  // A fixed width: sized by its rows, it changed width as the filters left some out.
   return (
     <aside
       aria-label={t.goals}
-      className="glass flex max-w-[300px] flex-[1_1_260px] flex-col gap-0.5 rounded-[14px] border border-border bg-surface p-2"
+      className="glass flex w-[280px] flex-none flex-col gap-0.5 rounded-[14px] border border-border bg-surface p-2"
     >
       {rows.map(row => {
         const current = row.id === goal
@@ -211,7 +212,7 @@ function Goals({ view, goal, hits }: GoalsProps) {
           >
             <span className="flex w-full items-center gap-2">
               {row.icon ? (
-                <GameIcon icon={row.icon} label={row.name} className="size-7 text-[11px]" />
+                <GameIcon icon={row.icon} label={row.name} className="size-7 text-[11px]" glyph />
               ) : (
                 <span
                   aria-hidden

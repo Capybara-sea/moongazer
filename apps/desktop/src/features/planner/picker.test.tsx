@@ -143,6 +143,39 @@ describe("the picker", () => {
     expect(html).not.toContain("title=")
   })
 
+  it("lists owned ones first, the highest level first, then the rest by rarity", () => {
+    const own = (key: string, level: number) => ({
+      key,
+      level,
+      ascension: 0,
+      constellation: 0,
+      talent: { auto: 1, skill: 1, burst: 1 },
+    })
+    const arm = (key: string, level: number) => ({
+      key,
+      level,
+      ascension: 0,
+      refinement: 1,
+      lock: false,
+      location: "",
+    })
+    const account: Account = {
+      ...EMPTY,
+      characters: [own("HuTao", 70), own("Xiangling", 90), own("Ganyu", 80)],
+      weapons: [arm("StaffOfHoma", 20), arm("DullBlade", 70), arm("TheCatch", 50)],
+    }
+    const characters = characterOptions(account, EMPTY_PLAN)
+    expect(characters.slice(0, 3).map(o => o.id)).toEqual(["Xiangling", "Ganyu", "HuTao"])
+    expect(characters[3]?.owned).toBe(false)
+    expect(characters[3]?.rarity).toBe(5)
+    const weapons = weaponOptions(account, EMPTY_PLAN)
+    expect(weapons.slice(0, 3).map(o => o.name)).toEqual(
+      ["DullBlade", "TheCatch", "StaffOfHoma"].map(key => weaponData(key).name),
+    )
+    expect(weapons[3]?.owned).toBe(false)
+    expect(weapons[3]?.rarity).toBe(5)
+  })
+
   it("writes an owned weapon's level and refinement under it", () => {
     const homa = { key: "StaffOfHoma", level: 90, ascension: 6, refinement: 5, lock: false }
     const account = { ...EMPTY, weapons: [{ ...homa, location: "" }] }

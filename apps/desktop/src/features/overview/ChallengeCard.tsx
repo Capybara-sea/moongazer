@@ -4,6 +4,7 @@
 import { Moon, Star } from "lucide-react"
 import type { ReactNode } from "react"
 import { Bar } from "@/components/Bar"
+import { DoneBadge } from "@/components/DoneBadge"
 import { GameIcon } from "@/components/GameIcon"
 import { HoverPreview } from "@/components/HoverPreview"
 import { Panel } from "@/components/Panel"
@@ -27,9 +28,11 @@ import { useNow } from "@/lib/useNow"
 import { text } from "@/text/zh"
 import {
   type ActState,
+  allStars,
   currentAbyssPeriod,
   currentStygian,
   fightTime,
+  stygianFullClear,
   stygianSummary,
   theaterActs,
   timeLeft,
@@ -54,6 +57,8 @@ type Challenge = {
   start?: number
   end?: number
   facts: Fact[]
+  /** The period is done: every star, or Stygian's full clear. */
+  done?: boolean
   acts?: ActState[]
   blessing?: AbyssBlessing
   cast?: TheaterCast
@@ -101,6 +106,7 @@ function abyss(account: Account, now: number): Challenge {
     start: running.start,
     end: running.end,
     facts,
+    done: allStars(running.stars, running.maxStars),
     blessing: abyssBlessing(running.start),
     teams: period?.picked.length ? [period.picked] : [],
   }
@@ -129,6 +135,7 @@ function theater(account: Account, now: number): Challenge {
         tip: t.stars(record.stars, record.maxStars),
       },
     ],
+    done: allStars(record.stars, record.maxStars),
     acts: theaterActs(record),
     cast,
     teams: [],
@@ -169,12 +176,13 @@ function stygian(account: Account, takenAt: number, now: number): Challenge {
     name: t.stygian,
     ...period,
     facts,
+    done: stygianFullClear(record),
     teams: record.fights.map(fight => fight.team).filter(team => team.length > 0),
   }
 }
 
 /** The name with the time left, then the record, then the blessing, cast or teams. */
-function Row({ name, left, start, end, facts, acts, blessing, cast, teams }: Challenge) {
+function Row({ name, left, start, end, facts, done, acts, blessing, cast, teams }: Challenge) {
   const now = useNow()
   const share =
     start !== undefined && end !== undefined && end > start
@@ -182,14 +190,17 @@ function Row({ name, left, start, end, facts, acts, blessing, cast, teams }: Cha
       : undefined
   return (
     <div className="flex flex-1 flex-col justify-center gap-2 border-(--separator) border-t py-2.5">
-      {/* The names take one width, so the three bars of time left line up. */}
+      {/* The names and the times left take one width each, so the three bars line up. */}
       <div className="flex items-center gap-3">
         <span className="w-24 flex-none whitespace-nowrap font-semibold text-[14px]">{name}</span>
-        {share !== undefined && <Bar value={share} className="h-1 min-w-10 flex-1" />}
+        {share !== undefined && <Bar value={share} className="min-w-10 flex-1" />}
         {left && (
           <Tip
             content={end === undefined ? undefined : t.endsAt(formatMonthDay(end))}
-            className={cn("tabular whitespace-nowrap text-[12px] text-muted", !share && "ml-auto")}
+            className={cn(
+              "tabular min-w-[6em] whitespace-nowrap text-right text-[12px] text-muted",
+              !share && "ml-auto",
+            )}
           >
             {left}
           </Tip>
@@ -208,6 +219,12 @@ function Row({ name, left, start, end, facts, acts, blessing, cast, teams }: Cha
           </Tip>
         ))}
         {acts && <Acts acts={acts} />}
+        {done && (
+          <span className="ml-auto flex items-center gap-1 whitespace-nowrap font-semibold text-(--ok) text-[12px]">
+            <DoneBadge inline />
+            {t.done}
+          </span>
+        )}
       </div>
       {(blessing || cast || teams.length > 0) && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -325,6 +342,7 @@ function Cast({ cast }: { cast: TheaterCast }) {
             icon={ELEMENT_ICONS[element]}
             label={text.game.elementLong(text.game.elements[element])}
             className="size-5 text-[10px]"
+            glyph
           />
         ))}
       </Labeled>

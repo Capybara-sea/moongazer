@@ -58,7 +58,7 @@ export function GoalPicker({ kind, options, filters, onFilters, onCustom, onPick
           onChange={weapon => set({ weapon })}
         />
       </div>
-      <ul className="grid max-h-[52vh] grid-cols-[repeat(auto-fill,minmax(100px,1fr))] content-start gap-1.5 overflow-y-auto pr-1">
+      <ul className="grid h-[52vh] grid-cols-[repeat(auto-fill,minmax(100px,1fr))] content-start gap-1.5 overflow-y-auto pr-1 [scrollbar-gutter:stable]">
         {onCustom && <Tile name={t.addCustom[kind]} placeholder="?" onPick={onCustom} />}
         {options.length === 0 && (
           <li className="col-span-full py-6 text-center text-muted">{t.noMatch}</li>
@@ -109,7 +109,12 @@ function ChipGroup<T extends string | number>({
             className="h-8 w-8 justify-center px-0"
           >
             <span aria-hidden>
-              <GameIcon icon={option.icon} label={option.label} className="size-4 text-[10px]" />
+              <GameIcon
+                icon={option.icon}
+                label={option.label}
+                className="size-4 text-[10px]"
+                glyph
+              />
             </span>
           </FilterChip>
         ) : (

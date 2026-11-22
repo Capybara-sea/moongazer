@@ -51,6 +51,7 @@ export function CharacterAvatar({ characterKey, size, className }: Props) {
             icon={ELEMENT_ICONS[data.element]}
             label={text.game.elementLong(text.game.elements[data.element])}
             className={cn("text-[9px]", sizes.icon)}
+            glyph
           />
         </span>
       )}

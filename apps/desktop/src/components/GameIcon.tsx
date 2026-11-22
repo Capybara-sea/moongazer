@@ -14,6 +14,8 @@ type Props = {
   placeholder?: string
   /** Size, shape and colors of the box. */
   className?: string
+  /** A glyph drawn for the game's dark panels, as an element is: edged in dark on light ones. */
+  glyph?: boolean
 }
 
 /**
@@ -22,7 +24,7 @@ type Props = {
  * character, as in the design. Its tip names it, unless it sits in a block
  * with a tip of its own.
  */
-export function GameIcon({ icon, label, placeholder, className }: Props) {
+export function GameIcon({ icon, label, placeholder, className, glyph = false }: Props) {
   const [failed, setFailed] = useState<string | null>(null)
   const [loaded, setLoaded] = useState<string | null>(null)
   const tip = useTip<HTMLSpanElement>(label)
@@ -32,6 +34,7 @@ export function GameIcon({ icon, label, placeholder, className }: Props) {
       {...tip.props}
       className={cn(
         "relative flex flex-none select-none items-center justify-center overflow-hidden font-semibold text-muted",
+        glyph && "glyph",
         className,
       )}
     >

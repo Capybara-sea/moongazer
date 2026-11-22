@@ -165,6 +165,7 @@ function ElementFilter() {
                 icon={ELEMENT_ICONS[option]}
                 label={name}
                 className="size-[18px] text-[10px]"
+                glyph
               />
             </span>
           </FilterChip>

@@ -20,6 +20,14 @@ createRoot(root).render(
   </StrictMode>,
 )
 
+// The webview's own menu (back, reload, save as, print) has no place in the app; text fields keep
+// theirs for cut, copy and paste.
+document.addEventListener("contextmenu", event => {
+  const { target } = event
+  const field = target instanceof Element && target.closest("input, textarea, [contenteditable]")
+  if (!field) event.preventDefault()
+})
+
 // tauri.conf.json keeps ASCII names; the window shows the Chinese name.
 document.title = text.appName
 void setWindowTitle(text.appName)

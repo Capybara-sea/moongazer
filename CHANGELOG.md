@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   up over time.
 - The planner's material cells say what is short, or once there is enough, what is needed, in grey,
   and fade.
+- Right-clicking in the app no longer opens the browser's menu, except in text fields.
 
 ## [0.3.1] - 2026-11-23
 

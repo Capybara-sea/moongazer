@@ -120,6 +120,8 @@ export type Account = {
   materials: Map<string, number>
   /** By character key. */
   characterInfo: Map<string, CharacterInfo>
+  /** Which twin the Traveler is, by character id; only Moongazer's own sync writes it. */
+  traveler?: number
 }
 
 function player(value: unknown): Player | undefined {
@@ -358,5 +360,6 @@ export function parseAccount(value: unknown): Account {
     artifacts: artifacts(raw.artifacts),
     materials: materials(raw.materials),
     characterInfo: info,
+    traveler: num(raw.mg_traveler),
   }
 }

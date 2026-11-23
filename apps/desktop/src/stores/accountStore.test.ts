@@ -4,6 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { Account } from "@/domain/account"
 import { groupAccounts } from "@/domain/accounts"
+import { lookup } from "@/domain/names"
 import { getSnapshotExport, type Snapshot } from "@/lib/backend"
 import { text } from "@/text/zh"
 import {
@@ -96,6 +97,23 @@ describe("entryAccount", () => {
   it("has no account when the export cannot be read", () => {
     expect(entryAccount(true, { status: "failed", message: "fake failure" })).toBeNull()
     expect(entryAccount(true, { status: "summaryOnly" })).toBeNull()
+  })
+})
+
+describe("the Traveler's icon", () => {
+  afterEach(reset)
+
+  it("follows the twin of the account shown, once its export is read", () => {
+    const icon = () => lookup("characters", "TravelerAnemo").icon
+    const shown = snapshot(1)
+    useAccountStore.setState({ shown, entries: { 1: { status: "loading" } } })
+    expect(icon()).toBeUndefined()
+    useAccountStore.setState({
+      entries: { 1: { status: "ready", account: { ...account, traveler: 10000007 } } },
+    })
+    expect(icon()).toBe("UI_AvatarIcon_PlayerGirl")
+    useAccountStore.setState({ shown: snapshot(2), entries: { 2: { status: "ready", account } } })
+    expect(icon()).toBeUndefined()
   })
 })
 

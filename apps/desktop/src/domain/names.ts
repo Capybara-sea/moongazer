@@ -22,16 +22,36 @@ export function unnamed(kind: NameKind, keys: readonly string[]) {
   return keys.filter(key => !Object.hasOwn(tables[kind], key))
 }
 
+/** The twins' portraits by character id. */
+const TWIN_ICONS = new Map([
+  [10000005, "UI_AvatarIcon_PlayerBoy"],
+  [10000007, "UI_AvatarIcon_PlayerGirl"],
+])
+let travelerIcon: string | undefined
+
+/**
+ * Which twin the shown account's Traveler is, by character id, for every Traveler's icon; none
+ * when its snapshot does not say, as only Moongazer's own sync writes it.
+ */
+export function setTraveler(twin: number | undefined) {
+  travelerIcon = twin === undefined ? undefined : TWIN_ICONS.get(twin)
+}
+
 /**
  * The name and icon of an item. Keys the bundled data lacks show as "data not
- * updated (key)". Weapons and artifacts name any Traveler just "Traveler",
- * and no export says which twin the Traveler is, so Travelers have no icon.
+ * updated (key)". Weapons and artifacts name any Traveler just "Traveler".
+ * A Traveler's icon is the twin's that `setTraveler` was given, if any.
  */
 export function lookup(kind: NameKind, key: string): Entry {
-  if (kind === "characters" && key === "Traveler") return { name: text.names.traveler }
-  return Object.hasOwn(tables[kind], key)
+  if (kind === "characters" && key === "Traveler") {
+    return { name: text.names.traveler, icon: travelerIcon }
+  }
+  const entry = Object.hasOwn(tables[kind], key)
     ? (tables[kind][key] ?? { name: key })
     : { name: text.names.unknown(key) }
+  return kind === "characters" && key.startsWith("Traveler") && travelerIcon
+    ? { ...entry, icon: travelerIcon }
+    : entry
 }
 
 export type CharacterData = {

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The achievements page can sort by finish time, the latest first.
+- Auto sync notes which twin the Traveler is, and the pages show the Traveler with that portrait.
 
 ### Changed
 

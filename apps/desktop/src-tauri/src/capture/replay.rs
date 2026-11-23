@@ -33,7 +33,7 @@ use teyvatme_core::recording::{self, Recording};
 use teyvatme_protocol::KeyState;
 use tracing_subscriber::fmt::MakeWriter;
 
-use super::decoder::Decoder;
+use super::decoder::{Decoder, TRAVELER_KEY};
 use super::pack::Pack;
 use super::service::LOGIN_BURST_FRAMES;
 use super::worker::Burst;
@@ -165,6 +165,14 @@ fn matches_the_reference(dir: &Path) -> bool {
     // anecdotes.rs).
     reference["source"] = ours["source"].clone();
     reference["gi_player"]["gameData"] = ours["gi_player"]["gameData"].clone();
+    // Which twin the Traveler is, which only Moongazer writes.
+    let twin = &ours[TRAVELER_KEY];
+    println!(
+        "Traveler's twin read: {}",
+        if twin.is_u64() { "yes" } else { "no" }
+    );
+    assert!(twin.is_u64(), "the Traveler's twin was not read");
+    reference[TRAVELER_KEY] = twin.clone();
     let mut differing = BTreeMap::new();
     differences(
         String::new(),

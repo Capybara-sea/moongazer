@@ -117,6 +117,12 @@ describe("parseAccount on a Leyline export", () => {
     expect(tasks?.abyss).toEqual({ start: 6_000_000, end: 7_000_000, stars: 27, maxStars: 36 })
   })
 
+  it("reads which twin the Traveler is, which only Moongazer's sync writes", () => {
+    expect(leyline({ mg_traveler: 10000007 }).traveler).toBe(10000007)
+    expect(leyline({}).traveler).toBeUndefined()
+    expect(leyline({ mg_traveler: "10000007" }).traveler).toBeUndefined()
+  })
+
   it("gives realm currency the highest Adeptal Energy among the realm layouts", () => {
     const { tasks } = leyline({
       gi_tasks: { realm: { value: 1_200, limit: 2_400 } },

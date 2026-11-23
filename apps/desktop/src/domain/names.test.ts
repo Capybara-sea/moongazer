@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import names from "@/generated/names.json"
 import { text } from "@/text/zh"
 import {
+  characterData,
   characterProfile,
   characterTalents,
   constellations,
+  lookup,
   MATERIAL_TABS,
   materialData,
   setEffects,
+  setTraveler,
   unnamed,
   weaponData,
   weaponPassive,
@@ -114,6 +117,29 @@ describe("weaponPassive", () => {
     expect(weaponPassive("DullBlade", 1)).toBeUndefined()
     expect(weaponPassive("NoSuchFakeBlade", 1)).toBeUndefined()
     expect(weaponPassive("constructor", 1)).toBeUndefined()
+  })
+})
+
+describe("the Traveler's icon", () => {
+  afterEach(() => setTraveler(undefined))
+
+  it("is the twin's the shown account says, for every Traveler key", () => {
+    expect(lookup("characters", "TravelerAnemo").icon).toBeUndefined()
+    setTraveler(10000007)
+    expect(lookup("characters", "TravelerAnemo").icon).toBe("UI_AvatarIcon_PlayerGirl")
+    expect(lookup("characters", "TravelerCryo").name).toBe(characterData("TravelerCryo").name)
+    expect(lookup("characters", "Traveler")).toEqual({
+      name: text.names.traveler,
+      icon: "UI_AvatarIcon_PlayerGirl",
+    })
+    setTraveler(10000005)
+    expect(characterData("TravelerGeo").icon).toBe("UI_AvatarIcon_PlayerBoy")
+    expect(lookup("characters", "Amber").icon).not.toBe("UI_AvatarIcon_PlayerBoy")
+  })
+
+  it("is none for an id that is no twin", () => {
+    setTraveler(10000046)
+    expect(lookup("characters", "TravelerAnemo").icon).toBeUndefined()
   })
 })
 

@@ -5,6 +5,7 @@ import { useEffect } from "react"
 import { create } from "zustand"
 import { type Account, parseAccount } from "@/domain/account"
 import { type AccountGroup, groupAccounts, latestKept, newestAccount } from "@/domain/accounts"
+import { setTraveler } from "@/domain/names"
 import { getSnapshotExport, type Snapshot, toBackendError } from "@/lib/backend"
 import { readStored, writeStored } from "@/lib/storage"
 import { text } from "@/text/zh"
@@ -357,3 +358,10 @@ export function useAccountName(token: number | undefined) {
       : null,
   )
 }
+
+// Every Traveler's icon follows the shown account's twin. This runs on each change of the store
+// before the pages, which subscribe later, draw again.
+useAccountStore.subscribe(state => {
+  const entry = state.shown ? state.entries[state.shown.id] : undefined
+  setTraveler(entry?.status === "ready" ? entry.account.traveler : undefined)
+})

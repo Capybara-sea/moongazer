@@ -15,8 +15,10 @@ use teyvatme_core::decode::{
     self, DataReplacement, DataVerdict, KeyReport, SnifferEvent, SnifferStats,
 };
 use teyvatme_core::delta::Keyed;
+use teyvatme_core::good::Good;
 use teyvatme_core::player_data::{LoginParts, PlayerData};
 use teyvatme_core::wish::hub::{WishEvent, take_wish_events};
+use teyvatme_protocol::r#gen::protos::AvatarInfo;
 use teyvatme_protocol::{CommandMatch, ConnectionPacket, GamePacket, GameSniffer, KeyState};
 use tokio::sync::mpsc;
 
@@ -29,6 +31,27 @@ const SOURCE: &str = "Moongazer";
 
 /// The game's UDP ports, which tell a frame's direction.
 const GAME_PORTS: [u16; 2] = [22101, 22102];
+
+/// The twins' character ids, Aether's and Lumine's.
+const TWINS: [u32; 2] = [10000005, 10000007];
+/// A character the account owns, not one lent for a trial (upstream's `AVATAR_TYPE_FORMAL`).
+const OWNED: u32 = 1;
+/// Where the export carries the Traveler's twin, by character id: `Export`'s name for it.
+#[cfg(test)]
+pub(super) const TRAVELER_KEY: &str = "mg_traveler";
+
+/// Upstream's export with Moongazer's own fields beside its own. Serialized as it is, so
+/// upstream's numbers keep their form (a round trip through a JSON value would widen its f32s).
+#[derive(serde::Serialize)]
+struct Export<'a> {
+    #[serde(flatten)]
+    good: &'a Good,
+    /// Which twin the Traveler is, by character id. Upstream knows it but names the Traveler
+    /// only by element ("TravelerAnemo") or as "Traveler", so the pages could not show the
+    /// Traveler's portrait.
+    #[serde(rename = "mg_traveler", skip_serializing_if = "Option::is_none")]
+    traveler: Option<u32>,
+}
 
 pub struct Decoder {
     sniffer: GameSniffer,
@@ -44,6 +67,8 @@ pub struct Decoder {
     book: Option<Book>,
     commission_cities: HashMap<u32, u32>,
     progress: commissions::Progress,
+    /// The login's Traveler, by character id, once its characters are in.
+    traveler: Option<u32>,
 }
 
 /// What one frame did.
@@ -108,6 +133,7 @@ impl Decoder {
             book: None,
             commission_cities: pack.commission_cities,
             progress: commissions::Progress::new(pack.commission_rewards),
+            traveler: None,
         }
     }
 
@@ -186,6 +212,7 @@ impl Decoder {
                     self.player_data.reset();
                     self.book = None;
                     self.progress.new_login();
+                    self.traveler = None;
                     fed.new_login = true;
                 }
                 DataVerdict::Hold => return,
@@ -195,6 +222,11 @@ impl Decoder {
                     && let Some(command) = commands.iter().find(|c| !c.sent && c.command_id == *id)
                 {
                     self.book = Some(Book::new(data.clone(), &command.proto_data));
+                }
+                if let CommandMatch::Avatars(avatars) = found
+                    && let Some(twin) = twin_of(avatars)
+                {
+                    self.traveler = Some(twin);
                 }
             }
             let player = &self.player_data;
@@ -265,13 +297,25 @@ impl Decoder {
                 adventure_rank: player.ar,
             })
             .unwrap_or_default();
+        let export = Export {
+            good: &good,
+            traveler: self.traveler,
+        };
         Ok(Some(Exported {
-            json: serde_json::to_string(&good)?,
+            json: serde_json::to_string(&export)?,
             left_out,
             keyed,
             account,
         }))
     }
+}
+
+/// Which twin the account's Traveler is, by character id, if `avatars` has it.
+fn twin_of(avatars: &[AvatarInfo]) -> Option<u32> {
+    avatars
+        .iter()
+        .find(|avatar| avatar.avatar_type == OWNED && TWINS.contains(&avatar.avatar_id))
+        .map(|avatar| avatar.avatar_id)
 }
 
 #[cfg(test)]
@@ -292,5 +336,23 @@ mod tests {
         let fed = decoder.feed(vec![0; 64], 0);
         assert!(!fed.data && !fed.connection && !fed.one_way);
         assert!(decoder.export(0).unwrap().is_none());
+    }
+
+    #[test]
+    fn the_traveler_is_the_twin_the_account_owns() {
+        let avatar = |id: u32, kind: u32| {
+            let mut avatar = AvatarInfo::new();
+            avatar.avatar_id = id;
+            avatar.avatar_type = kind;
+            avatar
+        };
+        let lumine = [
+            avatar(10000046, OWNED),
+            avatar(10000005, 2),
+            avatar(10000007, OWNED),
+        ];
+        assert_eq!(twin_of(&lumine), Some(10000007));
+        assert_eq!(twin_of(&[avatar(10000005, OWNED)]), Some(10000005));
+        assert_eq!(twin_of(&[avatar(10000046, OWNED)]), None);
     }
 }

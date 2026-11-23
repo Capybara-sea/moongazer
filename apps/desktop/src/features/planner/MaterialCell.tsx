@@ -80,11 +80,11 @@ export function cellLabel(key: string, have: number, need: number) {
 }
 
 /**
- * Whether a cell has all it needs and fades into the background: a known material, not one
- * conversions are paid in, with enough.
+ * Whether a cell has all it needs and fades into the background: a known material with enough.
+ * What conversions are paid in always has, as they spend only what there is.
  */
 export function isMet(key: string, have: number, need: number) {
-  return !lineView(key).unknown && !isConvertCost(key) && have >= need
+  return !lineView(key).unknown && have >= need
 }
 
 /** What `materials` hold of `key` before the cards share them, EXP as the planner pools it. */
@@ -178,7 +178,7 @@ type CellProps = {
  * needed, muted and faded, once there is enough; amber with a "combined" mark when
  * combining three of the tier below makes up the rest, or a "converted" mark when
  * converting others of the same tier does; muted, with what is needed, when not known
- * yet, or with what conversions spend of what they are paid in.
+ * yet; muted and faded, with what they spend, for what conversions are paid in.
  * Every cell is as wide as the next, so a long count is cut short rather than
  * pushing them apart; the tip, the same all over the cell, has "have/need" and
  * what the bag holds.

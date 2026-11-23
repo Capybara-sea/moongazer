@@ -202,12 +202,12 @@ describe("a material cell", () => {
     expect(cell({ ...converted, have: 2 })).not.toContain(`>${t.convertMark}<`)
   })
 
-  it("fades one with enough, not one short, converted or not known yet", () => {
+  it("fades one with enough and what conversions spend, not one short, converted or not known yet", () => {
     const plain = { ...converted, converted: undefined }
     expect(cell(plain)).toContain("opacity-40")
+    expect(cell({ ...plain, key: "DustOfAzoth" })).toContain("opacity-40")
     expect(cell({ ...plain, have: 2 })).not.toContain("opacity-40")
     expect(cell(converted)).not.toContain("opacity-40")
     expect(cell({ ...plain, key: "?gem:1" })).not.toContain("opacity-40")
-    expect(cell({ ...plain, key: "DustOfAzoth" })).not.toContain("opacity-40")
   })
 })

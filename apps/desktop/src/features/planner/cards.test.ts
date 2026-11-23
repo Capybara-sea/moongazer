@@ -13,12 +13,12 @@ import { cardStatus } from "./GoalCard"
 import {
   amountTip,
   bagHolds,
+  cellLabel,
   combinedNote,
   haveOfNeed,
   lineView,
   materialTip,
   neededBy,
-  shortOf,
 } from "./MaterialCell"
 
 const t = text.planner
@@ -107,7 +107,7 @@ describe("material cells", () => {
       t.usedItem("9", lineView("DustOfAzoth").name),
     ]
     expect(combinedNote(line)).toBe(t.converted("1", "1", used.join(t.listSeparator)))
-    expect(shortOf(dust.key, dust.have, dust.need)).toBe("9")
+    expect(cellLabel(dust.key, dust.have, dust.need)).toBe("9")
     expect(amountTip(dust.key, dust.have, dust.need)).toEqual({
       lines: [t.convertSpend("9"), undefined],
     })
@@ -143,13 +143,14 @@ describe("material cells", () => {
     )
   })
 
-  it("write what is short under the icon, or that it is enough, and have/need in the tip", () => {
-    expect(shortOf(top, 15, 21)).toBe("6")
-    expect(shortOf(top, 21, 21)).toBe(t.satisfied)
+  it("write what is short under the icon, or what is needed once enough, and have/need in the tip", () => {
+    expect(cellLabel(top, 15, 21)).toBe(t.short("6"))
+    expect(cellLabel(top, 21, 21)).toBe("21")
+    expect(cellLabel(top, 30, 21)).toBe("21")
     expect(amountTip(top, 15, 21)).toEqual({ amount: "15/21", lines: [undefined] })
     expect(amountTip(top, 30, 21)).toEqual({ amount: "30/21", lines: [undefined] })
     // A material not known yet: what is needed, and no have to compare it with.
-    expect(shortOf("?gem:1", 0, 9)).toBe("9")
+    expect(cellLabel("?gem:1", 0, 9)).toBe("9")
     expect(amountTip("?gem:1", 0, 9, 40)).toEqual({ amount: "—/9", lines: [undefined] })
   })
 

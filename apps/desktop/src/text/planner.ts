@@ -84,7 +84,7 @@ export const planner = {
   convertSpend: (count: string) => `转换消耗 ${count}`,
   inBag: (count: string, mora = false) => (mora ? `当前拥有 ${count}` : `当前拥有 ${count} 个`),
   besideName: (amount: string) => `（${amount}）`,
-  satisfied: "已满足",
+  short: (count: string) => `缺${count}`,
   neededBy: (names: readonly string[], total: number) =>
     `用于：${names.join("、")}${total > names.length ? ` 等 ${n(total)} 个` : ""}`,
   moraExp: "摩拉与经验",

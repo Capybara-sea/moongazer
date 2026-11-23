@@ -69,13 +69,22 @@ export function haveOfNeed(key: string, have: number, need: number) {
 }
 
 /**
- * What a cell writes under its icon: what is still short, or that it is enough; for a
- * material not known yet, what is needed; for what conversions are paid in, what they spend.
+ * What a cell writes under its icon: what is still short, or what is needed once there is
+ * enough or while the material is not known yet; for what conversions are paid in, what they
+ * spend.
  */
-export function shortOf(key: string, have: number, need: number) {
+export function cellLabel(key: string, have: number, need: number) {
   const view = lineView(key)
-  if (view.unknown || isConvertCost(key)) return view.count(need, true)
-  return have < need ? view.count(need - have, true) : t.satisfied
+  if (view.unknown || isConvertCost(key) || have >= need) return view.count(need, true)
+  return t.short(view.count(need - have, true))
+}
+
+/**
+ * Whether a cell has all it needs and fades into the background: a known material, not one
+ * conversions are paid in, with enough.
+ */
+export function isMet(key: string, have: number, need: number) {
+  return !lineView(key).unknown && !isConvertCost(key) && have >= need
 }
 
 /** What `materials` hold of `key` before the cards share them, EXP as the planner pools it. */
@@ -165,11 +174,11 @@ type CellProps = {
 }
 
 /**
- * A material a card needs: its icon over what is still short, red, or
- * that it is enough; amber with a "combined" mark when combining three of the tier
- * below makes up the rest, or a "converted" mark when converting others of the
- * same tier does; muted, with what is needed, when not known yet, or with
- * what conversions spend of what they are paid in.
+ * A material a card needs: its icon over what is still short, red, or what is
+ * needed, muted and faded, once there is enough; amber with a "combined" mark when
+ * combining three of the tier below makes up the rest, or a "converted" mark when
+ * converting others of the same tier does; muted, with what is needed, when not known
+ * yet, or with what conversions spend of what they are paid in.
  * Every cell is as wide as the next, so a long count is cut short rather than
  * pushing them apart; the tip, the same all over the cell, has "have/need" and
  * what the bag holds.
@@ -179,13 +188,14 @@ export function MaterialCell({ line, goals, note }: CellProps) {
   const bag = useBagHolds(line.key)
   const short = !view.unknown && line.have < line.need
   const mark = !short && (line.converted ? t.convertMark : line.made > 0 && t.combineMark)
+  const met = !mark && isMet(line.key, line.have, line.need)
   const { amount, lines } = amountTip(line.key, line.have, line.need, bag)
   const tip = useTip<HTMLLIElement>(
     materialTip(view.name, amount, [...lines, combinedNote(line), note], goals),
   )
   return (
     <li {...tip.props} className="flex w-[52px] flex-col items-center gap-1">
-      <span className="relative">
+      <span className={cn("relative", met && "opacity-40")}>
         <MaterialIcon view={view} className="size-12 rounded-[11px] text-[17px]" />
         {mark && (
           <span className="absolute -top-1.5 -right-1.5 rounded-[5px] bg-warning px-1 font-semibold text-[10px] text-warning-foreground leading-[16px]">
@@ -197,9 +207,10 @@ export function MaterialCell({ line, goals, note }: CellProps) {
         className={cn(
           "tabular max-w-full truncate text-[11px] leading-none",
           short ? "text-danger" : mark ? "text-warning" : "text-muted",
+          met && "opacity-70",
         )}
       >
-        {shortOf(line.key, line.have, line.need)}
+        {cellLabel(line.key, line.have, line.need)}
       </span>
       {tip.bubble}
     </li>

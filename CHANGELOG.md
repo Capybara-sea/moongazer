@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The daily card estimates when Realm Currency will be full from the Adeptal Energy, and counts it
   up over time.
+- The planner's material cells say what is short, or once there is enough, what is needed, in grey,
+  and fade.
 
 ## [0.3.1] - 2026-11-23
 

@@ -27,10 +27,11 @@ import { usePlannerStore } from "@/stores/plannerStore"
 import { text } from "@/text/zh"
 import {
   amountTip,
+  cellLabel,
+  isMet,
   lineView,
   MaterialIcon,
   materialTip,
-  shortOf,
   useBagHolds,
 } from "./MaterialCell"
 
@@ -78,27 +79,32 @@ function summaryTier(key: string) {
 }
 
 /**
- * A material over every card: its icon over what is still short, red, or
- * that it is enough; muted, with what is needed, when not known yet. Cells are all as
- * wide, so a long count is cut short; the tip, the same all over the cell,
- * has "have/need" and what the bag holds.
+ * A material over every card: its icon over what is still short, red, or what
+ * is needed, muted, once there is enough, faded too, or while it is not known yet.
+ * Cells are all as wide, so a long count is cut short; the tip, the same all over
+ * the cell, has "have/need" and what the bag holds.
  */
 export function TotalCell({ total }: { total: MaterialTotal }) {
   const view = lineView(total.key)
   const bag = useBagHolds(total.key)
   const short = !view.unknown && total.have < total.need
+  const met = isMet(total.key, total.have, total.need)
   const { amount, lines } = amountTip(total.key, total.have, total.need, bag)
   const tip = useTip<HTMLLIElement>(materialTip(view.name, amount, lines, total.goals))
   return (
     <li {...tip.props} className="flex w-[48px] flex-col items-center gap-0.5">
-      <MaterialIcon view={view} className="size-11 rounded-[10px] text-[16px]" />
+      <MaterialIcon
+        view={view}
+        className={cn("size-11 rounded-[10px] text-[16px]", met && "opacity-40")}
+      />
       <span
         className={cn(
           "tabular max-w-full truncate text-[11px]",
           short ? "text-danger" : "text-muted",
+          met && "opacity-70",
         )}
       >
-        {shortOf(total.key, total.have, total.need)}
+        {cellLabel(total.key, total.have, total.need)}
       </span>
       {tip.bubble}
     </li>

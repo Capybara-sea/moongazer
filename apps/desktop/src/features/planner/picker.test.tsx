@@ -212,6 +212,11 @@ describe("a custom weapon's card", () => {
     expect(html).toContain(t.daysUnknown(t.weaponMaterials))
     const names = card.lines.map(line => lineView(line.key).name)
     expect(names).toContain(t.unknownSlot(t.weaponSlots.elite))
-    expect(html).not.toContain(t.satisfied)
+    // Not known yet: what is needed, muted, never counted short.
+    const unknown = card.lines.filter(line => lineView(line.key).unknown)
+    expect(unknown.length).toBeGreaterThan(0)
+    for (const line of unknown) {
+      expect(html).toContain(`text-muted">${lineView(line.key).count(line.need, true)}</span>`)
+    }
   })
 })

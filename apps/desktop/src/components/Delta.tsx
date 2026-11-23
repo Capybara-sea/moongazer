@@ -6,8 +6,8 @@ import { cn } from "@/lib/cn"
 import type { Labeled, Signed, Way } from "@/lib/format"
 
 const WAY: Record<Way, string> = {
-  gain: "text-(--gain)",
-  loss: "text-(--loss)",
+  gain: "text-(--ok)",
+  loss: "text-(--err)",
   same: "text-muted",
 }
 

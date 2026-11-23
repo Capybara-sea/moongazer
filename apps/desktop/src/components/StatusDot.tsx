@@ -9,7 +9,7 @@ export type Tone = "ok" | "warn" | "bad" | "idle"
 const COLOR: Record<Tone, string> = {
   ok: "bg-(--ok)",
   warn: "bg-(--warn)",
-  bad: "bg-danger",
+  bad: "bg-(--err)",
   idle: "bg-(--off)",
 }
 
@@ -17,7 +17,7 @@ const COLOR: Record<Tone, string> = {
 const HALO: Record<Tone, string> = {
   ok: "outline-3 outline-[color:color-mix(in_srgb,var(--ok)_25%,transparent)]",
   warn: "outline-3 outline-[color:color-mix(in_srgb,var(--warn)_25%,transparent)]",
-  bad: "outline-3 outline-[color:color-mix(in_srgb,var(--danger)_25%,transparent)]",
+  bad: "outline-3 outline-[color:color-mix(in_srgb,var(--err)_25%,transparent)]",
   idle: "outline-3 outline-[color:color-mix(in_srgb,var(--off)_25%,transparent)]",
 }
 
@@ -25,7 +25,7 @@ const HALO: Record<Tone, string> = {
 export const TONE_SOFT: Record<Tone, string> = {
   ok: "bg-[color-mix(in_srgb,var(--ok)_25%,transparent)]",
   warn: "bg-[color-mix(in_srgb,var(--warn)_25%,transparent)]",
-  bad: "bg-[color-mix(in_srgb,var(--danger)_25%,transparent)]",
+  bad: "bg-[color-mix(in_srgb,var(--err)_25%,transparent)]",
   idle: "bg-[color-mix(in_srgb,var(--off)_25%,transparent)]",
 }
 

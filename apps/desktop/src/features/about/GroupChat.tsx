@@ -39,7 +39,7 @@ export function GroupChatHint() {
         }}
         className="mx-0.5 inline-flex size-5 cursor-pointer items-center justify-center rounded-[5px] align-[-5px] text-muted transition-colors duration-150 hover:bg-default/60 hover:text-foreground motion-reduce:transition-none"
       >
-        <Icon aria-hidden className={copied ? "size-3.5 text-success" : "size-3.5"} />
+        <Icon aria-hidden className={copied ? "size-3.5 text-(--ok)" : "size-3.5"} />
         {tip.bubble}
       </button>
       {t.groupChatRest}

@@ -40,15 +40,21 @@
     --border: #d3dcee;
     --separator: #e0e6f2;
     --accent-soft: rgb(22 104 220 / 0.12);
+    /*
+     * The three states, the same everywhere, gains and losses too: done (green), a warning
+     * (amber), an error or what is short (red). Each reads as small text on a card.
+     */
     --ok: #187a4f;
     --warn: #946000;
+    --err: #c53732;
     --off: #6b7690;
     --info: #1459bd;
     --knob-off: #8792ab;
     --pop-shadow: 0 12px 32px rgb(20 28 48 / 0.14);
     --drag-shadow: 0 18px 40px rgb(20 28 48 / 0.2);
-    /* Text and icons on solid accent, ok and danger fills. */
+    /* Text and icons on solid accent, ok and error fills; on amber fills. */
     --on-accent: #ffffff;
+    --on-warn: #ffffff;
   }
 
   /* Dark: layers lighten upward from hsl(222, 41%, 16%); borders use the same blue-gray hue. */
@@ -75,21 +81,35 @@
     --accent-soft: rgb(22 104 220 / 0.22);
     --ok: #3fbf87;
     --warn: #e0a53a;
+    --err: #f9736c;
     --off: #7d8aa8;
     --info: #7fb2ff;
     --knob-off: #93a2c3;
     --pop-shadow: 0 0 0 1px rgb(0 0 0 / 0.05), 0 12px 32px rgb(0 0 0 / 0.45);
     --drag-shadow: 0 18px 40px rgb(0 0 0 / 0.5);
     --on-accent: #ffffff;
+    --on-warn: #141c30;
   }
 
-  /* Account pages: links, gains and losses, the 5-star gold, and the Mora and Primogem series. */
+  /* HeroUI's soft status colors (alert and dialog icons) in the three states above. */
+  :root,
+  .light,
+  [data-theme="light"],
+  .dark,
+  [data-theme="dark"] {
+    --success-soft: color-mix(in oklab, var(--ok) 15%, transparent);
+    --success-soft-foreground: var(--ok);
+    --warning-soft: color-mix(in oklab, var(--warn) 15%, transparent);
+    --warning-soft-foreground: var(--warn);
+    --danger-soft: color-mix(in oklab, var(--err) 15%, transparent);
+    --danger-soft-foreground: var(--err);
+  }
+
+  /* Account pages: links, the 5-star gold, and the Mora and Primogem series. */
   :root,
   .light,
   [data-theme="light"] {
     --accent-text: #1459bd;
-    --gain: #2e7a58;
-    --loss: #b0504e;
     --gold-fg: #7d5a0f;
     --gold-bg: rgb(200 155 60 / 0.16);
     --c-mora: #9a6f12;
@@ -99,8 +119,6 @@
   .dark,
   [data-theme="dark"] {
     --accent-text: #7fb2ff;
-    --gain: #86c8a6;
-    --loss: #e59f9f;
     --gold-fg: #e5c07b;
     --gold-bg: rgb(200 155 60 / 0.18);
     --c-mora: #b88a2e;

@@ -106,7 +106,7 @@ export function LicensesPage() {
 function FrontendNote({ state }: { state: FrontendState }) {
   if (state.status === "failed") {
     return (
-      <p className="select-text pb-2 text-[12px] text-danger">
+      <p className="select-text pb-2 text-[12px] text-(--err)">
         {`${text.licenses.frontendFailed}: ${state.message}`}
       </p>
     )

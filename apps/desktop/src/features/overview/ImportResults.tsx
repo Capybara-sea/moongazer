@@ -32,10 +32,10 @@ function failure(error: BackendError) {
 }
 
 const TONE: Record<FileResult["status"], string> = {
-  saved: "text-success",
+  saved: "text-(--ok)",
   skipped: "text-muted",
   duplicate: "text-muted",
-  failed: "text-danger",
+  failed: "text-(--err)",
 }
 
 function statusText(result: FileResult) {

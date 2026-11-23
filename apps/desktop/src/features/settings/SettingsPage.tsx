@@ -80,7 +80,7 @@ function Row({ title, hint, error, children }: RowProps) {
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="font-medium text-sm">{title}</span>
         <span className="text-[12px] text-muted">{hint}</span>
-        {error && <span className="select-text text-[12px] text-danger">{error}</span>}
+        {error && <span className="select-text text-[12px] text-(--err)">{error}</span>}
       </div>
       {children}
     </div>
@@ -187,7 +187,7 @@ function DataPanel() {
           <span className="font-medium text-sm">{text.settings.dataDir}</span>
           {data && <span className="select-text break-all font-mono text-[12px]">{data.dir}</span>}
           <span className="text-[12px] text-muted">{text.settings.dataDirHint}</span>
-          {error && <span className="select-text text-[12px] text-danger">{error}</span>}
+          {error && <span className="select-text text-[12px] text-(--err)">{error}</span>}
         </div>
         <div className="flex flex-none gap-2">
           {data?.movable && !data.isDefault && (

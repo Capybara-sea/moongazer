@@ -19,7 +19,7 @@ const t = text.accounts
 const DOT: Record<Tone, string> = {
   ok: "bg-(--ok)",
   warn: "bg-(--warn)",
-  bad: "bg-danger",
+  bad: "bg-(--err)",
   idle: "bg-(--off)",
 }
 

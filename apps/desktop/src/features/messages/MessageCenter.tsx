@@ -37,7 +37,7 @@ const LOOKS: Record<MessageKind, { Icon: LucideIcon; className: string }> = {
   },
   danger: {
     Icon: CircleX,
-    className: "text-danger bg-[color-mix(in_srgb,var(--danger)_16%,transparent)]",
+    className: "text-(--err) bg-[color-mix(in_srgb,var(--err)_16%,transparent)]",
   },
 }
 
@@ -74,7 +74,7 @@ export function MessageCenter() {
           {unseen && (
             <span
               aria-hidden
-              className="absolute top-[7px] left-[22px] size-[7px] rounded-full bg-danger shadow-[0_0_0_2px_var(--background)]"
+              className="absolute top-[7px] left-[22px] size-[7px] rounded-full bg-(--err) shadow-[0_0_0_2px_var(--background)]"
             />
           )}
         </Button>

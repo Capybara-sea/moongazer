@@ -217,7 +217,7 @@ function Timeline({ id, session, version }: TimelineProps) {
       <ul className="glass-inset flex flex-col gap-1.5 rounded-[10px] bg-surface-secondary px-3 py-2.5 text-[12px]">
         {state.status === "loading" && <li className="text-muted">{t.timelineLoading}</li>}
         {state.status === "failed" && (
-          <li className="select-text text-danger">
+          <li className="select-text text-(--err)">
             {t.timelineFailed}: {state.message}
           </li>
         )}

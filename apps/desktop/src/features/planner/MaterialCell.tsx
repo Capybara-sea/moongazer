@@ -198,7 +198,7 @@ export function MaterialCell({ line, goals, note }: CellProps) {
       <span className={cn("relative", met && "opacity-40")}>
         <MaterialIcon view={view} className="size-12 rounded-[11px] text-[17px]" />
         {mark && (
-          <span className="absolute -top-1.5 -right-1.5 rounded-[5px] bg-warning px-1 font-semibold text-[10px] text-warning-foreground leading-[16px]">
+          <span className="absolute -top-1.5 -right-1.5 rounded-[5px] bg-(--warn) px-1 font-semibold text-[10px] text-(--on-warn) leading-[16px] shadow-[0_0_0_2px_var(--surface)]">
             {mark}
           </span>
         )}
@@ -206,7 +206,7 @@ export function MaterialCell({ line, goals, note }: CellProps) {
       <span
         className={cn(
           "tabular max-w-full truncate text-[11px] leading-none",
-          short ? "text-danger" : mark ? "text-warning" : "text-muted",
+          short ? "text-(--err)" : mark ? "text-(--warn)" : "text-muted",
           met && "opacity-70",
         )}
       >

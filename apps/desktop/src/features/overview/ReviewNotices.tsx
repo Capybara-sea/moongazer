@@ -65,7 +65,7 @@ function ReviewNotice({ snapshot, previous, takes }: NoticeProps) {
           ))}
         </ul>
         <p className="text-[12px] text-muted">{text.review.hint}</p>
-        {error && <p className="select-text text-[12px] text-danger">{error}</p>}
+        {error && <p className="select-text text-[12px] text-(--err)">{error}</p>}
         <div className="mt-1 flex gap-2">
           <Button
             isDisabled={busy}

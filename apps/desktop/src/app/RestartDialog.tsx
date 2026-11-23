@@ -40,7 +40,7 @@ export function RestartDialog() {
                 </p>
               ))}
               {syncing && (
-                <p className="text-warning">
+                <p className="text-(--warn)">
                   {autoStart ? text.restart.syncAutoStart : text.restart.syncManual}
                 </p>
               )}

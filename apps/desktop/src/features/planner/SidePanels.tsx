@@ -100,7 +100,7 @@ export function TotalCell({ total }: { total: MaterialTotal }) {
       <span
         className={cn(
           "tabular max-w-full truncate text-[11px]",
-          short ? "text-danger" : "text-muted",
+          short ? "text-(--err)" : "text-muted",
           met && "opacity-70",
         )}
       >

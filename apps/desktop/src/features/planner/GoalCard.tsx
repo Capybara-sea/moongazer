@@ -202,7 +202,7 @@ function Target({ label, tip, from, to, state }: TargetProps) {
       </span>
       <span className="tabular whitespace-nowrap text-[17px] leading-tight">
         {state === "done" ? (
-          <span className="font-semibold text-success">{to}</span>
+          <span className="font-semibold text-(--ok)">{to}</span>
         ) : state === "off" ? (
           <span className="text-muted">{from}</span>
         ) : (
@@ -246,10 +246,10 @@ export function cardStatus(card: Card): { label: string; tone: string } | undefi
   const short = card.lines.filter(line => !isUnknown(line.key) && line.have < line.need).length
   const [step] = card.steps
   if (card.off) return { label: t.status.off, tone: "text-muted" }
-  if (card.done) return { label: t.status.done, tone: "text-success" }
-  if (short === 0 && !unknown) return { label: t.status.complete, tone: "text-success" }
+  if (card.done) return { label: t.status.done, tone: "text-(--ok)" }
+  if (short === 0 && !unknown) return { label: t.status.complete, tone: "text-(--ok)" }
   if (step) return { label: t.status[step.kind], tone: "text-(--accent-text)" }
-  if (short > 0) return { label: t.status.short(short), tone: "text-danger" }
+  if (short > 0) return { label: t.status.short(short), tone: "text-(--err)" }
   return undefined
 }
 

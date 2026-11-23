@@ -81,7 +81,7 @@ export function SyncPanel({ now }: { now: number }) {
       {status.phase === "connected" && <Changes savedAt={status.savedAt} />}
       <Actions status={status} />
       {error && (
-        <p className="select-text text-[12px] text-danger">
+        <p className="select-text text-[12px] text-(--err)">
           {t.failed}: {error}
         </p>
       )}
@@ -146,14 +146,14 @@ const ICON: Record<StepLook, string> = {
   done: "border-(--ok) bg-(--ok) text-(--on-accent)",
   wait: "border-(--warn) bg-transparent",
   idle: "border-(--field-border) bg-transparent",
-  err: "border-danger bg-danger text-(--on-accent)",
+  err: "border-(--err) bg-(--err) text-(--on-accent)",
 }
 
 const DETAIL: Record<StepLook, string> = {
   done: "text-foreground",
   wait: "text-foreground",
   idle: "text-muted",
-  err: "text-danger",
+  err: "text-(--err)",
 }
 
 function StepRow({ step }: { step: Step }) {

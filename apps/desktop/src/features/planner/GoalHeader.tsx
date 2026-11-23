@@ -118,7 +118,7 @@ function RemoveGoal({ name, onRemove }: { name: string; onRemove: () => void }) 
         variant="ghost"
         isIconOnly
         aria-label={t.removeLabel(name)}
-        className="size-7 min-w-0 flex-none rounded-[8px] text-muted hover:text-danger"
+        className="size-7 min-w-0 flex-none rounded-[8px] text-muted hover:text-(--err)"
       >
         <Trash2 aria-hidden size={15} />
       </Button>

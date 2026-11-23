@@ -102,7 +102,7 @@ describe("a card's goals", () => {
       to: { stage: { level: 1, phase: 0 }, talents: { auto: 0, skill: 0, burst: 0 } },
     }
     const html = render(cardOf(goal, ["HuTao"]))
-    expect(html).toContain('<span class="font-semibold text-success">1</span>')
+    expect(html).toContain('<span class="font-semibold text-(--ok)">1</span>')
     expect(html).not.toContain("lucide-check")
   })
 })
@@ -198,7 +198,7 @@ describe("a material cell", () => {
   it("marks one converting makes enough, amber, as combining does", () => {
     const html = cell(converted)
     expect(html).toContain(`>${t.convertMark}<`)
-    expect(html).toContain("text-warning")
+    expect(html).toContain("text-(--warn)")
     expect(cell({ ...converted, have: 2 })).not.toContain(`>${t.convertMark}<`)
   })
 

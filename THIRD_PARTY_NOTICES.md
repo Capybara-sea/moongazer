@@ -1,10 +1,10 @@
 # Third-party notices
 
 Moongazer's own code is MIT licensed (see [`LICENSE`](LICENSE)). This file
-covers the third-party code adapted into this repository and the data the
-program is built from. The complete list of what ships inside the program,
-every library included, is on the app's About page and in
-`THIRD_PARTY_NOTICES.txt` on each release.
+covers the third-party code adapted into this repository, the font the program
+bundles and the data the program is built from. The complete list of what
+ships inside the program, every library included, is on the app's About page
+and in `THIRD_PARTY_NOTICES.txt` on each release.
 
 The projects below are MIT licensed. Their copyright notices follow, then the
 permission notice they share.
@@ -28,6 +28,15 @@ Capture's crates:
 - [mhy-kcp](https://github.com/hashblen/mhy-kcp): Copyright (c) 2017 Zhang
   Cheng
 - [pktmon](https://github.com/emmachase/pktmon): Copyright (c) 2025 emmachase
+
+## Font
+
+The UI font, [Sarasa Gothic](https://github.com/be5invis/Sarasa-Gothic) 1.0.43
+(Sarasa UI SC, regular and semibold), is built into every build unmodified.
+The font files are not in this repository: `cargo xtask gen-data` downloads
+them from Sarasa Gothic's release and checks them against pinned hashes. It is
+licensed under the SIL Open Font License 1.1, not MIT: its copyright notices
+and the license text are in `xtask/licenses/Sarasa-Gothic.txt`.
 
 ## Data
 

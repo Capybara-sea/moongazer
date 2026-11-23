@@ -43,6 +43,7 @@ const licenseGroups: Record<string, string> = {
   components: "其他组件",
   adapted: "改编的上游代码",
   frontend: "前端包",
+  fonts: "字体",
   data: "数据和密钥",
 }
 
@@ -848,6 +849,7 @@ export const text = {
       { name: "Snap.Metadata", what: "游戏数据。" },
       { name: "Genshin Optimizer", what: "GOOD 格式。" },
       { name: "Enka.Network、Project Amber", what: "游戏图标。" },
+      { name: "更纱黑体 Sarasa Gothic", what: "界面字体。" },
     ],
     // From the Traveler's reply at the end of the Project Moongazer quest.
     letter: [

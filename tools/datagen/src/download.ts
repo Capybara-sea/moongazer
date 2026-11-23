@@ -6,8 +6,10 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { setTimeout as sleep } from "node:timers/promises"
 
-const CACHE = join(import.meta.dirname, "..", ".cache")
+export const CACHE = join(import.meta.dirname, "..", ".cache")
 const TIMEOUT_MS = 60_000
+/** For release archives, tens of MB. */
+const LARGE_TIMEOUT_MS = 600_000
 const RETRIES = 5
 /** The longest Retry-After honoured; beyond it the run fails sooner. */
 const MAX_RETRY_AFTER_S = 60
@@ -47,11 +49,24 @@ export async function latestCommit(repo: string, branch: string): Promise<string
   return sha
 }
 
+/** A large file's bytes, or `undefined` for a 404. */
+export function fetchBytes(url: string): Promise<Buffer | undefined> {
+  return fetchBody(url, undefined, LARGE_TIMEOUT_MS, async response =>
+    Buffer.from(await response.arrayBuffer()),
+  )
+}
+
+function fetchText(url: string, headers?: Record<string, string>): Promise<string | undefined> {
+  return fetchBody(url, headers, TIMEOUT_MS, response => response.text())
+}
+
 /** The body, or `undefined` for a 404: that is an answer, not an outage, so it is not retried. */
-async function fetchText(
+async function fetchBody<T>(
   url: string,
-  headers?: Record<string, string>,
-): Promise<string | undefined> {
+  headers: Record<string, string> | undefined,
+  timeout: number,
+  read: (response: Response) => Promise<T>,
+): Promise<T | undefined> {
   if (active < MAX_REQUESTS) active++
   else await new Promise<void>(resolve => waiting.push(resolve))
   try {
@@ -59,8 +74,8 @@ async function fetchText(
       // 2, 4, 8, 16, 32 s: about a minute in all, enough for a brief outage.
       let delay = 2000 * 2 ** attempt
       try {
-        const response = await fetch(url, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) })
-        if (response.ok) return await response.text()
+        const response = await fetch(url, { headers, signal: AbortSignal.timeout(timeout) })
+        if (response.ok) return await read(response)
         if (response.status === 404) return undefined
         // A rate limit or an outage may say when to come back.
         const retryAfter = Number(response.headers.get("retry-after"))

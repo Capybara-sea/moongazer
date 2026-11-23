@@ -51,11 +51,11 @@ QQ 群 90376195，[点击加入](https://qm.qq.com/q/knbjLmXja0)。
 
 ## 开发
 
-需要：Windows 10/11 x64、Rust stable（1.100 以上）、Node.js 24、pnpm（会自动用 `package.json` 里写的版本）和 cargo-deny。
+需要：Windows 10/11 x64、Rust stable（1.100 以上）、Node.js 24、pnpm（会自动用 `package.json` 里写的版本）、cargo-deny 和 7-Zip（在 PATH 上或装在默认位置）。
 
 ```sh
 pnpm install --frozen-lockfile   # 同时装好 Git 钩子
-cargo xtask gen-data             # 生成前端要用的游戏数据（不在 git 里）
+cargo xtask gen-data             # 生成前端要用的游戏数据和界面字体（不在 git 里）
 cargo xtask check                # CI 跑的全部检查
 pnpm --filter @moongazer/desktop tauri dev
 ```
@@ -67,12 +67,13 @@ pnpm --filter @moongazer/desktop tauri dev
 - [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata)：游戏数据。
 - [Genshin Optimizer](https://github.com/frzyc/genshin-optimizer)：GOOD 格式，Leyline 在它的基础上扩展。生成数据时用它核对物品键名，程序里不带它的数据。
 - [Enka.Network](https://enka.network) 和 [Project Amber](https://gi.yatta.moe)：游戏图标。
+- [更纱黑体 Sarasa Gothic](https://github.com/be5invis/Sarasa-Gothic)：界面字体，SIL Open Font License 1.1 许可。
 - B 站 UP 主栖霆杨的[「原神游逸旅闻」](https://www.bilibili.com/toy/genshin-travelers-tales)：游逸旅闻的地点和前置、隐藏逸闻的触发方式，经作者同意参考。
 ## 许可证
 
 代码以 [MIT](LICENSE) 许可证发布。logo 和应用图标不在 MIT 范围内，保留所有权利。这包括 `assets/logo/`、由它生成的 `apps/desktop/src-tauri/icons/`，以及程序里显示的 logo。fork 如果要发布程序，得换成自己的 logo 和图标。
 
-本仓库改编了一些第三方代码，发布的程序里也带有游戏密钥和游戏数据，它们的来源和许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。程序里带的第三方组件，完整清单在程序的“关于”页里。游戏密钥和游戏数据不在 MIT 范围内。
+本仓库改编了一些第三方代码，发布的程序里带有界面字体（SIL Open Font License 1.1 许可，不在 MIT 范围内）、游戏密钥和游戏数据，它们的来源和许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。程序里带的第三方组件，完整清单在程序的“关于”页里。游戏密钥和游戏数据不在 MIT 范围内。
 
 ## 声明
 

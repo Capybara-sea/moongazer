@@ -45,6 +45,11 @@ const PREFERENCE: [&str; 7] = [
 /// The webview2-com-sys version whose bindings pin this WebView2 SDK, whose
 /// static loader it links into the exe.
 const WEBVIEW2_SYS: (&str, &str) = ("0.39.1", "1.0.3800.47");
+/// The UI font's license, and the Sarasa Gothic release `cargo xtask gen-data` takes the font from
+/// (tools/datagen/src/font.ts).
+const FONT_LICENSE: &str = "xtask/licenses/Sarasa-Gothic.txt";
+/// Kept with RELEASE in tools/datagen/src/font.ts.
+const SARASA_VERSION: &str = "1.0.43";
 /// npm packages that reach the bundle only through CSS imports, which Vite's
 /// list does not see, with the packages to resolve each one through.
 const CSS_PACKAGES: [(&str, &[&str]); 2] = [
@@ -427,6 +432,7 @@ fn collect(root: &Path, capture: bool) -> Result<Notices> {
         Vec::new()
     };
     let frontend = css_packages(root, &mut texts)?;
+    let fonts = fonts(root, &mut texts)?;
     let data = data(capture, &mut texts)?;
     let group = |id, title, entries| Group { id, title, entries };
     Ok(Notices {
@@ -443,6 +449,7 @@ fn collect(root: &Path, capture: bool) -> Result<Notices> {
                 "Frontend packages bundled into the program",
                 frontend,
             ),
+            group("fonts", "Fonts bundled into the program", fonts),
             group("data", "Data and keys", data),
         ],
         texts,
@@ -1044,6 +1051,33 @@ fn data(capture: bool, texts: &mut Texts) -> Result<Vec<Entry>> {
         });
     }
     Ok(entries)
+}
+
+/// The UI font, built in unmodified.
+fn fonts(root: &Path, texts: &mut Texts) -> Result<Vec<Entry>> {
+    let path = root.join(FONT_LICENSE);
+    let text =
+        clean(&fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?);
+    // The notices head the file; after the first, each starts "Portions Copyright".
+    let copyright = text
+        .lines()
+        .take_while(|line| !line.starts_with("This Font Software"))
+        .filter(|line| line.contains("Copyright"))
+        .map(str::to_owned)
+        .collect();
+    Ok(vec![Entry {
+        name: "Sarasa Gothic".to_owned(),
+        version: Some(SARASA_VERSION.to_owned()),
+        license: Some("OFL-1.1".to_owned()),
+        copyright,
+        note: Some(
+            "The UI font: SarasaUiSC-Regular.ttf and SarasaUiSC-SemiBold.ttf from the release, unmodified."
+                .to_owned(),
+        ),
+        texts: vec![texts.add(format!("Sarasa-Gothic-{SARASA_VERSION}/LICENSE"), text)],
+        links: vec!["https://github.com/be5invis/Sarasa-Gothic".to_owned()],
+        ..Entry::default()
+    }])
 }
 
 fn css_packages(root: &Path, texts: &mut Texts) -> Result<Vec<Entry>> {

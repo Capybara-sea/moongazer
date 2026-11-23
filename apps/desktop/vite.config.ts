@@ -3,11 +3,24 @@
 
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { createLogger, defineConfig } from "vite"
+
+// A url() in CSS that a build cannot find is left as it is and fails only at run time, quietly:
+// the UI font before `cargo xtask gen-data`, say. Builds fail on it instead.
+const logger = createLogger()
+const unresolved = (msg: string) => msg.includes("didn't resolve at build time")
+for (const level of ["warn", "warnOnce"] as const) {
+  const log = logger[level]
+  logger[level] = (msg, options) => {
+    if (unresolved(msg)) throw new Error(msg)
+    log(msg, options)
+  }
+}
 
 // Tauri opens the dev server on this fixed port and embeds dist/ in release builds.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  customLogger: logger,
   // A leading "/" resolves from this app's root, so "@logo" reaches the repository's assets/logo
   // ("@community" its assets/community, "@repo" its root for the changelog).
   resolve: {

@@ -51,11 +51,11 @@ QQ group 90376195 ([join](https://qm.qq.com/q/knbjLmXja0)), in Chinese.
 
 ## Development
 
-Requirements: Windows 10/11 x64, Rust stable (1.100+), Node.js 24, pnpm (the version in `package.json` is picked up automatically) and cargo-deny.
+Requirements: Windows 10/11 x64, Rust stable (1.100+), Node.js 24, pnpm (the version in `package.json` is picked up automatically), cargo-deny and 7-Zip (on PATH or in its default folder).
 
 ```sh
 pnpm install --frozen-lockfile   # also installs the Git hooks
-cargo xtask gen-data             # game data the frontend imports (not in git)
+cargo xtask gen-data             # game data and the UI font the frontend imports (not in git)
 cargo xtask check                # everything CI runs
 pnpm --filter @moongazer/desktop tauri dev
 ```
@@ -67,12 +67,13 @@ pnpm --filter @moongazer/desktop tauri dev
 - [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata): game data.
 - [Genshin Optimizer](https://github.com/frzyc/genshin-optimizer): the GOOD format, which Leyline builds on. Data generation checks item keys against it; the program includes none of its data.
 - [Enka.Network](https://enka.network) and [Project Amber](https://gi.yatta.moe): game icons.
+- [Sarasa Gothic](https://github.com/be5invis/Sarasa-Gothic): the UI font, under the SIL Open Font License 1.1.
 - [原神游逸旅闻](https://www.bilibili.com/toy/genshin-travelers-tales) by Bilibili creator 栖霆杨: where each anecdote is met, what brings the hidden ones on and what comes first; drawn on with the author's permission.
 ## License
 
 The code is released under the [MIT](LICENSE) license. The logo and app icons are not; all rights are reserved. That covers `assets/logo/`, the icons generated from it in `apps/desktop/src-tauri/icons/` and the logo shown inside the app. Forks that publish builds must replace them with their own.
 
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) covers third-party code adapted into this repository, and the game's keys and data the released program carries. The full list of what ships inside the program is on the app's About page. The game's keys and data are not covered by the MIT license.
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) covers the third-party code adapted into this repository, and the font (SIL Open Font License 1.1, not MIT), game keys and game data the released program carries. The full list of what ships inside the program is on the app's About page. The game's keys and data are not covered by the MIT license.
 
 ## Disclaimer
 

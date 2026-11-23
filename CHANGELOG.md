@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The planner's material cells say what is short, or once there is enough, what is needed, in grey,
   and fade.
 - Right-clicking in the app no longer opens the browser's menu, except in text fields.
+- The UI font is now Sarasa Gothic, with Segoe UI for digits; semibold titles and names no longer
+  show as bold.
 - Status colors are one set across the app: green for done and gains, amber for warnings, red for
   errors, shortages and losses. Errors and shortages read better in the dark theme, green and amber
   text in the light theme.

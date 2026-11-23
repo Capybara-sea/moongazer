@@ -268,9 +268,46 @@ body,
   height: 100%;
 }
 
+/*
+ * The UI font: Sarasa UI SC for Chinese and English (SIL OFL 1.1, unmodified; `cargo xtask
+ * gen-data` downloads it into generated/fonts, and its license is xtask/licenses/Sarasa-Gothic.txt),
+ * and the system's Segoe UI for the digits 0-9 and the hyphen between them in dates, which Sarasa
+ * spaces wide. Sarasa has no 500 and the app uses no 700, so up to 500 takes the regular face and
+ * 600 and up the semibold one.
+ */
+@font-face {
+  font-family: "Moongazer Sarasa";
+  font-weight: 100 500;
+  font-display: block;
+  src: url("./generated/fonts/SarasaUiSC-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Moongazer Sarasa";
+  font-weight: 600 900;
+  font-display: block;
+  src: url("./generated/fonts/SarasaUiSC-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Moongazer Digits";
+  font-weight: 100 500;
+  src: local("Segoe UI");
+  unicode-range: U+002D, U+0030-0039;
+}
+@font-face {
+  font-family: "Moongazer Digits";
+  font-weight: 600 900;
+  src: local("Segoe UI Semibold");
+  unicode-range: U+002D, U+0030-0039;
+}
+
+@theme {
+  --font-sans:
+    "Moongazer Digits", "Moongazer Sarasa", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-sans);
 }
 
 /*

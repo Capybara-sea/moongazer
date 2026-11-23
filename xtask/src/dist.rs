@@ -209,6 +209,7 @@ fn build(root: &Path, options: &Options, release: &Release) -> Result<()> {
     // tauri.conf.json turns off the bundler's own signing
     // (createUpdaterArtifacts).
     util::run(util::without_key(&mut gen_data::command(root, false)))?;
+    util::run(util::without_key(&mut gen_data::font_command(root)))?;
     notices::write_app_json(root, options.capture)?;
     util::run(
         util::without_key(&mut util::node_tool("pnpm", root))

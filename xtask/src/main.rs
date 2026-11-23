@@ -45,8 +45,8 @@ commands:
                                   --base-url: where latest.json links to; --no-sign: build only)
   manifest <dir>                  write latest.json and checksums for a build signed elsewhere (CI)
   icons <source>                  regenerate the app icons from the logo (SVG or square PNG)
-  gen-data [--update]             generate the game data tables (--update: move the source pins
-                                  to the latest upstream commits first)
+  gen-data [--update]             generate the game data tables and fetch the UI font (--update:
+                                  move the source pins to the latest upstream commits first)
   notices [--no-capture] [--text <file>]
                                   write the third-party notices the About page shows
                                   (--text: also the plain text shipped with the app)

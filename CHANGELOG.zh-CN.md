@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-23
+
 ### 新增
 
 - 成就页可以按完成时间排序，最近完成的排在最前。
@@ -114,7 +116,8 @@
 - 设置页、明暗主题、界面动效；游戏图标在第一次显示时下载。
 - 关于页：帮助与反馈、致谢和第三方许可。
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.1...HEAD
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/Capybara-sea/moongazer/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/Capybara-sea/moongazer/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Capybara-sea/moongazer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Capybara-sea/moongazer/compare/v0.1.1...v0.2.0

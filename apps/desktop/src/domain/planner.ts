@@ -289,6 +289,25 @@ function combining(key: string, count: number, left: ReadonlyMap<string, number>
   return used
 }
 
+/** A step of combining: `count` of `from` make `made` of `to`. */
+export type CombineStep = { from: string; count: number; to: string; made: number }
+
+/**
+ * The steps combining took to make up `line`, the lowest tier first: each takes three of the
+ * tier below for one, what the bag had of that tier and what the step before made.
+ */
+export function combineSteps(line: Pick<Line, "key" | "made" | "used">): CombineStep[] {
+  const steps: CombineStep[] = []
+  for (let item = line.key, n = line.made; n > 0; ) {
+    const lower = table.combine[item]
+    if (lower === undefined) break
+    steps.push({ from: lower, count: n * 3, to: item, made: n })
+    n = n * 3 - (line.used.get(lower) ?? 0)
+    item = lower
+  }
+  return steps.reverse()
+}
+
 /**
  * Shares the bag among the cards in order: each card takes what it needs of
  * each material, then makes up what is short by combining what is left of

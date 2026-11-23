@@ -28,6 +28,9 @@ describe("farming today", () => {
     key,
     need,
     have,
+    made: 0,
+    converted: 0,
+    spentElsewhere: 0,
     goals: [],
   })
   const totals = new Map(

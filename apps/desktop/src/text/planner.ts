@@ -74,15 +74,29 @@ export const planner = {
   stageTitle: (from: string, to: string, ascensions: number) =>
     ascensions > 0 ? `等级 ${from} → ${to}，还需突破 ${ascensions} 次` : `等级 ${from} → ${to}`,
   talentTitle: (name: string, from: number, to: number) => `${name} ${from} → ${to}`,
-  combined: (made: string, used: string) => `合成 ${made} 个即可补足（消耗 ${used}）`,
-  converted: (made: string | undefined, converted: string, used: string) =>
-    `${made ? `合成 ${made} 个、` : ""}转换 ${converted} 个即可补足（消耗 ${used}）`,
-  usedItem: (count: string, name: string) => `${count} 个${name}`,
-  usedMora: (mora: string) => `摩拉 ${mora}`,
+  recipeKinds: { combine: "合成", convert: "转换" },
+  times: (count: string) => `×${count}`,
   combineMark: "合",
   convertMark: "换",
   convertSpend: (count: string) => `转换消耗 ${count}`,
-  inBag: (count: string, mora = false) => (mora ? `当前拥有 ${count}` : `当前拥有 ${count} 个`),
+  expEquivalent: {
+    character: "数量为所有经验书的等效数量",
+    weapon: "数量为所有精锻矿的等效数量",
+  },
+  inBag: (bag: string, mora = false) => (mora ? `背包共有 ${bag}` : `背包共有 ${bag} 个`),
+  sharedBag: (bag: string, taken: string, mora = false) =>
+    mora
+      ? `背包共有 ${bag}，排在前面的目标已分走 ${taken}`
+      : `背包共有 ${bag} 个，排在前面的目标已分走 ${taken} 个`,
+  usedElsewhere: (bag: string, used: string, mora = false) =>
+    mora
+      ? `背包共有 ${bag}，其中 ${used} 用于合成或转换其他素材`
+      : `背包共有 ${bag} 个，其中 ${used} 个用于合成或转换其他素材`,
+  combinedPart: (count: string) => `其中 ${count} 个由合成补足`,
+  /** `by` is what made it up, as "合成" or "合成、转换"; no `left` once it is enough. */
+  afterRecipes: (by: string, left?: string) =>
+    left === undefined ? `${by}后已足够` : `${by}后还需 ${left} 个`,
+  convertedPart: (count: string) => `其中 ${count} 个由转换补足`,
   besideName: (amount: string) => `（${amount}）`,
   short: (count: string) => `缺${count}`,
   neededBy: (names: readonly string[], total: number) =>
@@ -113,6 +127,7 @@ export const planner = {
   todayNone: "今天开放的秘境中无不足的材料",
   sunday: "周日所有秘境都开放",
   listSeparator: "、",
+  clauseSeparator: "，",
   summary: "汇总",
   onlyShort: "仅显示不足",
   summaryEmpty: "材料已齐",

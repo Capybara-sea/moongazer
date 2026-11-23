@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Hovering a planner material shows what there is for that goal of what it needs, then each
+  combining or converting step with icons and what is still needed after them.
+- The planner's summary keeps what converting makes up, and what it costs, when showing only what
+  is short; weekly boss materials come before world boss ones.
+
 ## [0.3.2] - 2026-11-23
 
 ### Added

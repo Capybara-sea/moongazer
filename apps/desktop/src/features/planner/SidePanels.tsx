@@ -6,6 +6,7 @@ import { useState } from "react"
 import { CheckboxField } from "@/components/CheckboxField"
 import { Panel } from "@/components/Panel"
 import { Tip, useTip } from "@/components/Tip"
+import { isConvertCost } from "@/domain/convert"
 import { isUnknown, SLOTS, unknownSlot } from "@/domain/customCharacter"
 import { WEAPON_SLOTS } from "@/domain/customWeapon"
 import {
@@ -30,6 +31,7 @@ import {
   cellLabel,
   isMet,
   lineView,
+  Mark,
   MaterialIcon,
   materialTip,
   useBagHolds,
@@ -49,8 +51,8 @@ type Totals = ReadonlyMap<string, MaterialTotal>
 function groupRank(key: string) {
   const id = summaryGroup(key)
   if (id === MORA_EXP_GROUP) return -1
-  // Weekly bosses' drops right after the world bosses', whose type they share.
-  return (lineView(knownLike(key)).typeOrder ?? 999) + (id === WEEKLY_BOSS_GROUP ? 0.5 : 0)
+  // Weekly bosses' drops right before the world bosses', whose type they share.
+  return (lineView(knownLike(key)).typeOrder ?? 999) - (id === WEEKLY_BOSS_GROUP ? 0.5 : 0)
 }
 
 const GROUP_NAMES: Record<string, string> = {
@@ -79,28 +81,44 @@ function summaryTier(key: string) {
 }
 
 /**
+ * A total's tip on its amount: "x/y", x what the bag holds for the goals that need it, after
+ * what combining and converting others used, y what they need; then, when those used some, the
+ * bag and what they used; and what combining and converting it made. x, what they made and
+ * what is short under the cell add up to y. `bag` is what the bag holds, if known.
+ */
+export function totalTip(total: MaterialTotal, bag: number | undefined) {
+  const view = lineView(total.key)
+  const held = bag === undefined ? undefined : Math.max(0, bag - total.spentElsewhere)
+  const { amount, lines } = amountTip(total.key, held, total.need, bag, t.usedElsewhere)
+  const made = total.made > 0 ? t.combinedPart(view.count(total.made, true)) : undefined
+  const converted =
+    total.converted > 0 ? t.convertedPart(view.count(total.converted, true)) : undefined
+  return { amount, lines: [...lines, made, converted] }
+}
+
+/**
  * A material over every card: its icon over what is still short, red, or what
- * is needed, muted, once there is enough, faded too, or while it is not known yet.
- * Cells are all as wide, so a long count is cut short; the tip, the same all over
- * the cell, has "have/need" and what the bag holds.
+ * is needed, muted, once there is enough, faded too, or while it is not known yet;
+ * amber with a "converted" mark when converting makes up the rest. Cells are all as
+ * wide, so a long count is cut short; the tip, the same all over the cell, is `totalTip`.
  */
 export function TotalCell({ total }: { total: MaterialTotal }) {
   const view = lineView(total.key)
-  const bag = useBagHolds(total.key)
   const short = !view.unknown && total.have < total.need
-  const met = isMet(total.key, total.have, total.need)
-  const { amount, lines } = amountTip(total.key, total.have, total.need, bag)
+  const converted = !short && total.converted > 0
+  const met = !converted && isMet(total.key, total.have, total.need)
+  const { amount, lines } = totalTip(total, useBagHolds(total.key))
   const tip = useTip<HTMLLIElement>(materialTip(view.name, amount, lines, total.goals))
   return (
     <li {...tip.props} className="flex w-[48px] flex-col items-center gap-0.5">
-      <MaterialIcon
-        view={view}
-        className={cn("size-11 rounded-[10px] text-[16px]", met && "opacity-40")}
-      />
+      <span className={cn("relative", met && "opacity-40")}>
+        <MaterialIcon view={view} className="size-11 rounded-[10px] text-[16px]" />
+        {converted && <Mark>{t.convertMark}</Mark>}
+      </span>
       <span
         className={cn(
           "tabular max-w-full truncate text-[11px]",
-          short ? "text-(--err)" : "text-muted",
+          short ? "text-(--err)" : converted ? "text-(--warn)" : "text-muted",
           met && "opacity-70",
         )}
       >
@@ -153,7 +171,8 @@ type SummaryProps = {
 
 /**
  * Every card's materials added up by the game's material type; by default
- * only what is short. Those not known yet are listed with what is needed.
+ * only what is short, and what converting makes up and is paid in. Those not
+ * known yet are listed with what is needed.
  * The groups are dragged into the order the player likes, or moved with the
  * arrow keys on their grips.
  */
@@ -161,7 +180,9 @@ export function SummaryPanel({ totals, order }: SummaryProps) {
   const [onlyShort, setOnlyShort] = useState(true)
   const groups = new Map<string, { rank: number; items: MaterialTotal[] }>()
   for (const total of totals.values()) {
-    if (onlyShort && !isUnknown(total.key) && total.have >= total.need) continue
+    // What converting makes up, and what it is paid in, stay: converting is up to the player.
+    const kept = isUnknown(total.key) || total.converted > 0 || isConvertCost(total.key)
+    if (onlyShort && !kept && total.have >= total.need) continue
     const id = summaryGroup(total.key)
     const group = groups.get(id) ?? { rank: groupRank(total.key), items: [] }
     // The specialties' group goes where its first region's type would.

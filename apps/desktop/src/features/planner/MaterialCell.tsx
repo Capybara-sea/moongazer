@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { useMemo } from "react"
+import { ArrowRight, Plus } from "lucide-react"
+import { type ReactNode, useMemo } from "react"
 import { GameIcon } from "@/components/GameIcon"
 import { iconTone } from "@/components/RarityChip"
 import { useTip } from "@/components/Tip"
@@ -9,7 +10,7 @@ import { isConvertCost } from "@/domain/convert"
 import { unknownSlot } from "@/domain/customCharacter"
 import { materialData } from "@/domain/names"
 import { knownLike } from "@/domain/plan"
-import { expUnit, isExp, type Line, plannerBag } from "@/domain/planner"
+import { combineSteps, expUnit, isExp, type Line, plannerBag, WEAPON_EXP } from "@/domain/planner"
 import { cn } from "@/lib/cn"
 import { formatAmount } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
@@ -28,10 +29,12 @@ export function lineView(key: string) {
   const unit = expUnit(key)
   const unknown = unknownSlot(key)
   const data = materialData(unit?.item ?? key)
-  const count = (value: number, up: boolean) => {
+  /** `value` in whole items, EXP as its best item's. */
+  const whole = (value: number, up: boolean) => {
     const items = value / (unit?.exp ?? 1)
-    return formatAmount(up ? Math.ceil(items) : Math.floor(items), up ? "up" : "down")
+    return up ? Math.ceil(items) : Math.floor(items)
   }
+  const count = (value: number, up: boolean) => formatAmount(whole(value, up), up ? "up" : "down")
   return {
     ...data,
     name: unknown
@@ -40,6 +43,7 @@ export function lineView(key: string) {
     // Not known yet, yet its slot and tier tell its rarity.
     rarity: unknown ? materialData(knownLike(key)).rarity : data.rarity,
     unknown: unknown !== undefined,
+    whole,
     count,
   }
 }
@@ -56,16 +60,6 @@ export function MaterialIcon({ view, className }: IconProps) {
       className={cn(className, iconTone(view.rarity))}
     />
   )
-}
-
-/**
- * "have/need"; "—" for what there is of a material not known yet. Enough
- * rounds as the need does, so it never reads as less.
- */
-export function haveOfNeed(key: string, have: number, need: number) {
-  const view = lineView(key)
-  const written = view.unknown ? "—" : view.count(have, have >= need)
-  return `${written}/${view.count(need, true)}`
 }
 
 /**
@@ -98,44 +92,128 @@ export function useBagHolds(key: string) {
   return useMemo(() => account && bagHolds(account.materials, key), [account, key])
 }
 
+/** Says what the bag holds and how much of it went elsewhere, `mora` without a counter word. */
+type BagLine = (bag: string, gone: string, mora: boolean) => string
+
 /**
- * A cell's tip on its amount: "have/need" to go beside the name, then what the bag holds before
- * the cards share it; for what conversions are paid in, what they spend in place of "have/need".
- * The bag rounds down, unless "have", which rounds up once it is enough, would then read as more.
+ * A cell's tip on its amount: "x/y" to go beside the name, x what there is of it for the cell
+ * before combining and converting (`held`), y what it needs; "—" for x while it is not known.
+ * Then, for what conversions are paid in, what they spend, and for EXP, that it counts every
+ * book or ore by its EXP; and when some of what the bag holds
+ * (`bag`) went elsewhere, to the cards before by default, the bag and what went, in `said`'s
+ * words. What there is rounds down, but once it is enough as the need does, so it never reads
+ * as less; the bag rounds as x does, and what went is the difference of the two as written.
  */
 export function amountTip(
   key: string,
-  have: number,
+  held: number | undefined,
   need: number,
   bag?: number,
-): { amount?: string; lines: (string | undefined)[] } {
+  said: BagLine = t.sharedBag,
+): { amount: string; lines: (string | undefined)[] } {
   const view = lineView(key)
-  const up = have >= need && bag !== undefined && view.count(bag, true) === view.count(have, true)
-  const held =
-    bag === undefined || view.unknown ? undefined : t.inBag(view.count(bag, up), key === "Mora")
-  if (isConvertCost(key)) return { lines: [t.convertSpend(view.count(need, true)), held] }
-  return { amount: haveOfNeed(key, have, need), lines: [held] }
+  const enough = held !== undefined && held >= need
+  const x = held === undefined || view.unknown ? "—" : view.count(held, enough)
+  const bagged = bag === undefined ? 0 : view.whole(bag, enough)
+  const gone = held === undefined || view.unknown ? 0 : bagged - view.whole(held, enough)
+  const written = formatAmount(bagged, enough ? "up" : "down")
+  const shared =
+    bag === undefined || view.unknown
+      ? undefined
+      : gone >= 1
+        ? said(written, formatAmount(gone), key === "Mora")
+        : t.inBag(written, key === "Mora")
+  const about = isConvertCost(key)
+    ? t.convertSpend(view.count(need, true))
+    : isExp(key)
+      ? t.expEquivalent[key === WEAPON_EXP ? "weapon" : "character"]
+      : undefined
+  return { amount: `${x}/${view.count(need, true)}`, lines: [about, shared] }
 }
 
+type Amount = readonly [key: string, count: number]
+/** What goes in, what converting is paid in among it, and what comes out. */
+export type Recipe = { kind: "combine" | "convert"; inputs: Amount[]; output: Amount }
+
 /**
- * What combining and converting take, when they make up what the card is
- * short; nothing otherwise.
+ * What combining and converting do for what the card is short, whether or not it is then
+ * enough: a recipe for each step of combining, the lowest tier first, without its Mora, then
+ * one for converting; nothing when neither does anything.
  */
-export function combinedNote(line: Line) {
+export function recipes(line: Line): Recipe[] | undefined {
   const { made, converted } = line
-  if ((made === 0 && !converted) || line.have < line.need) return undefined
-  const used = [
-    ...line.used,
-    ...(converted?.from ?? []),
-    ...(converted ? [[converted.cost, converted.paid] as const] : []),
-  ]
-    .map(([key, count]) => {
-      const amount = formatAmount(count, "up")
-      return key === "Mora" ? t.usedMora(amount) : t.usedItem(amount, materialData(key).name)
-    })
-    .join(t.listSeparator)
-  if (!converted) return t.combined(formatAmount(made), used)
-  return t.converted(made > 0 ? formatAmount(made) : undefined, formatAmount(converted.count), used)
+  if (made === 0 && !converted) return undefined
+  const combined = combineSteps(line).map(
+    (step): Recipe => ({
+      kind: "combine",
+      inputs: [[step.from, step.count]],
+      output: [step.to, step.made],
+    }),
+  )
+  if (!converted) return combined
+  const convert: Recipe = {
+    kind: "convert",
+    inputs: [...converted.from, [converted.cost, converted.paid]],
+    output: [line.key, converted.count],
+  }
+  return [...combined, convert]
+}
+
+/** An amount as an icon and its count. */
+function RecipeAmount({ amount: [key, count] }: { amount: Amount }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <MaterialIcon view={lineView(key)} className="size-7 rounded-[7px] text-[12px]" />
+      <span className="tabular">{t.times(formatAmount(count, "up"))}</span>
+    </span>
+  )
+}
+
+const JOIN = <Plus aria-hidden className="size-3 flex-none text-muted" />
+const ARROW = <ArrowRight aria-hidden className="size-3.5 flex-none text-muted" />
+
+/**
+ * What `recipes` gives, a line each: "combine  [icon] ×21 → [icon] ×7", then one line of `bag`,
+ * what the bag holds, and what is still needed after them. A line too long for the tip wraps
+ * before a "+" or the arrow, never after, and goes on past its label.
+ */
+export function recipeNote(line: Line, bag?: string) {
+  const list = recipes(line)
+  if (!list) return undefined
+  const view = lineView(line.key)
+  const by = [...new Set(list.map(recipe => t.recipeKinds[recipe.kind]))].join(t.listSeparator)
+  const left = line.need - line.have
+  return (
+    <>
+      <span className="flex flex-col gap-1.5">
+        {list.map(recipe => (
+          <span
+            key={`${recipe.kind}-${recipe.output[0]}`}
+            className="grid grid-cols-[auto_1fr] items-start gap-x-2"
+          >
+            <span className="text-muted leading-7">{t.recipeKinds[recipe.kind]}</span>
+            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+              {recipe.inputs.map((amount, index) => (
+                <span key={amount[0]} className="inline-flex items-center gap-1.5">
+                  {index > 0 && JOIN}
+                  <RecipeAmount amount={amount} />
+                </span>
+              ))}
+              <span className="inline-flex items-center gap-1.5">
+                {ARROW}
+                <RecipeAmount amount={recipe.output} />
+              </span>
+            </span>
+          </span>
+        ))}
+      </span>
+      <span>
+        {[bag, t.afterRecipes(by, left > 0 ? view.count(left, true) : undefined)]
+          .filter(Boolean)
+          .join(t.clauseSeparator)}
+      </span>
+    </>
+  )
 }
 
 /** The goals that need a material, the first few by name; nothing when none do. */
@@ -144,25 +222,36 @@ export function neededBy(goals: readonly string[]) {
 }
 
 /**
- * A material's tip: its name with `amount` beside it, then each of `lines` given, then the goals
- * that need it.
+ * A material's tip: its name with `amount` beside it, then each of `lines` given, then `recipe`,
+ * then the goals that need it.
  */
 export function materialTip(
   name: string,
-  amount: string | undefined,
+  amount: string,
   lines: readonly (string | undefined)[],
   goals: readonly string[],
+  recipe?: ReactNode,
 ) {
   const who = neededBy(goals)
   return (
     <>
       <span>
         <span className="font-semibold">{name}</span>
-        {amount && <span className="tabular">{t.besideName(amount)}</span>}
+        <span className="tabular">{t.besideName(amount)}</span>
       </span>
       {lines.map(line => line && <span key={line}>{line}</span>)}
+      {recipe}
       {who && <span className="text-muted">{who}</span>}
     </>
+  )
+}
+
+/** The "combined" or "converted" mark on a cell's icon, at its top right. */
+export function Mark({ children }: { children: string }) {
+  return (
+    <span className="absolute -top-1.5 -right-1.5 rounded-[5px] bg-(--warn) px-1 font-semibold text-[10px] text-(--on-warn) leading-[16px] shadow-[0_0_0_2px_var(--surface)]">
+      {children}
+    </span>
   )
 }
 
@@ -180,8 +269,8 @@ type CellProps = {
  * converting others of the same tier does; muted, with what is needed, when not known
  * yet; muted and faded, with what they spend, for what conversions are paid in.
  * Every cell is as wide as the next, so a long count is cut short rather than
- * pushing them apart; the tip, the same all over the cell, has "have/need" and
- * what the bag holds.
+ * pushing them apart; the tip, the same all over the cell, has what there is for
+ * the card of what it needs, and how combining and converting make it up.
  */
 export function MaterialCell({ line, goals, note }: CellProps) {
   const view = lineView(line.key)
@@ -189,19 +278,20 @@ export function MaterialCell({ line, goals, note }: CellProps) {
   const short = !view.unknown && line.have < line.need
   const mark = !short && (line.converted ? t.convertMark : line.made > 0 && t.combineMark)
   const met = !mark && isMet(line.key, line.have, line.need)
-  const { amount, lines } = amountTip(line.key, line.have, line.need, bag)
+  const {
+    amount,
+    lines: [about, held],
+  } = amountTip(line.key, line.bag, line.need, bag)
+  // With recipes, the bag goes on their last line, with what is still needed.
+  const recipe = recipeNote(line, held)
   const tip = useTip<HTMLLIElement>(
-    materialTip(view.name, amount, [...lines, combinedNote(line), note], goals),
+    materialTip(view.name, amount, [about, recipe ? undefined : held, note], goals, recipe),
   )
   return (
     <li {...tip.props} className="flex w-[52px] flex-col items-center gap-1">
       <span className={cn("relative", met && "opacity-40")}>
         <MaterialIcon view={view} className="size-12 rounded-[11px] text-[17px]" />
-        {mark && (
-          <span className="absolute -top-1.5 -right-1.5 rounded-[5px] bg-(--warn) px-1 font-semibold text-[10px] text-(--on-warn) leading-[16px] shadow-[0_0_0_2px_var(--surface)]">
-            {mark}
-          </span>
-        )}
+        {mark && <Mark>{mark}</Mark>}
       </span>
       <span
         className={cn(

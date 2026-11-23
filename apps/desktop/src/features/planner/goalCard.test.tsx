@@ -10,18 +10,21 @@ import {
   type CustomGoal,
   type CustomWeaponGoal,
   type Goal,
+  type MaterialTotal,
   MORA_EXP_GROUP,
   materialTotals,
   planCards,
   summaryGroup,
+  WEEKLY_BOSS_GROUP,
   type WeaponGoal,
+  WORLD_BOSS_GROUP,
 } from "@/domain/plan"
-import { type Line, plannerBag } from "@/domain/planner"
+import { allocate, type Line, plannerBag } from "@/domain/planner"
 import { text } from "@/text/zh"
 import { CustomFields } from "./CustomFields"
 import { GoalCard, moraNote } from "./GoalCard"
-import { MaterialCell } from "./MaterialCell"
-import { SummaryPanel, TodayPanel } from "./SidePanels"
+import { lineView, MaterialCell } from "./MaterialCell"
+import { SummaryPanel, TodayPanel, totalTip } from "./SidePanels"
 
 const t = text.planner
 const TOP = { level: 90, phase: 6 }
@@ -123,6 +126,77 @@ describe("the summary", () => {
       <SummaryPanel totals={totals} order={[other, MORA_EXP_GROUP]} />,
     )
     expect(moved.indexOf(other)).toBeLessThan(moved.indexOf(t.moraExp))
+  })
+
+  const total = (key: string, need: number, have: number, converted = 0): MaterialTotal => ({
+    key,
+    need,
+    have,
+    made: 0,
+    converted,
+    spentElsewhere: 0,
+    goals: [],
+  })
+  const byKey = (...list: MaterialTotal[]) => new Map(list.map(each => [each.key, each]))
+
+  it("keeps what converting makes up and what it is paid in among what is short, marked", () => {
+    const html = renderToStaticMarkup(
+      <SummaryPanel
+        totals={byKey(
+          total("AgnidusAgateChunk", 3, 3, 2),
+          total("DustOfAzoth", 18, 18),
+          total("Mora", 10, 10),
+          { ...total("AgnidusAgateGemstone", 1, 1), made: 1 },
+        )}
+      />,
+    )
+    expect(html).toContain(`alt="${lineView("AgnidusAgateChunk").name}"`)
+    expect(html).toContain(`alt="${lineView("DustOfAzoth").name}"`)
+    expect(html).not.toContain(`alt="${lineView("Mora").name}"`)
+    // What combining alone makes up is left out.
+    expect(html).not.toContain(`alt="${lineView("AgnidusAgateGemstone").name}"`)
+    expect(html).toContain(`>${t.convertMark}<`)
+  })
+
+  it("writes x as the bag less what combining others used, so it adds up with what is short", () => {
+    // Card 1 combines its book from all 9 Teachings; card 2 then needs 6 Teachings itself.
+    const bag = new Map([
+      ["TeachingsOfFreedom", 9],
+      ["Mora", 1_000_000],
+    ])
+    const cards = allocate(
+      [new Map([["PhilosophiesOfFreedom", 1]]), new Map([["TeachingsOfFreedom", 6]])],
+      bag,
+    ).map(lines => ({ ...cardOf(sword), lines }))
+    const totals = materialTotals(cards)
+    const teachings = totals.get("TeachingsOfFreedom")
+    if (!teachings) throw new Error("no total")
+    expect(teachings).toMatchObject({ need: 6, have: 0, spentElsewhere: 9 })
+    expect(totalTip(teachings, 9)).toEqual({
+      amount: "0/6",
+      lines: [undefined, t.usedElsewhere("9", "9"), undefined, undefined],
+    })
+    const book = totals.get("PhilosophiesOfFreedom")
+    if (!book) throw new Error("no total")
+    expect(totalTip(book, 0)).toEqual({
+      amount: "0/1",
+      lines: [undefined, t.inBag("0"), t.combinedPart("1"), undefined],
+    })
+    const chunk = { ...total("AgnidusAgateChunk", 3, 3, 1), made: 1 }
+    expect(totalTip(chunk, 1)).toEqual({
+      amount: "1/3",
+      lines: [undefined, t.inBag("1"), t.combinedPart("1"), t.convertedPart("1")],
+    })
+    expect(totalTip(chunk, undefined).amount).toBe("—/3")
+  })
+
+  it("puts the weekly bosses' drops before the world bosses' by default", () => {
+    expect(summaryGroup("DvalinsPlume")).toBe(WEEKLY_BOSS_GROUP)
+    expect(summaryGroup("HurricaneSeed")).toBe(WORLD_BOSS_GROUP)
+    const html = renderToStaticMarkup(
+      <SummaryPanel totals={byKey(total("HurricaneSeed", 2, 0), total("DvalinsPlume", 2, 0))} />,
+    )
+    expect(html.indexOf(t.weeklyBoss)).toBeLessThan(html.indexOf(t.worldBoss))
   })
 })
 

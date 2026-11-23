@@ -332,8 +332,20 @@ export function goalName(goal: Goal) {
   return lookup(goal.kind === "weapon" ? "weapons" : "characters", goal.key).name
 }
 
-/** A material over every card: what they need, what they get, and the goals that need it. */
-export type MaterialTotal = { key: string; need: number; have: number; goals: string[] }
+/**
+ * A material over every card: what they need, what they get, of that what combining and
+ * converting made, what of the bag combining and converting others used (`spentElsewhere`), and
+ * the goals that need it.
+ */
+export type MaterialTotal = {
+  key: string
+  need: number
+  have: number
+  made: number
+  converted: number
+  spentElsewhere: number
+  goals: string[]
+}
 
 /**
  * Every card's materials added up, each with the names of the goals that need
@@ -343,11 +355,29 @@ export function materialTotals(cards: readonly Card[]): Map<string, MaterialTota
   const totals = new Map<string, MaterialTotal>()
   for (const card of cards) {
     for (const line of card.lines) {
-      const total = totals.get(line.key) ?? { key: line.key, need: 0, have: 0, goals: [] }
+      const total = totals.get(line.key) ?? {
+        key: line.key,
+        need: 0,
+        have: 0,
+        made: 0,
+        converted: 0,
+        spentElsewhere: 0,
+        goals: [],
+      }
       total.need += line.need
       total.have += line.have
+      total.made += line.made
+      total.converted += line.converted?.count ?? 0
       total.goals.push(goalName(card.goal))
       totals.set(line.key, total)
+    }
+  }
+  for (const card of cards) {
+    for (const { used, converted } of card.lines) {
+      for (const [key, count] of [...used, ...(converted?.from ?? [])]) {
+        const total = totals.get(key)
+        if (total) total.spentElsewhere += count
+      }
     }
   }
   return totals

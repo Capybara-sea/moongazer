@@ -120,7 +120,7 @@ export const planner = {
   daysUnknown: (what: string) => `${what} 未知`,
   unknownKinds: (kinds: number) => `${n(kinds)} 种未知`,
   weaponMaterials: "武器素材",
-  abundance: "「丰材的奔流」期间所有秘境都开放，以游戏为准",
+  abundance: "「盛材移涌」期间所有秘境都开放，以游戏为准",
   today: (weekday: number) => `今天 · 周${WEEKDAYS[weekday] ?? ""}`,
   weekdays: WEEKDAYS,
   todayHint: "今天开放的秘境中不足的材料",

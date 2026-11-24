@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The planner's summary keeps what converting makes up, and what it costs, when showing only what
   is short; weekly boss materials come before world boss ones.
 
+### Fixed
+
+- The planner's note on the event that opens every domain uses the event's name in the Chinese
+  client.
+
 ## [0.3.2] - 2026-11-23
 
 ### Added

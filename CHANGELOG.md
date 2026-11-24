@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hovering a material in the planner's summary or today list also shows each combining or
   converting step with icons, added up over all goals, and no longer what the bag holds.
 
+### Fixed
+
+- With auto sync, the list of running events no longer drops to one when a single event moves on
+  (spending resin on the weekly training event, trying a trial character).
+- Paimon's Bargains carry over from the last time the shop was read, so a new login no longer shows
+  them as not read.
+
 ## [0.3.3] - 2026-11-24
 
 ### Changed

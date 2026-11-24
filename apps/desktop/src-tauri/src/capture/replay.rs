@@ -192,6 +192,12 @@ fn matches_the_reference(dir: &Path) -> bool {
         "respawn spots kept from an earlier list: {}",
         kept - differing.len()
     );
+    let listed = differing.len();
+    differing.retain(|path, _| !kept_from_the_login_list(path, &reference));
+    println!(
+        "events kept from the login's list: {}",
+        listed - differing.len()
+    );
     let counted = differing.len();
     differing.retain(|path, _| !told_by_the_progress_notify(path, &ours, &reference));
     println!(
@@ -229,6 +235,14 @@ fn kept_from_an_earlier_list(path: &str, reference: &Value) -> bool {
     path.strip_prefix(".gi_tasks.respawns.")
         .filter(|spot| !spot.contains(['.', '[']))
         .is_some_and(|spot| reference["gi_tasks"]["respawns"].get(spot).is_none())
+}
+
+/// An event only we hold: a one-event update made upstream drop the rest of
+/// the login's list, and Moongazer merges it in instead (see events.rs).
+fn kept_from_the_login_list(path: &str, reference: &Value) -> bool {
+    path.strip_prefix(".gi_events.")
+        .and_then(|rest| rest.split(['.', '[']).next())
+        .is_some_and(|id| reference["gi_events"].get(id).is_none())
 }
 
 /// What the day's progress notify told and the reference's Capture had not

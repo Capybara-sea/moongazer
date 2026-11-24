@@ -1,27 +1,29 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! Challenge records the game sends only when their screen is opened: the
-//! Stygian Onslaught records and the Spiral Abyss record book. A new login
+//! What the game sends only when its screen is opened: the Stygian Onslaught
+//! records, the Spiral Abyss record book and Paimon's Bargains. A new login
 //! has none until then, so the account's last ones are carried into its
-//! exports. The page shows the record of the period running, so one carried
-//! past the end of its period reads as not started.
+//! exports. The pages count a record or the shop's buys for the period
+//! running, so one carried past the end of its period reads as not started.
 
 use serde_json::{Map, Value};
 
-/// The carried records, under `gi_endgame`.
-const CARRIED: [&str; 2] = ["stygian", "abyss"];
+/// The carried parts, by key, and the export section each sits in.
+const CARRIED: [(&str, &str); 3] = [
+    ("stygian", "gi_endgame"),
+    ("abyss", "gi_endgame"),
+    ("bargains", "gi_tasks"),
+];
 
 pub type Carry = Map<String, Value>;
 
-/// The carried records `export` holds itself.
+/// The carried parts `export` holds itself.
 pub fn held(export: &Value) -> Carry {
     let mut held = Carry::new();
-    if let Some(endgame) = export.get("gi_endgame").and_then(Value::as_object) {
-        for key in CARRIED {
-            if let Some(record) = endgame.get(key) {
-                held.insert(key.to_owned(), record.clone());
-            }
+    for (key, section) in CARRIED {
+        if let Some(part) = export.get(section).and_then(|section| section.get(key)) {
+            held.insert(key.to_owned(), part.clone());
         }
     }
     held
@@ -35,29 +37,27 @@ pub fn gather(carry: &mut Carry, from: &Value) -> bool {
     carry.len() == CARRIED.len()
 }
 
-/// Puts the records `export` lacks in from `carry`; true when it did.
+/// Puts the parts `export` lacks in from `carry`; true when it did.
 pub fn fill(export: &mut Value, carry: &Carry) -> bool {
     let present = held(export);
-    let missing: Vec<_> = carry
-        .iter()
-        .filter(|(key, _)| !present.contains_key(*key))
-        .collect();
-    if missing.is_empty() {
-        return false;
+    let mut filled = false;
+    for (key, section) in CARRIED {
+        let Some(part) = carry.get(key).filter(|_| !present.contains_key(key)) else {
+            continue;
+        };
+        let Some(section) = export.as_object_mut().map(|root| {
+            root.entry(section)
+                .or_insert_with(|| Value::Object(Map::new()))
+        }) else {
+            return filled;
+        };
+        let Some(section) = section.as_object_mut() else {
+            continue;
+        };
+        section.insert(key.to_owned(), part.clone());
+        filled = true;
     }
-    let Some(endgame) = export.as_object_mut().map(|root| {
-        root.entry("gi_endgame")
-            .or_insert_with(|| Value::Object(Map::new()))
-    }) else {
-        return false;
-    };
-    let Some(endgame) = endgame.as_object_mut() else {
-        return false;
-    };
-    for (key, record) in missing {
-        endgame.insert(key.clone(), record.clone());
-    }
-    true
+    filled
 }
 
 /// `json` with the records it lacks put in from `carry`; as it was when it
@@ -88,9 +88,14 @@ mod tests {
             &mut carry,
             &json!({ "gi_endgame": { "stygian": { "records": [1] }, "theater": {} } })
         ));
-        assert!(gather(
+        assert!(!gather(
             &mut carry,
             &json!({ "gi_endgame": { "stygian": { "records": [0] }, "abyss": { "periods": [2] } } })
+        ));
+        // Gathered once every part is in.
+        assert!(gather(
+            &mut carry,
+            &json!({ "gi_tasks": { "bargains": { "at": 0, "fates": [] } } })
         ));
         // The newer record stays: gathering goes from the newest export back.
         assert_eq!(carry["stygian"], json!({ "records": [1] }));
@@ -99,17 +104,38 @@ mod tests {
         assert!(fill(&mut fresh, &carry));
         assert_eq!(
             fresh,
-            json!({ "gi_endgame": {
-                "abyss": { "periods": [3] },
-                "theater": {},
-                "stygian": { "records": [1] },
-            } })
+            json!({
+                "gi_endgame": {
+                    "abyss": { "periods": [3] },
+                    "theater": {},
+                    "stygian": { "records": [1] },
+                },
+                "gi_tasks": { "bargains": { "at": 0, "fates": [] } },
+            })
         );
         assert!(!fill(&mut fresh, &carry));
 
         let mut bare = json!({ "format": "GOOD" });
         assert!(fill(&mut bare, &carry));
         assert_eq!(bare["gi_endgame"]["abyss"], json!({ "periods": [2] }));
+    }
+
+    #[test]
+    fn the_shop_is_carried_into_the_tasks() {
+        let mut carry = Carry::new();
+        gather(
+            &mut carry,
+            &json!({ "gi_tasks": { "bargains": { "at": 1, "fates": [] }, "resin": {} } }),
+        );
+        let mut fresh = json!({ "gi_tasks": { "resin": { "value": 3 } } });
+        assert!(fill(&mut fresh, &carry));
+        assert_eq!(
+            fresh,
+            json!({ "gi_tasks": { "resin": { "value": 3 }, "bargains": { "at": 1, "fates": [] } } })
+        );
+        let mut newer = json!({ "gi_tasks": { "bargains": { "at": 2, "fates": [] } } });
+        assert!(!fill(&mut newer, &carry));
+        assert_eq!(newer["gi_tasks"]["bargains"]["at"], json!(2));
     }
 
     #[test]

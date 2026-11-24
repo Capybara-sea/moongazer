@@ -773,7 +773,7 @@ impl Supervisor {
         });
     }
 
-    /// The account's last challenge records, from its newest kept exports.
+    /// The account's last challenge records and shop, from its newest kept exports.
     /// Exports carry them on once they are found, so only the first few
     /// are read: an account that never had them costs no more.
     fn carry_for(&self, uid: Option<u32>) -> Carry {

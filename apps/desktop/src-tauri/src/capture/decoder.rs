@@ -23,8 +23,8 @@ use teyvatme_protocol::{CommandMatch, ConnectionPacket, GamePacket, GameSniffer,
 use tokio::sync::mpsc;
 
 use super::anecdotes::Book;
-use super::commissions;
 use super::pack::Pack;
+use super::{commissions, events};
 
 /// What the export names as its source, in place of upstream's own name.
 const SOURCE: &str = "Moongazer";
@@ -69,6 +69,8 @@ pub struct Decoder {
     progress: commissions::Progress,
     /// The login's Traveler, by character id, once its characters are in.
     traveler: Option<u32>,
+    /// The login's events, which a one-event update is merged into.
+    events: events::Events,
 }
 
 /// What one frame did.
@@ -134,6 +136,7 @@ impl Decoder {
             commission_cities: pack.commission_cities,
             progress: commissions::Progress::new(pack.commission_rewards),
             traveler: None,
+            events: events::Events::default(),
         }
     }
 
@@ -213,6 +216,7 @@ impl Decoder {
                     self.book = None;
                     self.progress.new_login();
                     self.traveler = None;
+                    self.events.new_login();
                     fed.new_login = true;
                 }
                 DataVerdict::Hold => return,
@@ -233,6 +237,7 @@ impl Decoder {
             self.progress.teach(&mut classified, at_ms, || {
                 player.gi_player().and_then(|player| player.ar)
             });
+            self.events.merge(&mut classified);
             self.player_data.set_clock(at_ms / 1000);
             fed.applied = true;
             fed.data |= decode::apply_commands(&mut self.player_data, classified).any();

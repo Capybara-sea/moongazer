@@ -24,6 +24,7 @@ mod backend;
 mod carry;
 mod commissions;
 mod decoder;
+mod events;
 pub mod helper;
 mod ipc;
 mod link;

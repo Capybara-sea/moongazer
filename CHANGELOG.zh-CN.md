@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-24
+
 ### 变更
 
 - 规划页悬停素材时，先写分到这个目标的数量和需要的数量，再用图标逐步写出合成、转换，以及之后还需多少。
@@ -125,7 +127,8 @@
 - 设置页、明暗主题、界面动效；游戏图标在第一次显示时下载。
 - 关于页：帮助与反馈、致谢和第三方许可。
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.2...HEAD
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/Capybara-sea/moongazer/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/Capybara-sea/moongazer/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/Capybara-sea/moongazer/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Capybara-sea/moongazer/compare/v0.2.0...v0.3.0

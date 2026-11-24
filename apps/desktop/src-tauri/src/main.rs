@@ -14,6 +14,7 @@ mod logging;
 mod planner;
 mod portable;
 mod snapshots;
+mod tasks;
 mod text;
 mod update;
 mod webview2;
@@ -149,6 +150,8 @@ fn main() {
             snapshots::open_travelers_tales,
             planner::planner_data,
             planner::save_planner_data,
+            tasks::tasks_data,
+            tasks::save_tasks_data,
             update::app_info,
             update::check_update,
             update::download_update,

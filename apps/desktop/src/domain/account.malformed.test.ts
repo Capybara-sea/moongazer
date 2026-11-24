@@ -52,7 +52,7 @@ describe("parseAccount on malformed input", () => {
         resin: [],
         commissions: "4/4",
         realm: null,
-        weeklyBosses: { left: "2", limit: 3 },
+        weeklyBosses: { left: "2", used: 1, limit: 3 },
         expeditions: { 1: { doneAt: 2_000 } },
         transformer: { usedAt: "4000", readyAt: 5_000 },
         welkin: 12,

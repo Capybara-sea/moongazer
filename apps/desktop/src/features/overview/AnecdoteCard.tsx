@@ -4,6 +4,7 @@
 import { ChevronRight } from "lucide-react"
 import { useMemo } from "react"
 import { Bar } from "@/components/Bar"
+import { CardHeader } from "@/components/CardHeader"
 import { Panel } from "@/components/Panel"
 import { Tip } from "@/components/Tip"
 import type { Account } from "@/domain/account"
@@ -19,9 +20,8 @@ export function AnecdoteCard({ account }: { account: Account }) {
   const anecdotes = account.anecdotes
   const view = useMemo(() => anecdoteView(account), [account])
   return (
-    <section aria-label={text.anecdotes.title} className="flex flex-col gap-2.5">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="font-semibold text-base">{text.anecdotes.title}</h2>
+    <Panel aria-label={text.anecdotes.title} className="gap-2.5">
+      <CardHeader title={text.anecdotes.title}>
         <button
           type="button"
           onClick={() => navigate("collection", PARTS.anecdotes)}
@@ -30,8 +30,8 @@ export function AnecdoteCard({ account }: { account: Account }) {
           {text.anecdotes.open}
           <ChevronRight aria-hidden className="size-4" />
         </button>
-      </div>
-      <Panel className="flex-row flex-wrap items-center gap-7 px-4.5 py-3.5">
+      </CardHeader>
+      <div className="flex flex-wrap items-center gap-7">
         {anecdotes && view ? (
           <>
             <Recorded view={view} />
@@ -41,8 +41,8 @@ export function AnecdoteCard({ account }: { account: Account }) {
         ) : (
           <span className="text-[13px] text-muted">{text.snapshot.notRead}</span>
         )}
-      </Panel>
-    </section>
+      </div>
+    </Panel>
   )
 }
 

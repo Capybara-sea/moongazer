@@ -4,6 +4,7 @@
 import { Check, Gift } from "lucide-react"
 import type { ReactNode } from "react"
 import { Bar } from "@/components/Bar"
+import { CardHeader } from "@/components/CardHeader"
 import { DoneBadge } from "@/components/DoneBadge"
 import { GameIcon } from "@/components/GameIcon"
 import { Panel } from "@/components/Panel"
@@ -21,6 +22,7 @@ import {
   realmFullNote,
   transformerState,
 } from "@/domain/daily"
+import { nextDailyReset, serverMonthDay } from "@/domain/gameTime"
 import { lookup } from "@/domain/names"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
@@ -50,10 +52,9 @@ export function DailyCard({ account, takenAt }: { account: Account; takenAt: num
   const tasks = account.tasks
   return (
     <Panel aria-label={t.title} className="min-w-0 flex-[1_1_380px] gap-0 px-[18px] pt-3.5 pb-2">
-      <div className="flex items-baseline justify-between gap-2 pb-1.5">
-        <h2 className="font-semibold text-base">{t.title}</h2>
+      <CardHeader title={t.title}>
         <span className="tabular text-[12px] text-muted">{t.asOf(monthDayTime(takenAt))}</span>
-      </div>
+      </CardHeader>
       {/* One grid for all rows, so the values take one width and the bars end together. */}
       <div className="grid grid-cols-[76px_minmax(0,1fr)_auto] gap-x-3.5">
         <Resin resin={tasks?.resin} now={now} />
@@ -299,7 +300,11 @@ function Welkin({ welkin, takenAt, now }: WelkinProps) {
     <Row
       label={t.welkin}
       value={days > 0 ? t.welkinDays(days) : t.welkinNone}
-      tip={days > 0 ? `${t.welkinUntil(formatMonthDay(endsAt))}\n${t.welkinGuess}` : undefined}
+      tip={
+        days > 0
+          ? `${t.welkinUntil(serverMonthDay(endsAt))}\n${t.welkinGuess(formatTime(nextDailyReset(now)))}`
+          : undefined
+      }
     >
       {days > 0 && (
         <span

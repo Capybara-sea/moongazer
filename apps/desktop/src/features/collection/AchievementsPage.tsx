@@ -40,7 +40,9 @@ const Card = memo(SeriesCard)
  * The achievements by goal, each series of tiers in one card: done or not,
  * the primogems, the count where known and when it was finished. Back link,
  * header, toolbar and body are the page root's children, so they rise in one
- * after another.
+ * after another. Where the goals and the series sit side by side, the page
+ * fills the window and they scroll each on its own; narrower, one above the
+ * other, the page scrolls as a whole.
  */
 export function AchievementsPage() {
   const { snapshot, account } = useCurrentAccount()
@@ -49,7 +51,7 @@ export function AchievementsPage() {
     [account],
   )
   return (
-    <div className="mx-auto flex max-w-[1240px] flex-col gap-4 p-6">
+    <div className="mx-auto flex max-w-[1240px] flex-col gap-4 p-6 min-[1060px]:h-full">
       <BackLink />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col">
@@ -157,31 +159,32 @@ function Body({ view }: { view: AchievementView }) {
     [matched, shownGoal],
   )
   const { visible, more, sentinel } = useBatches(series)
-  const counts = filterCounts(view, shownGoal)
   const name = shownGoal === null ? t.allGoals : (GOAL_NAMES.get(shownGoal) ?? "")
+  // From 1060 px wide the two sit side by side (the 176 px menu, the page's padding and gutter,
+  // 280 + 16 + 520), each scrolling on its own.
   return (
-    <div className="flex flex-wrap items-start gap-4">
-      <Goals view={view} goal={shownGoal} hits={hits} />
-      <section aria-label={name} className="flex min-w-0 flex-[999_1_520px] flex-col gap-2">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="font-semibold text-[15px]">{name}</h2>
-          <span className="text-[12px] text-muted tabular">
-            {t.goalInfo(counts.done, counts.all)}
-          </span>
-        </div>
-        {series.length === 0 ? (
-          <EmptyState>{t.none}</EmptyState>
-        ) : (
-          visible.map(s => (
-            <Card
-              key={s.rows[0]?.info.id}
-              series={s}
-              goalName={shownGoal === null ? GOAL_NAMES.get(s.goal) : undefined}
-            />
-          ))
-        )}
-        {more && <div ref={sentinel} aria-hidden className="h-px" />}
-      </section>
+    <div className="min-[1060px]:min-h-0 min-[1060px]:flex-1">
+      <div className="flex flex-wrap items-start gap-4 min-[1060px]:h-full min-[1060px]:flex-nowrap">
+        <Goals view={view} goal={shownGoal} hits={hits} />
+        <section
+          aria-label={name}
+          data-achievement-list
+          className="flex min-w-0 flex-[999_1_520px] flex-col gap-2 min-[1060px]:max-h-full min-[1060px]:overflow-y-auto min-[1060px]:pr-1 min-[1060px]:[scrollbar-gutter:stable]"
+        >
+          {series.length === 0 ? (
+            <EmptyState>{t.none}</EmptyState>
+          ) : (
+            visible.map(s => (
+              <Card
+                key={s.rows[0]?.info.id}
+                series={s}
+                goalName={shownGoal === null ? GOAL_NAMES.get(s.goal) : undefined}
+              />
+            ))
+          )}
+          {more && <div ref={sentinel} aria-hidden className="h-px" />}
+        </section>
+      </div>
     </div>
   )
 }
@@ -192,8 +195,8 @@ function Goals({ view, goal, hits }: GoalsProps) {
   const { setGoal } = useAchievementListStore.getState()
   // Scrolled to the top again so a long list does not open halfway.
   const scrollTop = () => {
-    const page = document.querySelector('section[data-page="collection"]')
-    if (page) page.scrollTop = 0
+    const areas = ['section[data-page="collection"]', "[data-achievement-list]"]
+    for (const area of document.querySelectorAll(areas.join(", "))) area.scrollTop = 0
   }
   const rows: { id: number | null; name: string; icon?: string; done: number; total: number }[] = [
     { id: null, name: t.allGoals, done: view.done, total: view.total },
@@ -206,7 +209,7 @@ function Goals({ view, goal, hits }: GoalsProps) {
   return (
     <aside
       aria-label={t.goals}
-      className="glass flex w-[280px] flex-none flex-col gap-0.5 rounded-[14px] border border-border bg-surface p-2"
+      className="glass flex w-[280px] flex-none flex-col gap-0.5 rounded-[14px] border border-border bg-surface p-2 min-[1060px]:max-h-full min-[1060px]:overflow-y-auto"
     >
       {rows.map(row => {
         const current = row.id === goal

@@ -6,7 +6,7 @@ import type { Snapshot } from "@/lib/backend"
 import type { CaptureStatus } from "@/lib/backend/sync"
 import { formatDateTime } from "@/lib/format"
 import { text } from "@/text/zh"
-import { groupAccounts, latestKept, liveUid, newestAccount, timeLabel } from "./accounts"
+import { groupAccounts, isNewest, latestKept, liveUid, newestAccount, timeLabel } from "./accounts"
 
 /** Made-up UIDs. */
 const A = 100000001
@@ -93,6 +93,35 @@ describe("newestAccount and latestKept", () => {
     const newest = newestAccount(accounts, list)
     expect(newest?.uid).toBe(B)
     expect(newest && latestKept(newest)?.id).toBe(2)
+  })
+})
+
+describe("isNewest", () => {
+  const kept = row(3, 3, B)
+  const older = row(2, 2, B)
+  const list = [{ ...row(4, 4, B), hasRaw: false }, kept, older]
+
+  it("is newest while following, whatever is shown till the newest is read", () => {
+    expect(isNewest(older, list, null)).toBe(true)
+  })
+
+  it("is not newest on a pick deleted since", () => {
+    const deleted = row(1, 1, B)
+    expect(isNewest(deleted, list, deleted.id)).toBe(false)
+  })
+
+  it("takes a pick as newest with no kept snapshot after it, past one with only its summary", () => {
+    expect(isNewest(kept, list, kept.id)).toBe(true)
+    expect(isNewest(older, list, older.id)).toBe(false)
+    // Picked from the newest, which stays shown till the pick is read.
+    expect(isNewest(kept, list, older.id)).toBe(true)
+  })
+
+  it("counts a newer kept snapshot still being read against a pick", () => {
+    const head = row(-7, 6, B, 1)
+    expect(isNewest(kept, [head, ...list], kept.id)).toBe(false)
+    // A head row the newer one replaced, placed by its time.
+    expect(isNewest(row(-6, 5, B, 1), [head, ...list], kept.id)).toBe(false)
   })
 })
 

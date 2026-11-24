@@ -19,6 +19,7 @@ import { GoalCard } from "./GoalCard"
 import { GoalEditor } from "./GoalEditor"
 import { PlannerSettings } from "./PlannerSettings"
 import { SummaryPanel, TodayPanel } from "./SidePanels"
+import { UpgradePanel } from "./UpgradePanel"
 import { usePlannerCards } from "./usePlannerCards"
 
 const t = text.planner
@@ -26,8 +27,8 @@ const t = text.planner
 const FLASH_MS = 1600
 
 /**
- * #/planner/<goal id>, from the home page: once the cards are there, scrolls
- * that goal's card into view and outlines it a moment, then drops the id from
+ * #/planner/<goal id>, from the upgrade panel: once the cards are there, scrolls
+ * that goal's card into view, focuses it and outlines it a moment, then drops the id from
  * the address so the same jump works again. Returns the goal outlined.
  */
 function useJump(ready: boolean) {
@@ -43,6 +44,7 @@ function useJump(ready: boolean) {
     )
     if (!card) return
     card.scrollIntoView({ block: "center", behavior: motionAllowed() ? "smooth" : "auto" })
+    card.focus({ preventScroll: true })
     setFlash(target)
   }, [ready, target])
   useEffect(() => {
@@ -99,6 +101,7 @@ export function PlannerPage() {
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[304px_1fr]">
           {/* Under the cards in a narrow window, where they would push the cards out of view. */}
           <div className="order-last flex flex-col gap-4 lg:order-first">
+            {cards.length > 0 && <UpgradePanel cards={cards} />}
             <TodayPanel totals={totals} weekday={weekday} />
             <SummaryPanel totals={totals} order={plan.summaryOrder} />
           </div>

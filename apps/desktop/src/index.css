@@ -549,7 +549,7 @@ button#decorum-tb-close:hover {
 }
 
 /*
- * A planner card the home page jumps to shows its outline a moment
+ * A planner card the upgrade panel jumps to shows its outline a moment
  * (PlannerPage's FLASH_MS): fading in and out, or just there with motion off.
  * An animation, as the page's rise transition takes over the card's own.
  */

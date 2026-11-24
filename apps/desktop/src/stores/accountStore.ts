@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { create } from "zustand"
 import { type Account, parseAccount } from "@/domain/account"
 import { type AccountGroup, groupAccounts, latestKept, newestAccount } from "@/domain/accounts"
@@ -52,6 +52,8 @@ type AccountState = {
   shown: Snapshot | null
   /** The token of the account `shown` is of. */
   shownAccount: number | null
+  /** `selectedId` as it was when `shown` last moved, which says whether `shown` is the newest. */
+  shownSelected: number | null
   select: (id: number | null) => void
   /** Chooses an account by its token; null follows the newest snapshot's. */
   selectAccount: (token: number | null) => void
@@ -89,6 +91,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
   entries: {},
   shown: null,
   shownAccount: null,
+  shownSelected: null,
 
   select(id) {
     set({ selectedId: id })
@@ -269,7 +272,11 @@ function follow() {
   grouped = snapshots
   const group =
     accounts.find(g => g.token === state.account) ?? newestAccount(accounts, snapshots) ?? null
-  const selectedId = group?.token === state.group?.token ? state.selectedId : null
+  // A choice no longer listed is let go, so a later snapshot given its id is not taken for it.
+  const selectedId =
+    group?.token === state.group?.token && group?.snapshots.some(s => s.id === state.selectedId)
+      ? state.selectedId
+      : null
   const current = currentOf(group?.snapshots ?? [], selectedId)
   const shown = nextShown(current, state.shown, state.entries)
   const moved = shown === current
@@ -281,6 +288,7 @@ function follow() {
     selectedId,
     shown,
     shownAccount: moved ? (group?.token ?? null) : state.shownAccount,
+    shownSelected: moved ? selectedId : state.shownSelected,
     entries: moved ? withoutUnlisted(state.entries, snapshots) : state.entries,
   }
   if ((Object.keys(next) as (keyof typeof next)[]).some(key => next[key] !== state[key])) {
@@ -307,8 +315,11 @@ export function useCurrentSnapshot() {
   const list =
     useAccountStore(s => s.accounts.find(g => g.token === s.shownAccount)?.snapshots) ?? NONE
   const entry = useAccountStore(s => (snapshot ? s.entries[snapshot.id] : undefined))
+  const selected = useAccountStore(s => s.shownSelected)
   return {
     snapshot,
+    /** The choice it was shown by: null when following the newest. */
+    selected,
     /** Every snapshot of its account, newest first. */
     list,
     /** Every snapshot of its account older than it, newest first. */
@@ -348,6 +359,35 @@ export function usePreviousAccount(): Account | null | undefined {
     if (previous) void useAccountStore.getState().load(previous.id)
   }, [previous])
   return entryAccount(previous !== undefined, entry)
+}
+
+type Newest = { token: number; snapshot: Snapshot; account: Account }
+
+/**
+ * An account's newest snapshot whose export is kept, whatever the pages show,
+ * with its account once read. While a newer one is read (a head row every
+ * 15 s while playing), the one read before stays, as the pages keep theirs.
+ */
+export function useNewestAccount(group: AccountGroup) {
+  const newest = latestKept(group)
+  const entry = useAccountStore(s => (newest ? s.entries[newest.id] : undefined))
+  const read: Newest | undefined =
+    newest && entry?.status === "ready"
+      ? { token: group.token, snapshot: newest, account: entry.account }
+      : undefined
+  const [kept, setKept] = useState(read)
+  const reading = newest !== undefined && (entry === undefined || entry.status === "loading")
+  if (
+    read &&
+    (kept?.snapshot !== read.snapshot || kept.account !== read.account || kept.token !== read.token)
+  ) {
+    setKept(read)
+  }
+  // One that could not be read, or has only its summary, is what there is: nothing older comes back.
+  if (!read && !reading && kept) setKept(undefined)
+  const shown = read ?? (reading && kept?.token === group.token ? kept : undefined)
+  // Each account's newest is read anyway, for its name.
+  return { snapshot: shown?.snapshot, account: shown?.account }
 }
 
 /** An account's name where two or more are saved, else null: one needs no name. */

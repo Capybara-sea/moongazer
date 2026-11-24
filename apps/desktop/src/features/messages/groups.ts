@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { formatMonthDay, formatTime, formatWhen } from "@/lib/format"
+import { formatMonthDay, formatTime, formatWhen, startOfDay } from "@/lib/format"
 import type { Message } from "@/stores/messageStore"
 import { text } from "@/text/zh"
 
 const DAY = 86_400_000
-
-function startOfDay(ms: number) {
-  const date = new Date(ms)
-  date.setHours(0, 0, 0, 0)
-  return date.getTime()
-}
 
 /** Newest first under today, yesterday and earlier, in local time; empty groups are left out. */
 export function messageGroups(messages: readonly Message[], now: number) {

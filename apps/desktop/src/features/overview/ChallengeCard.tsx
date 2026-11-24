@@ -4,6 +4,7 @@
 import { Moon, Star } from "lucide-react"
 import type { ReactNode } from "react"
 import { Bar } from "@/components/Bar"
+import { CardHeader } from "@/components/CardHeader"
 import { DoneBadge } from "@/components/DoneBadge"
 import { GameIcon } from "@/components/GameIcon"
 import { HoverPreview } from "@/components/HoverPreview"
@@ -11,6 +12,7 @@ import { Panel } from "@/components/Panel"
 import { Tip } from "@/components/Tip"
 import type { Account } from "@/domain/account"
 import { ELEMENT_ICONS } from "@/domain/elements"
+import { serverMonthDay } from "@/domain/gameTime"
 import { lookup } from "@/domain/names"
 import {
   type AbyssBlessing,
@@ -23,7 +25,7 @@ import {
   theaterLevelName,
 } from "@/domain/overviewData"
 import { cn } from "@/lib/cn"
-import { formatMonthDay } from "@/lib/format"
+import { formatMonthDay, formatTime } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
 import { text } from "@/text/zh"
 import {
@@ -75,7 +77,11 @@ export function ChallengeCard({ account, takenAt }: { account: Account; takenAt:
   const rows = [abyss(account, now), theater(account, now), stygian(account, takenAt, now)]
   return (
     <Panel aria-label={t.title} className="min-w-0 flex-[1_1_380px] gap-0 px-[18px] pt-3.5 pb-2">
-      <h2 className="pb-1.5 font-semibold text-base">{t.title}</h2>
+      <CardHeader title={t.title}>
+        <span className="tabular text-[12px] text-muted">
+          {text.daily.asOf(`${formatMonthDay(takenAt)} ${formatTime(takenAt)}`)}
+        </span>
+      </CardHeader>
       {rows.map(challenge => (
         <Row key={challenge.name} {...challenge} />
       ))}
@@ -196,7 +202,7 @@ function Row({ name, left, start, end, facts, done, acts, blessing, cast, teams 
         {share !== undefined && <Bar value={share} className="min-w-10 flex-1" />}
         {left && (
           <Tip
-            content={end === undefined ? undefined : t.endsAt(formatMonthDay(end))}
+            content={end === undefined ? undefined : t.endsAt(serverMonthDay(end))}
             className={cn(
               "tabular min-w-[6em] whitespace-nowrap text-right text-[12px] text-muted",
               !share && "ml-auto",

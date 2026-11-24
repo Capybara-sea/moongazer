@@ -19,6 +19,7 @@ export type Overview = {
   theater: Record<string, number>
   theaterCasts: Record<string, Cast>
   stygian: Record<string, number>
+  stygianBegins: Record<string, number>
   abyss: Record<string, number>
   abyssBlessings: Record<string, Blessing>
   areas: Record<string, Area>
@@ -70,6 +71,7 @@ export async function buildOverview(
     theater: times(theater, "End"),
     theaterCasts: casts(theater, characters),
     stygian: times(stygian, "End"),
+    stygianBegins: times(stygian, "Begin"),
     abyss: Object.fromEntries(abyss.map(row => [num(row, "scheduleId"), abyssOpens(row)])),
     abyssBlessings: blessings(g, abyss, entities),
     areas: areas(totals, cities),

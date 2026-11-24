@@ -73,7 +73,7 @@ export function TrendChart({ snapshots }: { snapshots: Snapshot[] }) {
   return (
     <Panel aria-label={text.trend.title} className="gap-4 px-4.5 pt-4 pb-4.5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-semibold text-base">{text.trend.title}</h2>
+        <h2 className="font-semibold text-[15px]">{text.trend.title}</h2>
         {hasData && (
           <div className="flex flex-wrap items-center gap-2">
             <fieldset

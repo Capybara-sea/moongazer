@@ -29,7 +29,7 @@ import {
 } from "@/domain/planner"
 import { cn } from "@/lib/cn"
 import { text } from "@/text/zh"
-import { type CardDrag, dimmed, GoalHeader } from "./GoalHeader"
+import { type CardDrag, dimmed, GoalHeader, goalTitleId } from "./GoalHeader"
 import { MaterialCell } from "./MaterialCell"
 import { RankBadge } from "./RankBadge"
 
@@ -67,7 +67,7 @@ export function moraNote(card: Card) {
 
 type Props = {
   card: Card
-  /** Outlined a moment, as the home page jumped to it. */
+  /** Outlined a moment, as the upgrade panel jumped to it. */
   flash?: boolean
   /** Every card's materials, for who else needs each. */
   totals: ReadonlyMap<string, MaterialTotal>
@@ -103,7 +103,10 @@ export function GoalCard({ card, flash, totals, weekday, drag, onEdit, onReplace
       {...drag?.item}
       data-goal={goal.id}
       data-flash={flash || undefined}
-      className="glass flex flex-col gap-3 rounded-[16px] border border-border bg-surface px-4.5 py-4"
+      // Focused by the upgrade panel's jump, so the keyboard carries on from the card.
+      tabIndex={-1}
+      aria-labelledby={goalTitleId(goal.id)}
+      className="glass flex flex-col outline-none gap-3 rounded-[16px] border border-border bg-surface px-4.5 py-4"
     >
       <GoalHeader card={card} drag={drag} onReplace={onReplace} />
       <div className={cn("flex items-center gap-3", dimmed(off))}>

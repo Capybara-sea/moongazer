@@ -10,6 +10,7 @@
 
 import { achievementPage, anecdotePage, collection } from "./collection"
 import { planner } from "./planner"
+import { resinPlan, tasks, upgrade } from "./tasks"
 
 /** Stat names by GOOD stat key; percentage and flat stats share a name. */
 const stats: Record<string, string> = {
@@ -83,6 +84,28 @@ export const text = {
     importFile: "导入 Leyline 文件",
     latest: "最新快照",
     openOverview: "查看总览",
+    date: (month: number, day: number, weekday: number) =>
+      `今天 · ${month} 月 ${day} 日 周${planner.weekdays[weekday] ?? ""}`,
+    dailyReset: "每日刷新还有",
+    weeklyReset: "每周刷新还有",
+    versionUpdate: "版本更新还有",
+    versionTip: (when: string) => `预计 ${when} 开始维护（按每 42 天一个版本推算）`,
+    tasksLeft: (n: number) => `待办剩余 ${n} 项`,
+    tasksDone: "待办均已完成",
+    calendar: {
+      title: "活动日历",
+      version: (from: string, to: string) => `当前版本 ${from} 至 ${to}（预计）`,
+      estimate: "按每 42 天一个版本推算，以游戏公告为准",
+      starts: (date: string) => `${date} 开始`,
+      burst: "紊乱爆发期",
+    },
+    usage: {
+      title: "游戏时长",
+      note: "按自动同步记录的每次登录计算：从登录到最后一次读取到变化。未开启自动同步的时段不计入，实际时长可能更长。",
+      none: "开启自动同步后，将按每次登录记录游戏时长。",
+      spans: { today: "今日", week: "本周", month: "本月", total: "累计" },
+      logins: (n: number, since: string) => `自 ${since} 起共登录 ${n} 次`,
+    },
   },
   overview: {
     title: "账号总览",
@@ -99,6 +122,8 @@ export const text = {
           : `在首页点击“开始同步”，登录游戏时将自动读取账号数据并保存快照；也可${importHint}。`,
     loadFailed: "读取快照失败",
     recent: "最近快照",
+    latestOnly: "待办和体力规划仅在查看最新快照时显示。",
+    showLatest: "查看最新快照",
     showAll: "全部",
     showLess: "收起",
     unchanged: "总数未变",
@@ -231,7 +256,7 @@ export const text = {
     welkinNone: "未生效",
     welkinClaimed: "今日已领",
     welkinUnclaimed: "今日未领",
-    welkinGuess: "按快照时间推算：每日 4 点刷新后首次登录时发放",
+    welkinGuess: (reset: string) => `按快照时间推算：每日 ${reset} 刷新后首次登录时发放`,
     reset: "快照之后已过重置时间",
     duration: {
       minutes: (n: number) => `${n} 分钟`,
@@ -303,6 +328,9 @@ export const text = {
   achievementPage,
   anecdotePage,
   planner,
+  tasks,
+  resinPlan,
+  upgrade,
   collections: {
     title: "收集",
     outfits: "衣装",
@@ -923,8 +951,8 @@ export const text = {
     welkinEnding: (days: number) => `空月祝福还剩 ${days} 天`,
     welkinEndingBody: "到期后将无法领取每日 90 原石。",
     commissionsUnclaimed: "今日委托奖励未领取",
-    commissionsUnclaimedBody: (finished: number, total: number) =>
-      `${finished}/${total} 已完成，凌晨 4 点重置。`,
+    commissionsUnclaimedBody: (finished: number, total: number, reset: string) =>
+      `${finished}/${total} 已完成，${reset} 重置。`,
     realmNearlyFull: "洞天宝钱即将存满",
     realmNearlyFullBody: (value: string, limit: string) => `${value}/${limit}，存满后不再增加。`,
     abyssEnding: "深境螺旋即将重置",

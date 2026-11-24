@@ -76,7 +76,7 @@ export function RecentSnapshots({ snapshots }: { snapshots: Snapshot[] }) {
   return (
     <Panel aria-label={t.recent} className="gap-0 px-4 pt-3.5 pb-1.5">
       <div className="flex items-center justify-between gap-2 pb-2">
-        <h2 className="font-semibold text-base">{t.recent}</h2>
+        <h2 className="font-semibold text-[15px]">{t.recent}</h2>
         {items.length > FIRST_ROWS && (
           <button type="button" onClick={() => setAll(!all)} className={MORE}>
             {all ? t.showLess : t.showAll}

@@ -75,6 +75,22 @@ export function latestKept(group: AccountGroup) {
 }
 
 /**
+ * Whether the pages show the account's newest snapshot, `selectedId` being
+ * the choice it was shown by. Following the newest (null) they do, though till
+ * a newer one is read they show the one before it (a head row every 15 s while
+ * playing, a new login, an import). A choice is newest with no kept snapshot
+ * after it; one deleted since is not, nor is one no longer listed placed after
+ * a kept one by its time.
+ */
+export function isNewest(snapshot: Snapshot, list: readonly Snapshot[], selectedId: number | null) {
+  if (selectedId === null) return true
+  if (!list.some(s => s.id === selectedId) && snapshot.id === selectedId) return false
+  const index = list.findIndex(s => s.id === snapshot.id)
+  const newer = index >= 0 ? list.slice(0, index) : list.filter(s => s.takenAt > snapshot.takenAt)
+  return !newer.some(s => s.hasRaw)
+}
+
+/**
  * The UID auto sync is reading live: its login settled and it is still
  * connected, with or without a live head row yet.
  */

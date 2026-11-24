@@ -11,6 +11,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window"
 import {
   call,
   isNullableNumber,
+  isNullableString,
   isNumber,
   isRecord,
   isStrings,
@@ -382,6 +383,17 @@ export async function getPlannerData(uid: number): Promise<unknown> {
 
 export async function savePlannerData(uid: number, data: unknown) {
   await call("save_planner_data", { uid, data: JSON.stringify(data) })
+}
+
+/** The account's tasks as saved, unparsed; null before the first save. */
+export async function getTasksData(uid: number): Promise<string | null> {
+  const value = await call("tasks_data", { uid })
+  if (isNullableString(value)) return value
+  throw protocolError("tasks data")
+}
+
+export async function saveTasksData(uid: number, data: unknown) {
+  await call("save_tasks_data", { uid, data: JSON.stringify(data) })
 }
 
 /**

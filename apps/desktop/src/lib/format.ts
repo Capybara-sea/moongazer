@@ -7,7 +7,8 @@ const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
 
-function startOfDay(ms: number) {
+/** Midnight before `ms` on the PC's clock. */
+export function startOfDay(ms: number) {
   const date = new Date(ms)
   date.setHours(0, 0, 0, 0)
   return date.getTime()
@@ -39,6 +40,11 @@ export function formatWhen(ms: number, now = Date.now()) {
 export function formatDateTime(ms: number) {
   const d = new Date(ms)
   return `${d.getFullYear()}-${formatMonthDay(ms)} ${formatTime(ms)}`
+}
+
+/** "2026-11-13" in local time. */
+export function formatDate(ms: number) {
+  return `${new Date(ms).getFullYear()}-${formatMonthDay(ms)}`
 }
 
 /** "11-13" in local time. */

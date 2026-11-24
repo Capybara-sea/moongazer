@@ -87,7 +87,7 @@ export function reminders(account: Account, takenAt: number, token: number): New
         `commissions:${day}`,
         at,
         t.commissionsUnclaimed,
-        t.commissionsUnclaimedBody(commissions.finished, commissions.total),
+        t.commissionsUnclaimedBody(commissions.finished, commissions.total, formatTime(day + DAY)),
       )
     }
   }

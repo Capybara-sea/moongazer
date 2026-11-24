@@ -6,6 +6,7 @@ import { text } from "@/text/zh"
 import {
   formatAmount,
   formatAmounts,
+  formatDate,
   formatDateTime,
   formatDelta,
   formatDuration,
@@ -44,6 +45,12 @@ describe("formatWhen", () => {
     expect(formatWhen(at(11, 13, 21), now)).toBe("11-13")
     expect(formatWhen(at(12, 30, 8, 0, 2025), now)).toBe("2025-12-30")
     expect(formatWhen(now + 3 * 60_000, now)).toBe("11-17")
+  })
+})
+
+describe("formatDate", () => {
+  it("writes the local date with year, month and day", () => {
+    expect(formatDate(new Date(2001, 0, 2, 23, 59).getTime())).toBe("2001-01-02")
   })
 })
 

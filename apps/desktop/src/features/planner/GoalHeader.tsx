@@ -31,6 +31,9 @@ export type CardDrag = {
   rearrange: (change: () => void) => void
 }
 
+/** The id of a card's title, which names the card. */
+export const goalTitleId = (goal: string) => `goal-title-${goal}`
+
 type Props = { card: Card; drag: CardDrag | undefined; onReplace: () => void }
 
 /**
@@ -64,7 +67,9 @@ export function GoalHeader({ card, drag, onReplace }: Props) {
         </Tip>
       )}
       <div className={cn("flex min-w-0 flex-1 items-center gap-2", dimmed(off))}>
-        <h3 className="truncate font-semibold text-[15px]">{name}</h3>
+        <h3 id={goalTitleId(goal.id)} className="truncate font-semibold text-[15px]">
+          {name}
+        </h3>
         {tag && (
           <Tip
             content={standing === "otherElement" ? t.otherElementTip : undefined}

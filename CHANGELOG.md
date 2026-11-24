@@ -8,13 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Home turns to the game: time to the resets and the next version, the newest snapshot with the
+  tasks left, time played as auto sync saw it, and a calendar of the version.
+- The overview has a to-do card (battle pass, reputation, shop, Adventure Rank rewards, events and
+  custom tasks, ticked by themselves where the snapshot tells) and where to spend resin, a place a
+  row in order of priority with what is short there.
+- The planner lists up to five goals whose next step has its materials, with what to combine or
+  convert first.
+
 ### Changed
 
 - Hovering a material in the planner's summary or today list also shows each combining or
   converting step with icons, added up over all goals, and no longer what the bag holds.
+- Section titles on the overview sit inside their cards, each card's title on one line at one
+  size.
+- The achievements page drops the title over the list; in a wide enough window the goals and the
+  achievements scroll each on their own.
 
 ### Fixed
 
+- Weekly boss discounts in Leyline files from Teyvat.me Capture 1.13.2 and earlier are no longer
+  read the wrong way round.
 - With auto sync, the list of running events no longer drops to one when a single event moves on
   (spending resin on the weekly training event, trying a trial character).
 - Paimon's Bargains carry over from the last time the shop was read, so a new login no longer shows

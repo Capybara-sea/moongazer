@@ -8,7 +8,7 @@
  * Times are converted from unix seconds to milliseconds.
  */
 
-import { RESIN_CAP } from "./daily"
+import { type GameEvent, parseEvents, parseTasks, type Tasks } from "@/domain/accountTasks"
 import {
   type Artifact,
   artifacts,
@@ -22,6 +22,8 @@ import {
 } from "./good"
 import { count, idMap, type Json, list, ms, num, record, size, str } from "./json"
 
+export type { EventCounter, Fate, GameEvent, Tasks } from "@/domain/accountTasks"
+
 export type Player = {
   uid?: number
   ar?: number
@@ -32,18 +34,6 @@ export type Player = {
   profileFrame?: number
   nameCard?: number
   birthday?: { month: number; day: number }
-}
-
-export type Tasks = {
-  resin?: { value: number; nextAt?: number }
-  commissions?: { finished: number; total: number; claimed: boolean }
-  /** `comfort` is the highest Adeptal Energy among the realm layouts, which sets the rate. */
-  realm?: { value: number; limit: number; comfort?: number }
-  weeklyBosses?: { left: number; limit: number }
-  expeditions?: { character?: string; doneAt: number }[]
-  transformer?: { usedAt: number; readyAt: number }
-  welkin?: { days: number }
-  abyss?: { start: number; end: number; stars: number; maxStars: number }
 }
 
 export type AnecdoteEntry = { state: number; finishCount: number }
@@ -110,6 +100,8 @@ export type Account = {
   achievements?: Achievements
   anecdotes?: Anecdotes
   tasks?: Tasks
+  /** The events running at login. */
+  events?: GameEvent[]
   exploration?: Exploration
   endgame?: Endgame
   collections?: Collections
@@ -159,56 +151,6 @@ function bestComfort(value: unknown): number | undefined {
     best = Math.max(best ?? 0, total)
   }
   return best
-}
-
-/**
- * `heldResin` is the player's resin, as at login or the last change; `comfort` the Adeptal
- * Energy that sets the Realm Currency rate.
- */
-function tasks(
-  value: unknown,
-  heldResin: number | undefined,
-  comfort: number | undefined,
-): Tasks | undefined {
-  const raw = record(value)
-  if (!raw) return undefined
-  const resin = record(raw.resin)
-  const commissions = record(raw.commissions)
-  const realm = record(raw.realm)
-  const bosses = record(raw.weeklyBosses)
-  const transformer = record(raw.transformer)
-  const welkin = record(raw.welkin)
-  const abyss = record(raw.abyss)
-  const usedAt = ms(transformer?.usedAt)
-  const readyAt = ms(transformer?.readyAt)
-  const start = ms(abyss?.start)
-  const end = ms(abyss?.end)
-  return {
-    // At the cap no next point comes, so the game sends no time and Capture
-    // leaves the clock out; full resin stays full until spent.
-    resin: resin
-      ? { value: count(resin.value), nextAt: ms(resin.nextAt) }
-      : heldResin !== undefined && heldResin >= RESIN_CAP
-        ? { value: heldResin }
-        : undefined,
-    commissions: commissions && {
-      finished: count(commissions.finished),
-      total: count(commissions.total),
-      claimed: commissions.claimed === true,
-    },
-    realm: realm && { value: count(realm.value), limit: count(realm.limit), comfort },
-    weeklyBosses: bosses && { left: count(bosses.left), limit: count(bosses.limit) },
-    expeditions: list(raw.expeditions)?.flatMap(item => {
-      const doneAt = ms(record(item)?.doneAt)
-      return doneAt === undefined ? [] : [{ character: str(record(item)?.character), doneAt }]
-    }),
-    transformer: usedAt !== undefined && readyAt !== undefined ? { usedAt, readyAt } : undefined,
-    welkin: welkin && { days: count(welkin.days) },
-    abyss:
-      start !== undefined && end !== undefined
-        ? { start, end, stars: count(abyss?.stars), maxStars: count(abyss?.maxStars) }
-        : undefined,
-  }
 }
 
 function anecdotes(value: unknown): Anecdotes | undefined {
@@ -351,7 +293,8 @@ export function parseAccount(value: unknown): Account {
       : undefined,
     achievements: achievements(raw),
     anecdotes: anecdotes(raw.gi_anecdotes),
-    tasks: tasks(raw.gi_tasks, num(record(raw.gi_player)?.resin), bestComfort(raw.gi_teapot)),
+    tasks: parseTasks(raw.gi_tasks, num(record(raw.gi_player)?.resin), bestComfort(raw.gi_teapot)),
+    events: parseEvents(raw.gi_events),
     exploration: exploration(raw.gi_exploration),
     endgame: endgame(raw.gi_endgame),
     collections: collections(raw),

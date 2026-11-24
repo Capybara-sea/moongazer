@@ -31,7 +31,6 @@ export const achievementPage = {
   hideHidden: "不含隐藏成就",
   goals: "成就分类",
   allGoals: "全部分类",
-  goalInfo: (done: number, total: number) => `${n(done)} / ${n(total)} 已完成`,
   hidden: "隐藏",
   done: "已完成",
   notDone: "未完成",

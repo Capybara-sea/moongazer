@@ -97,8 +97,14 @@ describe("upgrade rows", () => {
     ])
     const [row] = rows([goal()], account([ayaka(80, 5)]), bag)
     expect(row?.card.goal.id).toBe("a")
-    expect(row?.target).toEqual({ kind: "ascend", level: 80, cap: 90 })
-    expect(row?.combine).toEqual([{ key: "ShivadaJadeGemstone", count: 3 }])
+    expect(row?.target).toEqual({
+      kind: "ascend",
+      from: { level: 80, cap: 80 },
+      to: { level: 80, cap: 90 },
+    })
+    expect(row?.recipes).toEqual([
+      { kind: "combine", inputs: [["ShivadaJadeChunk", 9]], output: ["ShivadaJadeGemstone", 3] },
+    ])
   })
 
   it("name levelling to the cap, nothing to combine", () => {
@@ -107,8 +113,12 @@ describe("upgrade rows", () => {
       ["Mora", 10_000_000],
     ])
     const [row] = rows([goal()], account([ayaka(80, 6)]), bag)
-    expect(row?.target).toEqual({ kind: "level", level: 90, cap: 90 })
-    expect(row?.combine).toEqual([])
+    expect(row?.target).toEqual({
+      kind: "level",
+      from: { level: 80, cap: 90 },
+      to: { level: 90, cap: 90 },
+    })
+    expect(row?.recipes).toEqual([])
   })
 
   it("name a talent's next level, combined only past what the bag holds for the step", () => {
@@ -121,13 +131,15 @@ describe("upgrade rows", () => {
     ])
     const [row] = rows([goal(8)], account([ayaka(90, 6)]), bag)
     expect(row?.target).toEqual({ kind: "talent", talent: "skill", from: 6, to: 7 })
-    expect(row?.combine).toEqual([{ key: "PhilosophiesOfElegance", count: 3 }])
+    expect(row?.recipes).toEqual([
+      { kind: "combine", inputs: [["GuideToElegance", 9]], output: ["PhilosophiesOfElegance", 3] },
+    ])
     const [direct] = rows(
       [goal(8)],
       account([ayaka(90, 6)]),
       new Map([...bag, ["PhilosophiesOfElegance", 4]]),
     )
-    expect(direct?.combine).toEqual([])
+    expect(direct?.recipes).toEqual([])
   })
 
   it("name what must be converted for a step, past what combining makes", () => {
@@ -143,12 +155,24 @@ describe("upgrade rows", () => {
     ])
     const plan = { goals: [goal()], focus: "important" as const, convert: ["gem" as const] }
     const [row] = upgradeRows(planCards(plan, account([ayaka(80, 5)]), plannerBag(bag)))
-    expect(row?.target).toEqual({ kind: "ascend", level: 80, cap: 90 })
-    expect(row?.combine).toEqual([{ key: "ShivadaJadeGemstone", count: 1 }])
-    expect(row?.convert).toEqual([{ key: "ShivadaJadeGemstone", count: 3 }])
+    expect(row?.target).toMatchObject({ kind: "ascend", to: { level: 80, cap: 90 } })
+    const [combined, converted] = row?.recipes ?? []
+    expect(combined).toEqual({
+      kind: "combine",
+      inputs: [["ShivadaJadeChunk", 3]],
+      output: ["ShivadaJadeGemstone", 1],
+    })
+    expect(converted).toMatchObject({
+      kind: "convert",
+      inputs: [
+        ["AgnidusAgateGemstone", 3],
+        ["DustOfAzoth", expect.any(Number)],
+      ],
+      output: ["ShivadaJadeGemstone", 3],
+    })
   })
 
-  it("take each goal's first step in card order, six at most, none off or done", () => {
+  it("take each goal's first step in card order, five at most, none off or done", () => {
     const sword = (id: string, over: Partial<WeaponGoal> = {}): WeaponGoal => ({
       id,
       kind: "weapon",
@@ -164,7 +188,11 @@ describe("upgrade rows", () => {
       ["Mora", 10_000_000],
     ])
     const list = rows(goals, account([]), bag)
-    expect(list.map(row => row.card.goal.id)).toEqual(["1", "3", "5", "6", "7", "8"])
-    expect(list[0]?.target).toEqual({ kind: "level", level: 20, cap: 20 })
+    expect(list.map(row => row.card.goal.id)).toEqual(["1", "3", "5", "6", "7"])
+    expect(list[0]?.target).toEqual({
+      kind: "level",
+      from: { level: 1, cap: 20 },
+      to: { level: 20, cap: 20 },
+    })
   })
 })

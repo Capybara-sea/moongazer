@@ -9,9 +9,10 @@ import { Tip } from "@/components/Tip"
 import { levelCap } from "@/domain/builds"
 import type { Character, CharacterInfo } from "@/domain/good"
 import { characterData, characterProfile } from "@/domain/names"
+import { formatDate } from "@/lib/format"
 import { text } from "@/text/zh"
 import { CharacterAvatar } from "./CharacterAvatar"
-import { ascended, formatDate } from "./detail"
+import { ascended } from "./detail"
 
 type Props = {
   character: Character

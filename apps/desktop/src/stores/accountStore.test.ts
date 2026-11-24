@@ -76,6 +76,7 @@ function reset() {
     entries: {},
     shown: null,
     shownAccount: null,
+    shownSelected: null,
   })
   useSnapshotStore.setState({ snapshots: null })
 }
@@ -315,6 +316,39 @@ describe("the account the pages show", () => {
     useSnapshotStore.setState({ snapshots: [b4, b2] })
     expect(state().group?.uid).toBe(B)
     expect(state().accounts).toHaveLength(1)
+  })
+
+  it("lets go of a chosen snapshot once deleted, so a later one given its id is not taken for it", async () => {
+    useSnapshotStore.setState({ snapshots: two })
+    state().select(b2.id)
+    await vi.waitFor(() => expect(state().shown).toBe(b2))
+    expect(state().shownSelected).toBe(b2.id)
+    useSnapshotStore.setState({ snapshots: [b4, a3, a1] })
+    expect(state().selectedId).toBeNull()
+    await vi.waitFor(() => expect(state().shown).toBe(b4))
+    expect(state().shownSelected).toBeNull()
+    useSnapshotStore.setState({ snapshots: [{ ...b2, takenAt: 5000 }, b4, a3, a1] })
+    expect(state().selectedId).toBeNull()
+  })
+
+  it("keeps the choice the shown snapshot was shown by till the next is read", async () => {
+    let release = () => {}
+    vi.mocked(getSnapshotExport).mockImplementation(async id => {
+      if (id === b2.id) {
+        await new Promise<void>(resolve => {
+          release = resolve
+        })
+      }
+      return {}
+    })
+    useSnapshotStore.setState({ snapshots: two })
+    await vi.waitFor(() => expect(state().shown).toBe(b4))
+    state().select(b2.id)
+    expect(state().shown).toBe(b4)
+    expect(state().shownSelected).toBeNull()
+    release()
+    await vi.waitFor(() => expect(state().shown).toBe(b2))
+    expect(state().shownSelected).toBe(b2.id)
   })
 })
 

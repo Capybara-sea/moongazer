@@ -6,7 +6,6 @@ import { formatStat, levelCap } from "@/domain/builds"
 import type { Element } from "@/domain/elements"
 import type { Character } from "@/domain/good"
 import { BASE_STATS, type CharacterStats, OTHER_STATS, type OtherStatKey } from "@/domain/stats"
-import { formatMonthDay } from "@/lib/format"
 import { visibleCharacters } from "./order"
 
 type ListOptions = Parameters<typeof visibleCharacters>[1]
@@ -44,11 +43,6 @@ export function neighbors(keys: readonly string[], key: string): Neighbors | und
  */
 export function ascended(level: number, ascension: number) {
   return ascension > 0 && level < levelCap(ascension)
-}
-
-/** "2021-09-01" in local time. */
-export function formatDate(ms: number) {
-  return `${new Date(ms).getFullYear()}-${formatMonthDay(ms)}`
 }
 
 /**

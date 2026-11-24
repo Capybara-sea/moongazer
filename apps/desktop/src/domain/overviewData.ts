@@ -22,6 +22,7 @@ type Table = {
   theater: Record<string, number>
   theaterCasts: Record<string, { elements: string[]; guests: string[]; openers: string[] }>
   stygian: Record<string, number>
+  stygianBegins: Record<string, number>
   abyss: Record<string, number>
   abyssBlessings: Record<string, AbyssBlessing>
   areas: Record<string, { total: number; city: number }>
@@ -67,11 +68,15 @@ export function abyssBlessing(start: number): AbyssBlessing | undefined {
   return period === undefined ? undefined : table.abyssBlessings[period]
 }
 
-export type StygianSeason = { season: number; end: number }
+export type StygianSeason = { season: number; begin?: number; end: number }
 
-/** Stygian Onslaught seasons with their ends. */
+/** Stygian Onslaught seasons with their begins and ends. */
 export const STYGIAN_SEASONS: StygianSeason[] = Object.entries(table.stygian).map(
-  ([season, end]) => ({ season: Number(season), end: end * 1000 }),
+  ([season, end]) => ({
+    season: Number(season),
+    begin: toMs(table.stygianBegins[season]),
+    end: end * 1000,
+  }),
 )
 
 /** When a Spiral Abyss period opened. */

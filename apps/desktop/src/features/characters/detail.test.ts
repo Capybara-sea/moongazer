@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
 import type { Character } from "@/domain/good"
 import type { CharacterStats } from "@/domain/stats"
-import { ascended, comparedAccount, detailOrder, formatDate, neighbors, statRows } from "./detail"
+import { ascended, comparedAccount, detailOrder, neighbors, statRows } from "./detail"
 
 function character(key: string, level: number): Character {
   return {
@@ -83,12 +83,6 @@ describe("ascended", () => {
     expect(ascended(80, 5)).toBe(false)
     expect(ascended(20, 0)).toBe(false)
     expect(ascended(15, 0)).toBe(false)
-  })
-})
-
-describe("formatDate", () => {
-  it("writes the local date with year, month and day", () => {
-    expect(formatDate(new Date(2001, 0, 2, 23, 59).getTime())).toBe("2001-01-02")
   })
 })
 

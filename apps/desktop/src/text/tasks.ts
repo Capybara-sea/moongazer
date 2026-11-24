@@ -1,0 +1,147 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Capybara_sea
+
+/** The overview's to-do card and resin plan, and the planner's upgrade panel. */
+
+export const tasks = {
+  countdown: {
+    days: (days: number, hours: number) => `${days} 天 ${hours} 小时`,
+    hours: (hours: number, minutes: number) => `${hours} 小时 ${minutes} 分`,
+    minutes: (minutes: number) => `${minutes} 分`,
+  },
+  todo: "待办",
+  tabsLabel: "任务分类",
+  tabs: { all: "全部", standing: "常驻", events: "活动", custom: "自定义" },
+  hideDone: "隐藏已完成",
+  shown: "显示的任务",
+  newTask: "新建任务",
+  noUid: "此快照不含 UID，无法手动勾选或添加自定义任务。",
+  loadFailed: (error: string) => `读取任务失败：${error}`,
+  saveFailed: (error: string) => `保存任务失败，最近的更改尚未保存：${error}`,
+  empty: "暂无任务",
+  allDone: "所有任务均已完成",
+  customEmpty: "暂无自定义任务，可点击右上角的“+”添加。",
+  auto: "按快照自动判断",
+  autoOff: "已关闭自动判断，需手动勾选",
+  autoTip: "按快照自动判断。点击可关闭，改为手动勾选",
+  autoOffTip: "已关闭自动判断，需手动勾选。点击可恢复自动判断",
+  lockedTick: "按快照自动判断。如需手动勾选，请点击右侧的同步标志",
+  markLabel: (task: string, state: string) => `${task}：${state}`,
+  standing: {
+    battlePass: "纪行每周任务",
+    reputation: "声望",
+    shop: "派蒙的小卖部",
+    arRewards: "冒险等阶奖励",
+  },
+  detail: {
+    count: (done: number, total: number) => `${done}/${total}`,
+    fate: (name: string, bought: number, limit: number) => `${name} ${bought}/${limit}`,
+    arRewards: (n: number) => (n > 0 ? `可领取 ${n} 个` : "暂无可领取"),
+    separator: " · ",
+  },
+  eventUnnamed: (id: number) => `活动 ${id}`,
+  eventTags: { quest: "任务", exploration: "世界探索" },
+  groups: {
+    limited: "限时活动",
+    gcg: "七圣召唤",
+    challenge: "挑战",
+    quest: "任务和区域",
+    trial: "试用角色",
+    banner: "横幅宣传",
+  },
+  repeat: {
+    daily: "每天",
+    weekly: "每周",
+    days: (n: number) => `每 ${n} 天`,
+  },
+  byDone: "（按完成日计算）",
+  startsOn: (month: number, day: number) => `${month} 月 ${day} 日开始`,
+  shownSections: { standing: "常驻", events: "活动", custom: "自定义" },
+  shownLabel: (name: string) => `显示 ${name}`,
+  edit: (name: string) => `编辑 ${name}`,
+  noCustom: "暂无自定义任务",
+  dialog: {
+    newTitle: "新建任务",
+    editTitle: "编辑任务",
+    name: "名称",
+    repeat: "重复",
+    repeats: { daily: "每天", weekly: "每周", days: "每 N 天" },
+    days: "间隔天数",
+    daysUnit: "天",
+    startDay: "开始日",
+    anchor: "计算起点",
+    anchors: { start: "开始日", done: "完成日" },
+    anchorHint: {
+      start: "从开始日起按固定周期重复。",
+      done: "完成后间隔一个周期再次出现。",
+    },
+    dayHint: (reset: string) => `日期按每日 ${reset} 刷新划分。`,
+    note: "备注",
+    save: "保存",
+    cancel: "取消",
+    delete: "删除",
+    deleteAsk: "删除此任务？删除后无法恢复。",
+  },
+}
+
+export const resinPlan = {
+  title: "体力规划",
+  /** The header's note: the resin there is. */
+  original: (value: number, cap: number) => `原粹树脂 ${value}/${cap}`,
+  item: (name: string, count: number) => `${name} ${count}`,
+  training: {
+    title: "砺行修远",
+    value: (spent: number, goal: number) => `${spent} / ${goal}`,
+    tip: "今日已消耗的原粹树脂（浓缩树脂不计）",
+  },
+  burst: {
+    title: "紊乱爆发期",
+    left: (time: string) => `剩余 ${time}`,
+    modesLabel: "紊乱爆发期的树脂用法",
+    modes: { all: "圣遗物", prestige: "1200 勋望" },
+    /** Under the time left: what the chosen way means for the rows below. */
+    notes: { all: "以下各项可暂缓", prestige: "目标 1200，平均每天 120" },
+    all: "全部用于圣遗物：在幽境危战完成困难及以上难度的战斗后，于紊乱地脉花消耗树脂领取自选祝圣秘境的奖励。爆发期结束前，下方各项可暂缓。",
+    prestige:
+      "优先累计 1200 勋望：先在紊乱地脉花累计消耗 1200 树脂（整期 10 天，平均每天 120）领取启圣之尘，其余树脂按下方顺序使用。",
+  },
+  places: {
+    weekly: "周本",
+    domains: "今日秘境",
+    worldBoss: "世界 Boss",
+    blossoms: "地脉之花",
+    free: "不消耗树脂",
+    plan: "规划所需材料",
+  },
+  weeklyLeft: (n: number) => `减半剩余 ${n} 次`,
+  weeklyNone: "本周减半已用完",
+  short: (n: number) => `缺 ${n} 种`,
+  more: (n: string) => `+${n}`,
+  tomorrow: (names: string) => `明日开放：${names}`,
+  blossomParts: { exp: "角色经验", mora: "摩拉" },
+  freeParts: {
+    specialty: (n: number) => `区域特产 ${n} 种`,
+    enemy: (n: number) => `怪物掉落 ${n} 种`,
+    weaponExp: "武器经验（锻造）",
+  },
+  enough: "规划所需材料均已足够",
+  notToday: "不足的材料今明两天均无处可刷",
+  items: "树脂道具",
+  noPlan: "在“规划”中添加目标后，将按地点列出不足的材料。",
+  allOff: "规划中的目标均已停用。",
+  openPlanner: "前往规划",
+  planFailed: (error: string) => (error ? `读取规划失败：${error}` : "读取规划失败"),
+}
+
+export const upgrade = {
+  title: "可升级",
+  ascend: (from: string, to: string) => `突破 ${from} → ${to}`,
+  level: (from: string, to: string) => `等级 ${from} → ${to}`,
+  levelCap: (level: number, cap: number) => `${level}/${cap}`,
+  recipeKinds: { combine: "合成", convert: "转换" },
+  times: (count: string) => `×${count}`,
+  /** Read out in place of the recipe's plus and arrow. */
+  and: "和",
+  makes: "得到",
+  none: "暂无可升级的目标",
+}

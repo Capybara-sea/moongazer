@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { Button } from "@heroui/react"
 import { useState } from "react"
 import { Notice } from "@/components/Notice"
+import { Panel } from "@/components/Panel"
 import type { Account } from "@/domain/account"
+import { isNewest } from "@/domain/accounts"
+import { TodoCard } from "@/features/tasks/TodoCard"
+import { useTaskBoard } from "@/features/tasks/useTaskBoard"
 import { isHead, type Snapshot } from "@/lib/backend"
-import { useCurrentSnapshot } from "@/stores/accountStore"
+import { useNow } from "@/lib/useNow"
+import { useAccountStore, useCurrentSnapshot } from "@/stores/accountStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 import { AccountCard } from "./AccountCard"
@@ -21,13 +27,14 @@ import { ImportResults } from "./ImportResults"
 import { MonthTable } from "./MonthTable"
 import { RecentSnapshots, sourceLabel } from "./RecentSnapshots"
 import { RegionGrid } from "./RegionGrid"
+import { ResinPlanCard } from "./ResinPlanCard"
 import { ReviewNotices } from "./ReviewNotices"
 import { SnapshotPicker } from "./SnapshotPicker"
 import { TrendChart } from "./TrendChart"
 
 /**
  * The account overview, as in the design: account, totals, today's tasks and
- * challenges, the world, then the history. Blocks are direct children of the
+ * challenges, the to-do card and the resin plan, the world, then the history. Blocks are direct children of the
  * page's root so they rise in one after another.
  */
 export function OverviewPage() {
@@ -46,12 +53,15 @@ export function OverviewPage() {
     settled &&
     (shown?.snapshot !== current.snapshot ||
       shown?.entry !== current.entry ||
-      shown?.list !== current.list)
+      shown?.list !== current.list ||
+      shown?.selected !== current.selected)
   ) {
     setShown(current)
   }
-  const { snapshot, list, older, entry } = shown ?? {}
+  const { snapshot, list, older, entry, selected } = shown ?? {}
   const account = snapshot?.hasRaw && entry?.status === "ready" ? entry.account : undefined
+  const latest =
+    snapshot !== undefined && list !== undefined && isNewest(snapshot, list, selected ?? null)
 
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-4.5 p-6">
@@ -75,7 +85,7 @@ export function OverviewPage() {
             <Notice title={text.snapshot.loadFailed} detail={entry.message} />
           )}
           <CountTiles snapshot={snapshot} older={older ?? []} />
-          {account && <TodayBlocks account={account} takenAt={snapshot.takenAt} />}
+          {account && <TodayBlocks account={account} snapshot={snapshot} latest={latest} />}
           {account && <WorldBlocks account={account} />}
           <History snapshots={list} />
         </>
@@ -105,13 +115,50 @@ function Header({ snapshot, list }: { snapshot?: Snapshot; list?: Snapshot[] }) 
   )
 }
 
-/** Today's tasks next to the current challenges. */
-function TodayBlocks({ account, takenAt }: { account: Account; takenAt: number }) {
+type TodayProps = {
+  account: Account
+  snapshot: Snapshot
+  /** Whether it is the account's newest snapshot, the only one with the to-do card and the resin plan. */
+  latest: boolean
+}
+
+/**
+ * Today's tasks next to the current challenges, then the to-do card next to
+ * the resin plan, those two for the newest snapshot only.
+ */
+function TodayBlocks({ account, snapshot, latest }: TodayProps) {
   return (
-    <div className="flex flex-wrap items-stretch gap-4">
-      <DailyCard account={account} takenAt={takenAt} />
-      <ChallengeCard account={account} takenAt={takenAt} />
+    <>
+      <div className="flex flex-wrap items-stretch gap-4">
+        <DailyCard account={account} takenAt={snapshot.takenAt} />
+        <ChallengeCard account={account} takenAt={snapshot.takenAt} />
+      </div>
+      {latest ? <Plans account={account} snapshot={snapshot} /> : <LatestOnly />}
+    </>
+  )
+}
+
+/** The to-do card and the resin plan, of the newest snapshot. */
+function Plans({ account, snapshot }: { account: Account; snapshot: Snapshot }) {
+  const now = useNow()
+  const board = useTaskBoard(account, snapshot.uid, now)
+  return (
+    <div className="flex flex-wrap items-start gap-4">
+      <TodoCard board={board} uid={snapshot.uid} now={now} />
+      <ResinPlanCard account={account} takenAt={snapshot.takenAt} now={now} />
     </div>
+  )
+}
+
+/** In place of the tasks and the resin plan while an older snapshot is shown. */
+function LatestOnly() {
+  return (
+    <Panel className="flex-row flex-wrap items-center justify-between gap-2 py-2.5">
+      <p className="text-[13px] text-muted">{text.overview.latestOnly}</p>
+      <Button variant="secondary" onPress={() => useAccountStore.getState().select(null)}>
+        {text.overview.showLatest}
+      </Button>
+    </Panel>
   )
 }
 

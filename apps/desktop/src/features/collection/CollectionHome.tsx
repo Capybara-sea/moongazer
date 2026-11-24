@@ -90,7 +90,7 @@ function PartCard({ icon: Icon, title, part, progress, line }: Props) {
         >
           <Icon size={18} />
         </span>
-        <span className="font-semibold text-base">{title} ›</span>
+        <span className="font-semibold text-[15px]">{title} ›</span>
       </span>
       {progress ? (
         <>

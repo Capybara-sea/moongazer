@@ -28,7 +28,7 @@ export function MonthTable({ snapshots }: { snapshots: Snapshot[] }) {
   return (
     <Panel aria-label={text.month.title} className="gap-3 px-4 py-3.5">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-semibold text-base">{text.month.title}</h2>
+        <h2 className="font-semibold text-[15px]">{text.month.title}</h2>
         <div className="flex items-center gap-1">
           <StepButton
             label={text.month.previous}

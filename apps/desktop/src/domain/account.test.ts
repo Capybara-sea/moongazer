@@ -144,7 +144,7 @@ describe("parseAccount on a Leyline export", () => {
       gi_tasks: {
         resin: { value: 210 },
         commissions: { total: 4 },
-        weeklyBosses: { limit: 3 },
+        weeklyBosses: { used: 3, limit: 3 },
         welkin: {},
         abyss: { start: 6_000, end: 7_000, maxStars: 36 },
       },

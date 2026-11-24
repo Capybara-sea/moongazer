@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-11-25
+
 ### Added
 
 - Home turns to the game: time to the resets and the next version, the newest snapshot with the
@@ -193,7 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - About page with help and feedback, acknowledgments and third-party
   licenses.
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.3...HEAD
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/Capybara-sea/moongazer/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/Capybara-sea/moongazer/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/Capybara-sea/moongazer/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/Capybara-sea/moongazer/compare/v0.3.0...v0.3.1

@@ -88,15 +88,9 @@ export const planner = {
     mora
       ? `背包共有 ${bag}，排在前面的目标已分走 ${taken}`
       : `背包共有 ${bag} 个，排在前面的目标已分走 ${taken} 个`,
-  usedElsewhere: (bag: string, used: string, mora = false) =>
-    mora
-      ? `背包共有 ${bag}，其中 ${used} 用于合成或转换其他素材`
-      : `背包共有 ${bag} 个，其中 ${used} 个用于合成或转换其他素材`,
-  combinedPart: (count: string) => `其中 ${count} 个由合成补足`,
   /** `by` is what made it up, as "合成" or "合成、转换"; no `left` once it is enough. */
   afterRecipes: (by: string, left?: string) =>
     left === undefined ? `${by}后已足够` : `${by}后还需 ${left} 个`,
-  convertedPart: (count: string) => `其中 ${count} 个由转换补足`,
   besideName: (amount: string) => `（${amount}）`,
   short: (count: string) => `缺${count}`,
   neededBy: (names: readonly string[], total: number) =>

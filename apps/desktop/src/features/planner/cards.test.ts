@@ -22,6 +22,7 @@ import {
   amountTip,
   bagHolds,
   cellLabel,
+  lineMadeUp,
   lineView,
   materialTip,
   neededBy,
@@ -66,6 +67,8 @@ describe("material cells", () => {
   const top = "PhilosophiesOfElegance"
   const mid = lowerTier(top) ?? ""
   const low = lowerTier(mid) ?? ""
+  // A card's line as its cell gives it to `recipeNote`.
+  const onCard = (line: Line) => ({ ...lineMadeUp(line), need: line.need, have: line.have })
 
   it("write combining even when it is still not enough, and what is needed after it", () => {
     const line: Line = {
@@ -80,11 +83,13 @@ describe("material cells", () => {
       ]),
     }
     expect(amountTip(line.key, line.bag, line.need).amount).toBe("10/21")
-    expect(recipes(line)).toEqual([{ kind: "combine", inputs: [[mid, 15]], output: [top, 5] }])
-    const html = renderToStaticMarkup(recipeNote(line))
+    expect(recipes(lineMadeUp(line))).toEqual([
+      { kind: "combine", inputs: [[mid, 15]], output: [top, 5] },
+    ])
+    const html = renderToStaticMarkup(recipeNote(onCard(line)))
     expect(html).toContain(t.afterRecipes(t.recipeKinds.combine, "6"))
     // The bag goes on the same line, before it.
-    const withBag = renderToStaticMarkup(recipeNote(line, t.inBag("10")))
+    const withBag = renderToStaticMarkup(recipeNote(onCard(line), t.inBag("10")))
     expect(withBag).toContain(
       `${t.inBag("10")}${t.clauseSeparator}${t.afterRecipes(t.recipeKinds.combine, "6")}`,
     )
@@ -100,7 +105,7 @@ describe("material cells", () => {
     )
     const line = lines?.[0]
     if (!line) throw new Error("no line")
-    expect(recipes(line)).toEqual([
+    expect(recipes(lineMadeUp(line))).toEqual([
       {
         kind: "combine",
         inputs: [[low, 18]],
@@ -113,7 +118,7 @@ describe("material cells", () => {
       },
     ])
     expect(line.used.get("Mora")).toBe(6 * 175 + 2 * 550)
-    const html = renderToStaticMarkup(recipeNote(line))
+    const html = renderToStaticMarkup(recipeNote(onCard(line)))
     expect(html.match(/lucide-arrow-right/g)).toHaveLength(2)
     for (const key of [low, mid, top]) expect(html).toContain(`alt="${lineView(key).name}"`)
     expect(html).not.toContain(`alt="${lineView("Mora").name}"`)
@@ -130,7 +135,7 @@ describe("material cells", () => {
     const [lines] = allocate([new Map([[top, 2]])], bag)
     const line = lines?.[0]
     if (!line) throw new Error("no line")
-    expect(recipes(line)?.map(recipe => [recipe.inputs[0], recipe.output])).toEqual([
+    expect(recipes(lineMadeUp(line))?.map(recipe => [recipe.inputs[0], recipe.output])).toEqual([
       [
         [low, 12],
         [mid, 4],
@@ -153,7 +158,7 @@ describe("material cells", () => {
     const [lines] = convertShort(allocate([new Map([["AgnidusAgateChunk", 3]])], bag), bag, ["gem"])
     const [line, dust] = lines ?? []
     if (!line || !dust) throw new Error("no lines")
-    expect(recipes(line)).toEqual([
+    expect(recipes(lineMadeUp(line))).toEqual([
       {
         kind: "combine",
         inputs: [["AgnidusAgateFragment", 3]],
@@ -168,7 +173,7 @@ describe("material cells", () => {
         output: ["AgnidusAgateChunk", 1],
       },
     ])
-    const html = renderToStaticMarkup(recipeNote(line))
+    const html = renderToStaticMarkup(recipeNote(onCard(line)))
     expect(html.match(/lucide-plus/g)).toHaveLength(1)
     expect(html.match(/lucide-arrow-right/g)).toHaveLength(2)
     expect(html).toContain(t.recipeKinds.convert)

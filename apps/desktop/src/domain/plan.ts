@@ -24,13 +24,17 @@ import { DEFAULTS, type Defaults } from "@/domain/planDefaults"
 import {
   allocate,
   type CharacterState,
+  type CombineStep,
+  type Conversion,
   characterCaps,
   characterNeed,
+  combineSteps,
   compareStages,
   covers,
   defaultOrder,
   isExp,
   type Line,
+  lowerTier,
   type Need,
   START,
   type Stage,
@@ -335,7 +339,8 @@ export function goalName(goal: Goal) {
 /**
  * A material over every card: what they need, what they get, of that what combining and
  * converting made, what of the bag combining and converting others used (`spentElsewhere`), and
- * the goals that need it.
+ * the goals that need it. `steps` and `conversion` are how combining and converting made it,
+ * every card's added up; left out when they made none.
  */
 export type MaterialTotal = {
   key: string
@@ -345,6 +350,39 @@ export type MaterialTotal = {
   converted: number
   spentElsewhere: number
   goals: string[]
+  steps?: CombineStep[]
+  conversion?: Conversion
+}
+
+/** `steps` with `more` added, the lowest tier first; every step of one material is in one chain. */
+function addSteps(key: string, steps: readonly CombineStep[], more: readonly CombineStep[]) {
+  const byTarget = new Map(steps.map(step => [step.to, { ...step }]))
+  for (const step of more) {
+    const same = byTarget.get(step.to)
+    if (same) {
+      same.count += step.count
+      same.made += step.made
+    } else byTarget.set(step.to, { ...step })
+  }
+  const chain: CombineStep[] = []
+  for (let item: string | undefined = key; item !== undefined; item = lowerTier(item)) {
+    const step = byTarget.get(item)
+    if (step) chain.push(step)
+  }
+  return chain.reverse()
+}
+
+/** Two conversions of one material as one; it is always paid in the same item. */
+function addConversion(conversion: Conversion | undefined, more: Conversion): Conversion {
+  if (!conversion) return { ...more, from: new Map(more.from) }
+  const from = new Map(conversion.from)
+  for (const [key, count] of more.from) from.set(key, (from.get(key) ?? 0) + count)
+  return {
+    count: conversion.count + more.count,
+    from,
+    cost: conversion.cost,
+    paid: conversion.paid + more.paid,
+  }
 }
 
 /**
@@ -369,6 +407,9 @@ export function materialTotals(cards: readonly Card[]): Map<string, MaterialTota
       total.made += line.made
       total.converted += line.converted?.count ?? 0
       total.goals.push(goalName(card.goal))
+      const steps = combineSteps(line)
+      if (steps.length > 0) total.steps = addSteps(line.key, total.steps ?? [], steps)
+      if (line.converted) total.conversion = addConversion(total.conversion, line.converted)
       totals.set(line.key, total)
     }
   }

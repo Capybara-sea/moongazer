@@ -34,6 +34,7 @@ import {
   Mark,
   MaterialIcon,
   materialTip,
+  recipeNote,
   useBagHolds,
 } from "./MaterialCell"
 
@@ -81,19 +82,23 @@ function summaryTier(key: string) {
 }
 
 /**
- * A total's tip on its amount: "x/y", x what the bag holds for the goals that need it, after
- * what combining and converting others used, y what they need; then, when those used some, the
- * bag and what they used; and what combining and converting it made. x, what they made and
- * what is short under the cell add up to y. `bag` is what the bag holds, if known.
+ * A total's tip: "x/y", x what the bag holds for the goals that need it, after what combining
+ * and converting others used, y what they need; then the recipes of every card's combining and
+ * converting added up, and what is still needed after them. x, what they made and what is short
+ * under the cell add up to y. Over every card nothing is shared, so the bag itself, `bag` if
+ * known, goes unsaid.
  */
 export function totalTip(total: MaterialTotal, bag: number | undefined) {
-  const view = lineView(total.key)
   const held = bag === undefined ? undefined : Math.max(0, bag - total.spentElsewhere)
-  const { amount, lines } = amountTip(total.key, held, total.need, bag, t.usedElsewhere)
-  const made = total.made > 0 ? t.combinedPart(view.count(total.made, true)) : undefined
-  const converted =
-    total.converted > 0 ? t.convertedPart(view.count(total.converted, true)) : undefined
-  return { amount, lines: [...lines, made, converted] }
+  const { amount, lines } = amountTip(total.key, held, total.need)
+  const recipe = recipeNote({
+    key: total.key,
+    steps: total.steps ?? [],
+    converted: total.conversion,
+    need: total.need,
+    have: total.have,
+  })
+  return { amount, lines, recipe }
 }
 
 /**
@@ -107,8 +112,8 @@ export function TotalCell({ total }: { total: MaterialTotal }) {
   const short = !view.unknown && total.have < total.need
   const converted = !short && total.converted > 0
   const met = !converted && isMet(total.key, total.have, total.need)
-  const { amount, lines } = totalTip(total, useBagHolds(total.key))
-  const tip = useTip<HTMLLIElement>(materialTip(view.name, amount, lines, total.goals))
+  const { amount, lines, recipe } = totalTip(total, useBagHolds(total.key))
+  const tip = useTip<HTMLLIElement>(materialTip(view.name, amount, lines, total.goals, recipe))
   return (
     <li {...tip.props} className="flex w-[48px] flex-col items-center gap-0.5">
       <span className={cn("relative", met && "opacity-40")}>

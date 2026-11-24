@@ -10,7 +10,16 @@ import { isConvertCost } from "@/domain/convert"
 import { unknownSlot } from "@/domain/customCharacter"
 import { materialData } from "@/domain/names"
 import { knownLike } from "@/domain/plan"
-import { combineSteps, expUnit, isExp, type Line, plannerBag, WEAPON_EXP } from "@/domain/planner"
+import {
+  type CombineStep,
+  type Conversion,
+  combineSteps,
+  expUnit,
+  isExp,
+  type Line,
+  plannerBag,
+  WEAPON_EXP,
+} from "@/domain/planner"
 import { cn } from "@/lib/cn"
 import { formatAmount } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
@@ -92,24 +101,20 @@ export function useBagHolds(key: string) {
   return useMemo(() => account && bagHolds(account.materials, key), [account, key])
 }
 
-/** Says what the bag holds and how much of it went elsewhere, `mora` without a counter word. */
-type BagLine = (bag: string, gone: string, mora: boolean) => string
-
 /**
  * A cell's tip on its amount: "x/y" to go beside the name, x what there is of it for the cell
  * before combining and converting (`held`), y what it needs; "—" for x while it is not known.
  * Then, for what conversions are paid in, what they spend, and for EXP, that it counts every
- * book or ore by its EXP; and when some of what the bag holds
- * (`bag`) went elsewhere, to the cards before by default, the bag and what went, in `said`'s
- * words. What there is rounds down, but once it is enough as the need does, so it never reads
- * as less; the bag rounds as x does, and what went is the difference of the two as written.
+ * book or ore by its EXP; and, given what the bag holds (`bag`), the bag, with what the cards
+ * before took of it when they took some. What there is rounds down, but once it is enough as
+ * the need does, so it never reads as less; the bag rounds as x does, and what went is the
+ * difference of the two as written.
  */
 export function amountTip(
   key: string,
   held: number | undefined,
   need: number,
   bag?: number,
-  said: BagLine = t.sharedBag,
 ): { amount: string; lines: (string | undefined)[] } {
   const view = lineView(key)
   const enough = held !== undefined && held >= need
@@ -121,7 +126,7 @@ export function amountTip(
     bag === undefined || view.unknown
       ? undefined
       : gone >= 1
-        ? said(written, formatAmount(gone), key === "Mora")
+        ? t.sharedBag(written, formatAmount(gone), key === "Mora")
         : t.inBag(written, key === "Mora")
   const about = isConvertCost(key)
     ? t.convertSpend(view.count(need, true))
@@ -136,14 +141,24 @@ type Amount = readonly [key: string, count: number]
 export type Recipe = { kind: "combine" | "convert"; inputs: Amount[]; output: Amount }
 
 /**
- * What combining and converting do for what the card is short, whether or not it is then
- * enough: a recipe for each step of combining, the lowest tier first, without its Mora, then
- * one for converting; nothing when neither does anything.
+ * How combining and converting made up a material: the steps of combining, the lowest tier
+ * first, and what converting made; a card's, or every card's added up.
  */
-export function recipes(line: Line): Recipe[] | undefined {
-  const { made, converted } = line
-  if (made === 0 && !converted) return undefined
-  const combined = combineSteps(line).map(
+export type MadeUp = { key: string; steps: readonly CombineStep[]; converted?: Conversion }
+
+/** What combining and converting did for a card's line. */
+export function lineMadeUp(line: Line): MadeUp {
+  return { key: line.key, steps: combineSteps(line), converted: line.converted }
+}
+
+/**
+ * What combining and converting do for what is short, whether or not it is then enough: a
+ * recipe for each step of combining, the lowest tier first, without its Mora, then one for
+ * converting; nothing when neither does anything.
+ */
+export function recipes({ key, steps, converted }: MadeUp): Recipe[] | undefined {
+  if (steps.length === 0 && !converted) return undefined
+  const combined = steps.map(
     (step): Recipe => ({
       kind: "combine",
       inputs: [[step.from, step.count]],
@@ -154,7 +169,7 @@ export function recipes(line: Line): Recipe[] | undefined {
   const convert: Recipe = {
     kind: "convert",
     inputs: [...converted.from, [converted.cost, converted.paid]],
-    output: [line.key, converted.count],
+    output: [key, converted.count],
   }
   return [...combined, convert]
 }
@@ -174,15 +189,15 @@ const ARROW = <ArrowRight aria-hidden className="size-3.5 flex-none text-muted" 
 
 /**
  * What `recipes` gives, a line each: "combine  [icon] ×21 → [icon] ×7", then one line of `bag`,
- * what the bag holds, and what is still needed after them. A line too long for the tip wraps
- * before a "+" or the arrow, never after, and goes on past its label.
+ * what the bag holds, if given, and what is still needed after them. A line too long for the tip
+ * wraps before a "+" or the arrow, never after, and goes on past its label.
  */
-export function recipeNote(line: Line, bag?: string) {
-  const list = recipes(line)
+export function recipeNote(item: MadeUp & { need: number; have: number }, bag?: string) {
+  const list = recipes(item)
   if (!list) return undefined
-  const view = lineView(line.key)
+  const view = lineView(item.key)
   const by = [...new Set(list.map(recipe => t.recipeKinds[recipe.kind]))].join(t.listSeparator)
-  const left = line.need - line.have
+  const left = item.need - item.have
   return (
     <>
       <span className="flex flex-col gap-1.5">
@@ -283,7 +298,7 @@ export function MaterialCell({ line, goals, note }: CellProps) {
     lines: [about, held],
   } = amountTip(line.key, line.bag, line.need, bag)
   // With recipes, the bag goes on their last line, with what is still needed.
-  const recipe = recipeNote(line, held)
+  const recipe = recipeNote({ ...lineMadeUp(line), need: line.need, have: line.have }, held)
   const tip = useTip<HTMLLIElement>(
     materialTip(view.name, amount, [about, recipe ? undefined : held, note], goals, recipe),
   )

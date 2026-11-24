@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Hovering a material in the planner's summary or today list also shows each combining or
+  converting step with icons, added up over all goals, and no longer what the bag holds.
+
 ## [0.3.3] - 2026-11-24
 
 ### Changed

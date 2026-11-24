@@ -4,6 +4,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
+import { convertShort } from "@/domain/convert"
 import { characterData } from "@/domain/names"
 import {
   type Card,
@@ -172,22 +173,70 @@ describe("the summary", () => {
     const teachings = totals.get("TeachingsOfFreedom")
     if (!teachings) throw new Error("no total")
     expect(teachings).toMatchObject({ need: 6, have: 0, spentElsewhere: 9 })
+    // The bag goes unsaid: over every card nothing is shared.
     expect(totalTip(teachings, 9)).toEqual({
       amount: "0/6",
-      lines: [undefined, t.usedElsewhere("9", "9"), undefined, undefined],
+      lines: [undefined, undefined],
+      recipe: undefined,
     })
-    const book = totals.get("PhilosophiesOfFreedom")
-    if (!book) throw new Error("no total")
-    expect(totalTip(book, 0)).toEqual({
-      amount: "0/1",
-      lines: [undefined, t.inBag("0"), t.combinedPart("1"), undefined],
+    expect(totalTip(teachings, undefined).amount).toBe("—/6")
+  })
+
+  it("adds up every card's combining into one recipe a step, the lowest tier first", () => {
+    // Card 1 combines its book from the 3 Guides; card 2 from 9 Teachings, by way of 3 Guides.
+    const bag = new Map([
+      ["TeachingsOfFreedom", 9],
+      ["GuideToFreedom", 3],
+      ["Mora", 1_000_000],
+    ])
+    const book = new Map([["PhilosophiesOfFreedom", 1]])
+    const cards = allocate([book, book], bag).map(lines => ({ ...cardOf(sword), lines }))
+    const total = materialTotals(cards).get("PhilosophiesOfFreedom")
+    if (!total) throw new Error("no total")
+    expect(total).toMatchObject({
+      need: 2,
+      have: 2,
+      made: 2,
+      steps: [
+        { from: "TeachingsOfFreedom", count: 9, to: "GuideToFreedom", made: 3 },
+        { from: "GuideToFreedom", count: 6, to: "PhilosophiesOfFreedom", made: 2 },
+      ],
     })
-    const chunk = { ...total("AgnidusAgateChunk", 3, 3, 1), made: 1 }
-    expect(totalTip(chunk, 1)).toEqual({
-      amount: "1/3",
-      lines: [undefined, t.inBag("1"), t.combinedPart("1"), t.convertedPart("1")],
+    const { amount, lines, recipe } = totalTip(total, 0)
+    expect(amount).toBe("0/2")
+    expect(lines).toEqual([undefined, undefined])
+    const html = renderToStaticMarkup(recipe)
+    expect(html.match(/lucide-arrow-right/g)).toHaveLength(2)
+    for (const count of ["9", "3", "6", "2"]) expect(html).toContain(t.times(count))
+    expect(html).toContain(t.afterRecipes(t.recipeKinds.combine))
+    expect(html).not.toContain(t.inBag("0"))
+  })
+
+  it("adds up every card's converting into one recipe, with what it is paid in", () => {
+    const bag = new Map([
+      ["ShivadaJadeChunk", 5],
+      ["DustOfAzoth", 100],
+      ["Mora", 1_000_000],
+    ])
+    const chunk = new Map([["AgnidusAgateChunk", 1]])
+    const cards = convertShort(allocate([chunk, chunk], bag), bag, ["gem"]).map(lines => ({
+      ...cardOf(sword),
+      lines,
+    }))
+    const total = materialTotals(cards).get("AgnidusAgateChunk")
+    if (!total) throw new Error("no total")
+    expect(total.steps).toBeUndefined()
+    expect(total.converted).toBe(2)
+    expect(total.conversion).toEqual({
+      count: 2,
+      from: new Map([["ShivadaJadeChunk", 2]]),
+      cost: "DustOfAzoth",
+      paid: 18,
     })
-    expect(totalTip(chunk, undefined).amount).toBe("—/3")
+    const html = renderToStaticMarkup(totalTip(total, 0).recipe)
+    expect(html).toContain(t.recipeKinds.convert)
+    for (const count of ["2", "18"]) expect(html).toContain(t.times(count))
+    expect(html).toContain(t.afterRecipes(t.recipeKinds.convert))
   })
 
   it("puts the weekly bosses' drops before the world bosses' by default", () => {

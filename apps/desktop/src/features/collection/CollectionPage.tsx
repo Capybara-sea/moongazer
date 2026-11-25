@@ -6,7 +6,9 @@ import { useRoute } from "@/lib/route"
 import { AchievementsPage } from "./AchievementsPage"
 import { AnecdotesPage } from "./AnecdotesPage"
 import { CollectionHome } from "./CollectionHome"
+import { FurnishingPage } from "./FurnishingPage"
 import { PARTS } from "./parts"
+import { SpincrystalsPage } from "./SpincrystalsPage"
 
 /**
  * The overview of the collection, or one part of it at #/collection/<part>.
@@ -19,5 +21,7 @@ export function CollectionPage() {
   if (route.page === "collection" && route.param !== part) setPart(route.param)
   if (part === PARTS.achievements) return <AchievementsPage />
   if (part === PARTS.anecdotes) return <AnecdotesPage />
+  if (part === PARTS.furnishings) return <FurnishingPage />
+  if (part === PARTS.spincrystals) return <SpincrystalsPage />
   return <CollectionHome />
 }

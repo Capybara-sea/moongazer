@@ -139,6 +139,10 @@ impl Host {
                     "namecard/"
                 } else if name.starts_with("UI_AchievementIcon_") {
                     "achievement/"
+                } else if name.starts_with("UI_Homeworld_") {
+                    "furniture/"
+                } else if name.starts_with("UI_Home_Suite_") {
+                    "furnitureSuite/"
                 } else {
                     ""
                 };
@@ -151,13 +155,16 @@ impl Host {
 /// Item, element, profile frame and achievement goal icons try Project Amber
 /// first: Enka is missing some of them, the Cryo icon among them and 33 of the
 /// 75 goal icons. So does name card art, which Enka has only at half size.
+/// Enka has no furnishing or furnishing set icons.
 fn hosts(name: &str) -> [Host; 2] {
-    const AMBER_FIRST: [&str; 5] = [
+    const AMBER_FIRST: [&str; 7] = [
         "UI_ItemIcon_",
         "UI_Buff_Element_",
         "UI_AvatarFrameIcon_",
         "UI_NameCardPic_",
         "UI_AchievementIcon_",
+        "UI_Homeworld_",
+        "UI_Home_Suite_",
     ];
     if AMBER_FIRST.iter().any(|prefix| name.starts_with(prefix)) {
         [Host::Yatta, Host::Enka]
@@ -301,12 +308,21 @@ mod tests {
         assert_eq!(hosts("UI_AvatarFrameIcon_001"), [Host::Yatta, Host::Enka]);
         assert_eq!(hosts("UI_NameCardPic_Bp1_P"), [Host::Yatta, Host::Enka]);
         assert_eq!(hosts("UI_AchievementIcon_A016"), [Host::Yatta, Host::Enka]);
+        assert_eq!(hosts("UI_Home_Suite_Camp_01"), [Host::Yatta, Host::Enka]);
         assert_eq!(hosts("UI_AvatarIcon_Shougun"), [Host::Enka, Host::Yatta]);
         assert_eq!(hosts("UI_RelicIcon_15031_4"), [Host::Enka, Host::Yatta]);
     }
 
     #[test]
     fn urls_follow_each_hosts_layout() {
+        assert_eq!(
+            Host::Yatta.url("UI_Homeworld_Exterior_Common_Plant_Tree_01_Lod0"),
+            "https://gi.yatta.moe/assets/UI/furniture/UI_Homeworld_Exterior_Common_Plant_Tree_01_Lod0.png"
+        );
+        assert_eq!(
+            Host::Yatta.url("UI_Home_Suite_Camp_01"),
+            "https://gi.yatta.moe/assets/UI/furnitureSuite/UI_Home_Suite_Camp_01.png"
+        );
         assert_eq!(
             Host::Enka.url("UI_RelicIcon_15031_4"),
             "https://enka.network/ui/UI_RelicIcon_15031_4.png"

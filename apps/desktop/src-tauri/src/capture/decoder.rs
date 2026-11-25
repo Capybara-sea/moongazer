@@ -8,7 +8,7 @@
 
 //! The decoder: Ethernet frames in, the account as a Leyline export out.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use anyhow::Result;
 use teyvatme_core::decode::{
@@ -23,6 +23,7 @@ use teyvatme_protocol::{CommandMatch, ConnectionPacket, GamePacket, GameSniffer,
 use tokio::sync::mpsc;
 
 use super::anecdotes::Book;
+use super::furnishings::Furnishings;
 use super::pack::Pack;
 use super::{commissions, events};
 
@@ -39,6 +40,9 @@ const OWNED: u32 = 1;
 /// Where the export carries the Traveler's twin, by character id: `Export`'s name for it.
 #[cfg(test)]
 pub(super) const TRAVELER_KEY: &str = "mg_traveler";
+/// Where the export carries the bag's furnishings: `Export`'s name for them.
+#[cfg(test)]
+pub(super) const FURNISHINGS_KEY: &str = "mg_furnishings";
 
 /// Upstream's export with Moongazer's own fields beside its own. Serialized as it is, so
 /// upstream's numbers keep their form (a round trip through a JSON value would widen its f32s).
@@ -51,6 +55,9 @@ struct Export<'a> {
     /// Traveler's portrait.
     #[serde(rename = "mg_traveler", skip_serializing_if = "Option::is_none")]
     traveler: Option<u32>,
+    /// The bag's furnishings, count by furnishing id.
+    #[serde(rename = "mg_furnishings", skip_serializing_if = "Option::is_none")]
+    furnishings: Option<BTreeMap<u32, u32>>,
 }
 
 pub struct Decoder {
@@ -71,6 +78,7 @@ pub struct Decoder {
     traveler: Option<u32>,
     /// The login's events, which a one-event update is merged into.
     events: events::Events,
+    furnishings: Furnishings,
 }
 
 /// What one frame did.
@@ -137,6 +145,7 @@ impl Decoder {
             progress: commissions::Progress::new(pack.commission_rewards),
             traveler: None,
             events: events::Events::default(),
+            furnishings: Furnishings::default(),
         }
     }
 
@@ -217,6 +226,7 @@ impl Decoder {
                     self.progress.new_login();
                     self.traveler = None;
                     self.events.new_login();
+                    self.furnishings.new_login();
                     fed.new_login = true;
                 }
                 DataVerdict::Hold => return,
@@ -233,6 +243,7 @@ impl Decoder {
                     self.traveler = Some(twin);
                 }
             }
+            self.furnishings.note(&classified);
             let player = &self.player_data;
             self.progress.teach(&mut classified, at_ms, || {
                 player.gi_player().and_then(|player| player.ar)
@@ -302,9 +313,11 @@ impl Decoder {
                 adventure_rank: player.ar,
             })
             .unwrap_or_default();
+        let uid = good.gi_player.as_ref().and_then(|player| player.uid);
         let export = Export {
             good: &good,
             traveler: self.traveler,
+            furnishings: uid.and_then(|uid| self.furnishings.counts(uid)),
         };
         Ok(Some(Exported {
             json: serde_json::to_string(&export)?,

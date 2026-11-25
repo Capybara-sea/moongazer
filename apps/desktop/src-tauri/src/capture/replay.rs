@@ -33,7 +33,7 @@ use teyvatme_core::recording::{self, Recording};
 use teyvatme_protocol::KeyState;
 use tracing_subscriber::fmt::MakeWriter;
 
-use super::decoder::{Decoder, TRAVELER_KEY};
+use super::decoder::{Decoder, FURNISHINGS_KEY, TRAVELER_KEY};
 use super::pack::Pack;
 use super::service::LOGIN_BURST_FRAMES;
 use super::worker::Burst;
@@ -173,6 +173,19 @@ fn matches_the_reference(dir: &Path) -> bool {
     );
     assert!(twin.is_u64(), "the Traveler's twin was not read");
     reference[TRAVELER_KEY] = twin.clone();
+    // The bag's furnishings, likewise; an account may have none in its bag.
+    let furnishings = &ours[FURNISHINGS_KEY];
+    println!(
+        "furnishings read: {} kinds, {} in all",
+        furnishings.as_object().map_or(0, |kinds| kinds.len()),
+        furnishings.as_object().map_or(0, |kinds| kinds
+            .values()
+            .filter_map(Value::as_u64)
+            .sum::<u64>())
+    );
+    if !furnishings.is_null() {
+        reference[FURNISHINGS_KEY] = furnishings.clone();
+    }
     let mut differing = BTreeMap::new();
     differences(
         String::new(),

@@ -91,6 +91,14 @@ export type Collections = {
   livingBeings?: number
   /** Finished main quests by id; missing when the export has no list. */
   quests?: ReadonlySet<number>
+  /** Furnishing ids whose blueprint is learned; missing when the export has no list, as below. */
+  blueprintIds?: ReadonlySet<number>
+  /** Furnishing set (suite) ids learned. */
+  furnishingSets?: ReadonlySet<number>
+  /** The companions' rewards collected, by realm event id. */
+  companionRewards?: ReadonlySet<number>
+  /** The spincrystals placed in the realm, by item id. */
+  spincrystals?: ReadonlySet<number>
 }
 
 export type Account = {
@@ -114,6 +122,8 @@ export type Account = {
   characterInfo: Map<string, CharacterInfo>
   /** Which twin the Traveler is, by character id; only Moongazer's own sync writes it. */
   traveler?: number
+  /** The bag's furnishings, count by id; only Moongazer's own sync writes them. */
+  furnishings?: Map<number, number>
 }
 
 function player(value: unknown): Player | undefined {
@@ -272,6 +282,10 @@ function collections(raw: Json): Collections | undefined {
   }
   const finished = list(record(items?.quests)?.finished)
   return {
+    blueprintIds: ids(items?.blueprints),
+    furnishingSets: ids(items?.furnishingSets),
+    companionRewards: ids(items?.companionRewards),
+    spincrystals: ids(items?.spincrystals),
     outfits: size(record(wardrobe?.outfits)?.owned),
     gliders: size(record(wardrobe?.gliders)?.owned),
     tcgCards: size(record(items?.tcg)?.cards),
@@ -279,8 +293,14 @@ function collections(raw: Json): Collections | undefined {
     blueprints: size(items?.blueprints),
     hangouts,
     livingBeings: size(record(items?.archive)?.livingBeings),
-    quests: finished && new Set(finished.filter((id): id is number => typeof id === "number")),
+    quests: finished && ids(finished),
   }
+}
+
+/** The numbers of a list; undefined when it is not a list. */
+function ids(value: unknown): Set<number> | undefined {
+  const items = list(value)
+  return items && new Set(items.filter((id): id is number => typeof id === "number"))
 }
 
 export function parseAccount(value: unknown): Account {
@@ -304,5 +324,6 @@ export function parseAccount(value: unknown): Account {
     materials: materials(raw.materials),
     characterInfo: info,
     traveler: num(raw.mg_traveler),
+    furnishings: record(raw.mg_furnishings) && idMap(raw.mg_furnishings),
   }
 }

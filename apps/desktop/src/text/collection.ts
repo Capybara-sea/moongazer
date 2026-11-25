@@ -14,6 +14,93 @@ export const collection = {
   anecdotesLine: (earned: string, total: number, days: string) =>
     `逸闻印签 ${earned} / ${n(total)} · ${days}`,
   newer: (count: number) => `${n(count)} 条来自新版本，更新望月后显示`,
+  furnishingLine: (primogems: number) => `伙伴原石尚可领取 ${n(primogems)}`,
+  spincrystalLine: (placed: string, bag: number) => `已拥有 ${placed} · 在背包 ${n(bag)}`,
+}
+
+export const furnishingPage = {
+  title: "摆设套装",
+  summary: (total: number, indoor: number, outdoor: number) =>
+    `共 ${n(total)} 套（室内 ${n(indoor)}、室外 ${n(outdoor)}）`,
+  views: { sets: "按套装", characters: "按角色", furnishings: "所需摆设" },
+  viewLabel: "查看方式",
+  search: "搜索套装、角色或摆设",
+  noBag:
+    "此快照未读取到背包中的摆设数量，暂不显示是否齐全和缺少的摆设。使用望月的自动同步登录游戏后即可读取。",
+  placedNote: "已摆放在洞天中的摆设无法读取，会计为缺少。",
+  stats: "统计",
+  learned: "已学会套装",
+  learnedLine: "已学习套装图纸",
+  whole: "背包中摆设齐全",
+  wholeLine: (craftable: number) => `另有 ${n(craftable)} 套缺少的摆设均可制作`,
+  wholeMissing: "未读取到背包数量",
+  primogems: "伙伴原石尚可领取",
+  primogemsLine: (claimed: number, total: number) => `已领取 ${n(claimed)} / ${n(total)} 次`,
+  claimNeedNote:
+    "仅计算尚可领取的套装。同一种摆设在多个套装中都需要时，按需要最多的一套计算（领取后可拆下用于下一套）。",
+  indoor: "室内",
+  outdoor: "室外",
+  kinds: (kinds: number, pieces: number) => `${n(kinds)} 种 ${n(pieces)} 件`,
+  notLearned: "未学习套装图纸",
+  complete: "已齐全",
+  short: (kinds: number, pieces: number) => `缺 ${n(kinds)} 种 ${n(pieces)} 件`,
+  shortHow: (buy: number, blueprint: number) =>
+    [
+      ...(buy > 0 ? [`${n(buy)} 种需购买`] : []),
+      ...(blueprint > 0 ? [`${n(blueprint)} 种未学习图纸`] : []),
+    ].join(" · ") || "缺少的摆设均可制作",
+  craftableKinds: (kinds: number) => `可制作 ${n(kinds)} 种`,
+  claimable: (primogems: number) => `原石 ×${n(primogems)}`,
+  units: "组成",
+  columns: {
+    item: "摆设",
+    need: "需要",
+    have: "背包里",
+    short: "缺",
+    getting: "获取",
+    usedBy: "用于",
+  },
+  usedBy: (sets: string[]) =>
+    sets.length > 3 ? `${sets.slice(0, 3).join("、")} 等 ${n(sets.length)} 套` : sets.join("、"),
+  onlyShort: "仅显示缺少的",
+  noneShort: "背包中已有全部所需摆设",
+  noneFurnishings: "无符合条件的摆设",
+  getting: { craft: "可制作", blueprint: "未学习图纸", buy: "需购买" } as Record<string, string>,
+  recipe: (parts: string[]) => `配方：${parts.join("、")}`,
+  sources: (sources: string[]) => sources.join("、"),
+  materials: "制作所需材料",
+  materialsWhole: "制作所需材料（整套）",
+  materialShort: (count: number) => `差 ${n(count)}`,
+  noMaterials: "暂无可制作的缺少摆设",
+  characterClaimable: (count: number, primogems: number) =>
+    `可领取 ${n(count)} 次 · 原石 ×${n(primogems)}`,
+  none: "无符合条件的套装",
+  allClaimed: "暂无可领取的伙伴原石（已领完，或尚未拥有对应角色）",
+  notRead: "此快照未读取到摆设套装。",
+}
+
+export const spincrystalPage = {
+  title: "旋曜玉帛",
+  summary: (total: number) => `共 ${n(total)} 个`,
+  stats: "统计",
+  had: "已获得",
+  placed: "已拥有",
+  placedLine: "已放入尘歌壶",
+  bag: "在背包",
+  bagLine: "放入尘歌壶后即可播放",
+  none: "未拥有",
+  notPlacedRead: "未读取到",
+  realmNote: "此快照中没有已放入尘歌壶的旋曜玉帛列表（一个都未放入时游戏不会发送），仅按背包计算。",
+  areas: "地区",
+  allAreas: "全部",
+  filters: { all: "全部", placed: "已拥有", bag: "在背包", none: "未拥有" } as Record<
+    string,
+    string
+  >,
+  filterLabel: "状态",
+  columns: { label: "编号", song: "曲名", hint: "获取地点", status: "状态" },
+  status: { placed: "已拥有", bag: "在背包", none: "未拥有" } as Record<string, string>,
+  noMatch: "无符合条件的旋曜玉帛",
 }
 
 export const achievementPage = {

@@ -11,7 +11,12 @@ import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 
 /** The collection's parts, by their name in #/collection/<part>. */
-export const PARTS = { achievements: "achievements", anecdotes: "anecdotes" } as const
+export const PARTS = {
+  achievements: "achievements",
+  anecdotes: "anecdotes",
+  furnishings: "furnishings",
+  spincrystals: "spincrystals",
+} as const
 
 /** "‹ Collection" above a part's title, back to the overview of the collection. */
 export function BackLink() {

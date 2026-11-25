@@ -8,7 +8,13 @@
  * CHANGELOG.zh-CN.md.
  */
 
-import { achievementPage, anecdotePage, collection } from "./collection"
+import {
+  achievementPage,
+  anecdotePage,
+  collection,
+  furnishingPage,
+  spincrystalPage,
+} from "./collection"
 import { planner } from "./planner"
 import { resinPlan, tasks, upgrade } from "./tasks"
 
@@ -327,6 +333,8 @@ export const text = {
   collection,
   achievementPage,
   anecdotePage,
+  furnishingPage,
+  spincrystalPage,
   planner,
   tasks,
   resinPlan,

@@ -25,6 +25,7 @@ mod carry;
 mod commissions;
 mod decoder;
 mod events;
+mod furnishings;
 pub mod helper;
 mod ipc;
 mod link;

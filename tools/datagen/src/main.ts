@@ -4,8 +4,8 @@
 // Writes apps/desktop/src/generated/names.json, the Chinese names, rarities, icons, set effects,
 // material types, constellations and weapon passives of game items by GOOD key; overview.json, the
 // game data the overview page needs; builds.json, constellation talent boosts, artifact main stat
-// values and what character stats are computed from; collection.json, the achievements and
-// anecdotes; planner.json, what raising characters and weapons costs; and activities.json, the
+// values and what character stats are computed from; collection.json, the achievements,
+// anecdotes, furnishing sets and spincrystals; planner.json, what raising characters and weapons costs; and activities.json, the
 // names and types of the game's events; from the commits pinned in sources.json. `--update` first
 // moves the pins to the latest commits.
 
@@ -17,6 +17,7 @@ import { buildProfiles, LANGUAGE, textMap } from "./animeGameData.ts"
 import { type Builds, buildBuilds } from "./builds.ts"
 import { buildCollection } from "./collection.ts"
 import { latestCommit } from "./download.ts"
+import { buildFurnishings } from "./furnishing.ts"
 import { cities, offerings, theaterLevels, travelerNames } from "./manual.ts"
 import { crossCheck } from "./optimizer.ts"
 import { buildOverview, type Overview } from "./overview.ts"
@@ -50,6 +51,8 @@ const BUILDS_MINIMUM: Record<keyof Builds, number> = {
 const COLLECTION_MINIMUM: Record<string, number> = {
   achievementGoals: 70,
   achievements: 1800,
+  furnishings: 500,
+  spincrystalAreas: 9,
 }
 const ACTIVITIES_MINIMUM = 300
 const PLANNER_MINIMUM: Partial<Record<keyof Planner, number>> = {
@@ -104,7 +107,10 @@ const { tables, ids } = buildTables({
 })
 const optimizer = sources.genshinOptimizer
 await crossCheck(optimizer.repo, optimizer.commit, tables)
-const collection = await buildCollection(sources.snapMetadata, agd, characterKeys(tables))
+const collection = {
+  ...(await buildCollection(sources.snapMetadata, agd, characterKeys(tables))),
+  ...(await buildFurnishings(pin, agd, ids.characters, new Set(Object.keys(tables.materials)))),
+}
 for (const [key, entry] of Object.entries(await manualCharacters(agd, profiles, travelerNames))) {
   if (key in tables.characters) throw new Error(`manual character ${key} is also in the game's`)
   tables.characters[key] = entry

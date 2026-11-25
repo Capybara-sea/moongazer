@@ -24,7 +24,7 @@ Windows 10/11 (64-bit) · Free · Simplified Chinese interface · Early developm
 
 - **Overview** (总览): daily tasks (Original Resin, Daily Commissions, Realm Currency and more), Spiral Abyss and other challenge progress, Mora and Primogem trends, and the changes from each login.
 - **Characters, weapons, artifacts and inventory**: synced automatically, with filters.
-- **Collection** (收集): achievements and anecdotes.
+- **Collection** (收集): achievements, anecdotes, furnishing sets and spincrystals.
 - **Planner** (规划): set goals for characters and weapons, and see the missing materials and what to craft first.
 - **Reminders**: Original Resin full, expeditions complete, commission rewards unclaimed, Spiral Abyss about to reset and more; also sent as Windows notifications while Moongazer runs in the background.
 - **Multiple accounts**, switched automatically when you log in to the game.

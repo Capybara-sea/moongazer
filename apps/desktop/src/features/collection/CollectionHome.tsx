@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { BookOpen, type LucideIcon, Trophy } from "lucide-react"
+import { Armchair, BookOpen, Disc3, type LucideIcon, Trophy } from "lucide-react"
 import { useMemo } from "react"
 import { Bar } from "@/components/Bar"
 import { achievementView } from "@/domain/achievements"
 import { anecdoteView } from "@/domain/anecdotes"
+import { COMPANION_PRIMOGEMS, FURNISHING_SETS, furnishingView } from "@/domain/furnishing"
+import { SPINCRYSTALS, spincrystalView } from "@/domain/spincrystals"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { navigate } from "@/lib/route"
 import { useCurrentAccount } from "@/stores/accountStore"
@@ -22,6 +24,12 @@ export function CollectionHome() {
     [account],
   )
   const anecdotes = useMemo(() => (account ? anecdoteView(account) : undefined), [account])
+  const furnishings = useMemo(
+    () =>
+      account?.collections?.furnishingSets !== undefined ? furnishingView(account) : undefined,
+    [account],
+  )
+  const crystals = useMemo(() => (account ? spincrystalView(account) : undefined), [account])
   return (
     <div className="mx-auto flex max-w-[1240px] flex-col gap-4 p-6">
       <div className="flex flex-col">
@@ -58,6 +66,30 @@ export function CollectionHome() {
                   : formatNumber(anecdotes.seals.earned),
                 anecdotes.seals.total,
                 text.anecdotePage.fastestShort(anecdotes.fastest.days),
+              )
+            }
+          />
+          <PartCard
+            icon={Armchair}
+            title={text.furnishingPage.title}
+            part={PARTS.furnishings}
+            progress={furnishings && { done: furnishings.learned, total: FURNISHING_SETS.length }}
+            line={furnishings && t.furnishingLine(furnishings.claimable * COMPANION_PRIMOGEMS)}
+          />
+          <PartCard
+            icon={Disc3}
+            title={text.spincrystalPage.title}
+            part={PARTS.spincrystals}
+            progress={
+              crystals && { done: crystals.placed + crystals.bag, total: SPINCRYSTALS.length }
+            }
+            line={
+              crystals &&
+              t.spincrystalLine(
+                crystals.realmRead
+                  ? formatNumber(crystals.placed)
+                  : text.spincrystalPage.notPlacedRead,
+                crystals.bag,
               )
             }
           />

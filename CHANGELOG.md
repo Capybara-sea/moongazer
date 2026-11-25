@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The collection has furnishing sets (the companions' primogems left to claim, and a list of the
+  furnishings those sets need with what the bag lacks and how to get it) and spincrystals by
+  area. Auto sync now reads the furnishings in the bag.
+
 ## [0.3.4] - 2026-11-25
 
 ### Added

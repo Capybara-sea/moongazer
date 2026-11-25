@@ -1,207 +1,157 @@
-# Changelog
+# 更新日志
 
-All notable changes to this project will be documented in this file. A
-Chinese version is in [CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md).
+本项目的重要改动都记在这里。英文版见 [CHANGELOG.en.md](CHANGELOG.en.md)。
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循[语义化版本](https://semver.org/lang/zh-CN/spec/v2.0.0.html)。
 
 ## [Unreleased]
 
 ## [0.3.5] - 2026-11-26
 
-### Added
+### 新增
 
-- The collection has furnishing sets (the companions' primogems left to claim, and a list of the
-  furnishings those sets need with what the bag lacks and how to get it) and spincrystals by
-  area. Auto sync now reads the furnishings in the bag.
+- 收集新增"摆设套装"（尚可领取的伙伴原石，以及这些套装所需摆设的清单、背包里缺多少和获取方式）和按地区列出的"旋曜玉帛"。自动同步会读取背包中的摆设数量。
 
 ## [0.3.4] - 2026-11-25
 
-### Added
+### 新增
 
-- Home turns to the game: time to the resets and the next version, the newest snapshot with the
-  tasks left, time played as auto sync saw it, and a calendar of the version.
-- The overview has a to-do card (battle pass, reputation, shop, Adventure Rank rewards, events and
-  custom tasks, ticked by themselves where the snapshot tells) and where to spend resin, a place a
-  row in order of priority with what is short there.
-- The planner lists up to five goals whose next step has its materials, with what to combine or
-  convert first.
+- 首页改为显示游戏的时间：刷新和版本更新倒计时、最新快照和剩余待办、自动同步记下的游戏时长，以及当前版本的活动日历。
+- 总览新增待办卡（纪行、声望、小卖部、冒险等阶奖励、活动和自定义任务，能从快照判断的自动勾上）和体力规划（按优先顺序一行一处地列出该去哪、缺什么）。
+- 规划页新增"可升级"：材料已够的下一步（最多 5 项），以及需先合成、转换的材料。
 
-### Changed
+### 变更
 
-- Hovering a material in the planner's summary or today list also shows each combining or
-  converting step with icons, added up over all goals, and no longer what the bag holds.
-- Section titles on the overview sit inside their cards, each card's title on one line at one
-  size.
-- The achievements page drops the title over the list; in a wide enough window the goals and the
-  achievements scroll each on their own.
+- 规划汇总和"今天"的悬停也用图标写出所有目标合计的合成、转换步骤，不再写背包里的数量。
+- 总览的区块标题都放进框里，卡片标题统一为一行、同一字号。
+- 成就页去掉右侧的分类标题；窗口够宽时左边分类和右边成就各自滚动。
 
-### Fixed
+### 修复
 
-- Weekly boss discounts in Leyline files from Teyvat.me Capture 1.13.2 and earlier are no longer
-  read the wrong way round.
-- With auto sync, the list of running events no longer drops to one when a single event moves on
-  (spending resin on the weekly training event, trying a trial character).
-- Paimon's Bargains carry over from the last time the shop was read, so a new login no longer shows
-  them as not read.
+- Teyvat.me Capture 1.13.2 及更早版本导出的 Leyline 文件，周本减半次数不再读反。
+- 自动同步时，活动列表不再因单个活动的更新（如消耗树脂推进砺行修远、试用角色）只剩一个。
+- 派蒙的小卖部会沿用上次读到的数据，重新登录后不再显示未读取到。
 
 ## [0.3.3] - 2026-11-24
 
-### Changed
+### 变更
 
-- Hovering a planner material shows what there is for that goal of what it needs, then each
-  combining or converting step with icons and what is still needed after them.
-- The planner's summary keeps what converting makes up, and what it costs, when showing only what
-  is short; weekly boss materials come before world boss ones.
+- 规划页悬停素材时，先写分到这个目标的数量和需要的数量，再用图标逐步写出合成、转换，以及之后还需多少。
+- 规划的汇总在"仅显示不足"时也列出靠转换补足的素材和要消耗的材料；周常 Boss 素材排在世界 Boss 素材前面。
 
-### Fixed
+### 修复
 
-- The planner's note on the event that opens every domain uses the event's name in the Chinese
-  client.
+- 规划页关于秘境全天开放的说明改用活动的国服名称「盛材移涌」（原写日服译名）。
 
 ## [0.3.2] - 2026-11-23
 
-### Added
+### 新增
 
-- The achievements page can sort by finish time, the latest first.
-- Auto sync notes which twin the Traveler is, and the pages show the Traveler with that portrait.
+- 成就页可以按完成时间排序，最近完成的排在最前。
+- 自动同步会记下旅行者是空还是荧，各页的旅行者显示对应的头像。
 
-### Changed
+### 变更
 
-- The daily card estimates when Realm Currency will be full from the Adeptal Energy, and counts it
-  up over time.
-- The planner's material cells say what is short, or once there is enough, what is needed, in grey,
-  and fade.
-- Right-clicking in the app no longer opens the browser's menu, except in text fields.
-- The UI font is now Sarasa Gothic, with Segoe UI for digits; semibold titles and names no longer
-  show as bold.
-- Status colors are one set across the app: green for done and gains, amber for warnings, red for
-  errors, shortages and losses. Errors and shortages read better in the dark theme, green and amber
-  text in the light theme.
+- 日常卡的洞天宝钱按洞天仙力估算多久存满，数量也随时间增加。
+- 规划的素材格不够时写缺多少；够了的格子变淡，以灰色写需要的数量。
+- 右键点击不再弹出浏览器菜单（输入框除外）。
+- 界面字体改用更纱黑体，数字用 Segoe UI；标题和名字的半粗不再显示成粗体。
+- 全应用的状态色统一：绿色表示完成和增加，黄色表示警告，红色表示错误、缺少和减少；深色主题的报错和缺少、浅色主题的绿字和黄字更易读。
 
 ## [0.3.1] - 2026-11-23
 
-### Added
+### 新增
 
-- After auto sync is first started by hand, Moongazer asks whether to start it with the app.
-- About can show the changelog, and the first start after an update shows what changed.
-- The planner can count on converting spare element gems and weekly boss materials, each with its
-  own switch in the planner's settings; it shows what is converted and the Dust of Azoth or Dream
-  Solvent spent.
-- The overview's challenges are marked done at full stars, or for Stygian Onslaught a full clear.
-- Each anecdote's tips have a "Video guide" link that searches Bilibili for the guide author's
-  video.
-- Hovering a planner material also shows how many the bag holds in all, before the goals share it.
+- 第一次手动开启自动同步后，会询问是否在打开望月时自动开启。
+- 关于页可以查看更新日志；更新到新版本后第一次打开时，会弹出这次更新的内容。
+- 规划可以把多余的元素宝石、周本素材转换后计入，在"设定"里分别开启；会写出转换了哪些、消耗多少嬗变之尘或异梦溶媒。
+- 总览的当前挑战在本期满星时标出"已完成"，幽境危战为最高难度全部通过。
+- 游逸旅闻每条的遇见提示旁有"视频攻略"，点击在 B 站搜索整理作者的攻略视频。
+- 规划页悬停素材时，还会显示背包中的总数（分配给各目标之前）。
 
-### Changed
+### 变更
 
-- On wide screens the character, weapon, artifact, bag and planner pages fill the window's width.
-- The weapon page opens with cards, and its view buttons are in the same order as the character page's.
-- The planner's material icons are larger and closer together.
-- Adding a goal leaves out what is already planned, and owned weapons show their refinement.
-- Adding a goal lists owned characters and weapons by level, highest first.
-- On the daily card, the notes for resin, the realm currency and the transformer sit under their
-  values, leaving just the bar in the middle.
+- 宽屏下角色、武器、圣遗物、背包和规划页面铺满窗口宽度。
+- 武器页默认显示卡片，切换按钮的顺序和角色页一致。
+- 规划页的素材图标更大，间距更小。
+- 添加目标时不再列出已在规划中的角色和武器；已拥有的武器写出精炼等级。
+- 添加目标时，已拥有的角色和武器按等级从高到低排列。
+- 日常卡中原粹树脂、洞天宝钱和参量质变仪的说明小字移到右侧数值下方，中间只显示进度条。
 
-### Fixed
+### 修复
 
-- Dropdown menus are translucent like the other popups, and the planner's priority switch looks like
-  the ones in Settings.
-- Picking an area on the anecdotes page lists only the characters with anecdotes there, with that
-  area's counts.
-- The add goal dialog and the achievements page's category column keep their size while searching
-  or filtering.
-- The overview's progress bars are one thickness and the daily card's line up; bar tracks show
-  clearly in the light theme.
-- In the light theme, borders, boxes inside cards, toggle groups, tags and element icons show
-  clearly, and green and amber text is easier to read.
-- The artifact and weapon icons on a character's page are colored by rarity, as on their own pages.
+- 下拉菜单和其他弹出层一样半透明；规划"设定"里的优先顺序切换和设置页的切换开关样式一致。
+- 游逸旅闻选择地区后，左侧只列出在该地区有旅闻的角色，数量按该地区统计。
+- 添加目标的弹窗和成就页左侧的分类栏在搜索、筛选时不再改变大小。
+- 总览的进度条粗细统一，日常卡的几条进度条两端对齐；浅色主题下进度条的底槽清晰可见。
+- 浅色主题下，边框、卡片里的小框、分段按钮、标签和元素图标清晰可见，绿色和琥珀色的文字更易读。
+- 角色详情页的圣遗物和武器图标按星级显示底色，和圣遗物页、武器页一致。
 
 ## [0.3.0] - 2026-11-22
 
-### Added
+### 新增
 
-- A Planner page under a new Growth group: goals for characters and weapons, what they still need
-  from the bag in card order, and what can be raised now; ones not out yet can be planned too.
+- 侧边栏新加"养成 › 规划"：给角色和武器定目标，按卡片顺序对背包算还缺什么、现在能升什么；还没出的也能先规划。
 
-### Changed
+### 变更
 
-- Hidden achievements show their description too, finished or not.
-- Settings can write large numbers in K, M and B instead of the Chinese units.
-- Hover tips use the app's own popup instead of the system's.
-- Icons sit on the game's rarity colors, easier to tell apart.
+- 隐藏成就的描述也直接显示，不管完成没有。
+- 大数字默认写成万、亿，可以在设置里换成 K、M、B。
+- 鼠标悬停的提示改用望月自己的弹出框，不再是系统的黑框。
+- 图标底色改用游戏里的稀有度颜色，更容易分辨。
 
-### Fixed
+### 修复
 
-- The overview's daily card no longer says "not read" for full resin, reads finished commissions
-  on more days, with or without a fixed commission region, and follows them as they are done;
-  when it still cannot, hovering the row says what to do.
-- Auto sync now links Teyvat.me Capture v1.18.4: spending all resin no longer leaves the old count,
-  and the UID, weekly boss discounts and the Aranara list are no longer lost in some cases.
+- 总览"日常"里，树脂满了不再写"未读取到"；委托完成数在更多情况下能读出来，固定没固定委托地区都行，做委托时也会跟着更新；还读不出来时，鼠标停在这行上会说怎么办。
+- 自动同步改用 Teyvat.me Capture v1.18.4：树脂花光后不再一直显示花之前的数；UID、周本减半次数和兰那罗列表在某些情况下不再丢失。
 
 ## [0.2.0] - 2026-11-21
 
-### Added
+### 新增
 
-- A Collection page in the side menu, also opened from the overview's anecdotes card.
-- Achievements: by category and series, with the game's category icons, counts, primogems and
-  versions, and a Bilibili video search for each; unfinished hidden ones keep their description
-  covered and can be left out.
-- Anecdotes: by character and area, with places, how hidden ones come and what comes first,
-  seals, the fewest days the rest take, and a note when the seal reward waits to be claimed.
+- 侧边栏加上"收集"，总览的游逸旅闻卡也能点进去。
+- 成就：按分类和系列列出，带游戏的分类图标、进度、原石和版本号，每条可以去 B 站搜视频；没完成的隐藏成就遮住描述，也可以不显示。
+- 游逸旅闻：按角色和地区列出，带地点和前置、隐藏逸闻的触发方式、逸闻印签、最快还需几天，印签攒满没领时提醒。
 
-### Changed
+### 变更
 
-- The account and auto sync share one block at the bottom of the side menu; the theme is set
-  in Settings.
+- 账号和自动同步合成侧边栏左下角的一块；主题改到设置里切换。
 
-### Fixed
+### 修复
 
-- The overview counts 156 anecdotes (155 without Lauma) instead of 161, and says new ones wait
-  until the seal reward is claimed.
-- Before the first snapshot, the home page shows auto sync's stage once it is on, and the pages
-  no longer suggest turning it on again.
+- 总览的游逸旅闻总数从 161 改为 156（没有菈乌玛时 155），印签攒满时提示不领不刷新新旅闻。
+- 还没有快照时，自动同步开启后首页会显示同步进行到哪一步，各页也不再提示"开启自动同步"。
 
 ## [0.1.1] - 2026-11-21
 
-### Added
+### 新增
 
-- The installed build can move its data to another folder in Settings, and back.
-- Restarting while auto sync is connected asks first: syncing resumes after you
-  return to the title screen and enter again.
-- About and the READMEs link to the QQ group (90376195).
+- 安装版可以在设置里把数据搬到别的文件夹，也能搬回默认位置。
+- 自动同步连着时重启会先提醒：重启后在游戏里退回标题界面再进一次，才能接着同步。
+- 关于页和 README 加上交流群（QQ 群 90376195）。
 
-### Changed
+### 变更
 
-- The ascension star no longer shows on a character at level 90/90.
-- The home page opens with three lines from the letter under the welcome, and
-  without data puts "Start sync" first, with importing a file below.
+- 角色在 90/90 级时不再显示突破星。
+- 首页欢迎语下面加上信里的三句话；没有数据时先是"开始同步"，导入文件放在下面。
 
-### Fixed
+### 修复
 
-- Icons with transparent parts no longer show a letter behind them.
-- Waiting long at the title screen no longer reads as an outdated Moongazer.
+- 有透明部分的图标后面不再露出文字。
+- 在标题界面停久了，不再误报"望月需要更新"。
 
 ## [0.1.0] - 2026-11-20
 
-### Added
+### 新增
 
-- Account overview, characters, weapons, artifacts and inventory pages; the
-  lists have filters.
-- Importing Leyline files as snapshots, with what changed since the previous
-  one; a file that looks wrong is saved only after you confirm.
-- Auto sync while you play: a snapshot at each login and a timeline of what
-  changed.
-- Several accounts, switched in the side menu, or by auto sync at login.
-- A message center for updates and auto sync's messages, Windows
-  notifications when auto sync has a problem, and a tray icon.
-- An installer and a portable zip; updates download in the background and
-  go in when you restart from the app.
-- Settings page, light and dark themes, animations, and game icons that
-  download when first shown.
-- About page with help and feedback, acknowledgments and third-party
-  licenses.
+- 账号总览、角色、武器、圣遗物、背包五页，列表可以筛选。
+- 导入 Leyline 文件，存成快照，能看和上一份相比的变化；明显不对的文件要你确认后才保存。
+- 自动同步：开着望月玩游戏，每次登录存一份快照，并按时间记下变化。
+- 多账号：在侧栏切换；开着自动同步时，登录游戏也会自动切换。
+- 消息中心（更新和自动同步的消息），自动同步出问题时发 Windows 通知，以及托盘图标。
+- 安装版和便携版 zip；更新在后台下载，在程序里点重启后换上。
+- 设置页、明暗主题、界面动效；游戏图标在第一次显示时下载。
+- 关于页：帮助与反馈、致谢和第三方许可。
 
 [unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.5...HEAD
 [0.3.5]: https://github.com/Capybara-sea/moongazer/compare/v0.3.4...v0.3.5

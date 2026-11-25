@@ -49,12 +49,12 @@ const ASSET_DIRS: &[&str] = &[
     "apps/desktop/src-tauri/icons/",
 ];
 /// Where CJK text may appear: the Chinese README (and the English one, for the
-/// link to it), the Chinese changelog, the Chinese UI strings, the installer
-/// hooks' message and the game names the data generator adds by hand.
-/// Entries ending in `/` cover a whole directory.
+/// link to it) and the Chinese changelog, both the default `.md` files, the
+/// Chinese UI strings, the installer hooks' message and the game names the
+/// data generator adds by hand. Entries ending in `/` cover a whole directory.
 const CJK_ALLOWLIST: &[&str] = &[
     "README.md",
-    "README.zh-CN.md",
+    "README.en.md",
     changelog::FILE_ZH,
     "apps/desktop/src/text/",
     "apps/desktop/src-tauri/src/text.rs",
@@ -952,8 +952,8 @@ mod tests {
     #[test]
     fn ui_strings_may_be_chinese_but_code_may_not() {
         assert!(listed(CJK_ALLOWLIST, "apps/desktop/src/text/zh.ts"));
-        assert!(listed(CJK_ALLOWLIST, "CHANGELOG.zh-CN.md"));
-        assert!(!listed(CJK_ALLOWLIST, "CHANGELOG.md"));
+        assert!(listed(CJK_ALLOWLIST, "CHANGELOG.md"));
+        assert!(!listed(CJK_ALLOWLIST, "CHANGELOG.en.md"));
         assert!(!listed(CJK_ALLOWLIST, "apps/desktop/src/app/App.tsx"));
         assert!(listed(CJK_ALLOWLIST, "tools/datagen/src/manual.ts"));
         assert!(!listed(CJK_ALLOWLIST, "tools/datagen/src/main.ts"));

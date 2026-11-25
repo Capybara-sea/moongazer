@@ -5,7 +5,7 @@
  * Every user-facing string of the web UI. Besides this directory, the
  * repository guard allows Chinese text only in src-tauri/src/text.rs, the
  * installer hooks, the data generator's hand-written names, the READMEs and
- * CHANGELOG.zh-CN.md.
+ * CHANGELOG.md.
  */
 
 import {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import changelogText from "@repo/CHANGELOG.zh-CN.md?raw"
+import changelogText from "@repo/CHANGELOG.md?raw"
 
 export type ChangelogSection = { title: string; items: string[] }
 export type ChangelogVersion = { version: string; date: string; sections: ChangelogSection[] }

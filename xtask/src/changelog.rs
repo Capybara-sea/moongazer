@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! Reading and editing `CHANGELOG.md` and its Chinese translation in the Keep
-//! a Changelog 1.1.0 layout.
+//! Reading and editing the changelogs, `CHANGELOG.md` in Chinese and
+//! `CHANGELOG.en.md` in English, in the Keep a Changelog 1.1.0 layout.
 
 use std::fs;
 use std::path::Path;
@@ -11,11 +11,12 @@ use anyhow::{Context, Result, bail};
 
 use crate::util::parse_version;
 
-pub const FILE: &str = "CHANGELOG.md";
-/// The Chinese changelog: the same version headings and links as `FILE`, with
-/// the title, the section names and the entries in Chinese.
-pub const FILE_ZH: &str = "CHANGELOG.zh-CN.md";
-pub const FILES: [&str; 2] = [FILE, FILE_ZH];
+/// The Chinese changelog, the one the repository shows first: the same version
+/// headings and links as `FILE_EN`, with the title, the section names and the
+/// entries in Chinese.
+pub const FILE_ZH: &str = "CHANGELOG.md";
+pub const FILE_EN: &str = "CHANGELOG.en.md";
+pub const FILES: [&str; 2] = [FILE_ZH, FILE_EN];
 const UNRELEASED: &str = "Unreleased";
 
 /// The title line and the allowed `###` section names of one file.
@@ -258,19 +259,19 @@ pub fn fmt_version((major, minor, patch): Version) -> String {
     format!("{major}.{minor}.{patch}")
 }
 
-/// The release page's notes for one version: the English section, a rule,
-/// then the Chinese one. None when either file lacks the section.
-pub fn release_notes(en: &str, zh: &str, wanted: &Heading) -> Option<String> {
-    let en = section(en, wanted)?;
+/// The release page's notes for one version: the Chinese section, a rule,
+/// then the English one. None when either file lacks the section.
+pub fn release_notes(zh: &str, en: &str, wanted: &Heading) -> Option<String> {
     let zh = section(zh, wanted)?;
-    Some(format!("{en}\n\n---\n\n{zh}"))
+    let en = section(en, wanted)?;
+    Some(format!("{zh}\n\n---\n\n{en}"))
 }
 
 /// `cargo xtask changelog <X.Y.Z|Unreleased>`: that version's release notes.
 pub fn print_section(root: &Path, which: &str) -> Result<()> {
     let read =
         |file: &str| fs::read_to_string(root.join(file)).with_context(|| format!("reading {file}"));
-    let (en, zh) = (read(FILE)?, read(FILE_ZH)?);
+    let (zh, en) = (read(FILE_ZH)?, read(FILE_EN)?);
     let wanted = if which.eq_ignore_ascii_case(UNRELEASED) {
         Heading::Unreleased
     } else {
@@ -281,8 +282,8 @@ pub fn print_section(root: &Path, which: &str) -> Result<()> {
             date: String::new(),
         }
     };
-    let notes = release_notes(&en, &zh, &wanted)
-        .with_context(|| format!("no section for `{which}` in {FILE} and {FILE_ZH}"))?;
+    let notes = release_notes(&zh, &en, &wanted)
+        .with_context(|| format!("no section for `{which}` in {FILE_ZH} and {FILE_EN}"))?;
     println!("{notes}");
     Ok(())
 }
@@ -303,8 +304,8 @@ mod tests {
 
     #[test]
     fn a_fresh_changelog_is_valid() {
-        assert_eq!(validate(FILE, EMPTY), Vec::<String>::new());
-        assert_eq!(validate(FILE, ONE_RELEASE), Vec::<String>::new());
+        assert_eq!(validate(FILE_EN, EMPTY), Vec::<String>::new());
+        assert_eq!(validate(FILE_EN, ONE_RELEASE), Vec::<String>::new());
     }
 
     #[test]
@@ -322,7 +323,7 @@ mod tests {
     #[test]
     fn bad_headings_and_sections_are_reported() {
         let text = "# Changelog\n\n## [0.1.0] - 2026-1-2\n\n### Misc\n\n## [Unreleased]\n";
-        let problems = validate(FILE, text);
+        let problems = validate(FILE_EN, text);
         assert!(problems.iter().any(|p| p.contains("YYYY-MM-DD")));
         assert!(problems.iter().any(|p| p.contains("### Misc")));
         assert!(problems.iter().any(|p| p.contains("must come first")));
@@ -334,7 +335,7 @@ mod tests {
         let text = "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-11-01\n\n\
             ## [0.2.0] - 2026-11-02\n\n[unreleased]: x\n";
         assert!(
-            validate(FILE, text)
+            validate(FILE_EN, text)
                 .iter()
                 .any(|p| p.contains("newest first"))
         );
@@ -358,7 +359,7 @@ mod tests {
     }
 
     #[test]
-    fn release_notes_carry_both_languages() {
+    fn release_notes_carry_both_languages_chinese_first() {
         let zh = ONE_RELEASE
             .replace("# Changelog", ZH.title)
             .replace("### Added", &format!("### {}", ZH.sections[0]))
@@ -368,16 +369,16 @@ mod tests {
             date: String::new(),
         };
         let both = format!(
-            "### Added\n\n- First.\n\n---\n\n### {}\n\n- Zh first.",
+            "### {}\n\n- Zh first.\n\n---\n\n### Added\n\n- First.",
             ZH.sections[0]
         );
-        assert_eq!(release_notes(ONE_RELEASE, &zh, &v010), Some(both));
+        assert_eq!(release_notes(&zh, ONE_RELEASE, &v010), Some(both));
         let v020 = Heading::Release {
             version: (0, 2, 0),
             date: String::new(),
         };
-        assert_eq!(release_notes(ONE_RELEASE, &zh, &v020), None);
-        assert_eq!(release_notes(ONE_RELEASE, EMPTY, &v010), None);
+        assert_eq!(release_notes(&zh, ONE_RELEASE, &v020), None);
+        assert_eq!(release_notes(EMPTY, ONE_RELEASE, &v010), None);
     }
 
     #[test]
@@ -406,7 +407,7 @@ mod tests {
             out.contains("[unreleased]: https://github.com/owner/repo/compare/v0.1.0...HEAD\n")
         );
         assert!(out.contains("[0.1.0]: https://github.com/owner/repo/releases/tag/v0.1.0\n"));
-        assert_eq!(validate(FILE, &out), Vec::<String>::new());
+        assert_eq!(validate(FILE_EN, &out), Vec::<String>::new());
     }
 
     #[test]
@@ -415,6 +416,6 @@ mod tests {
         assert!(out.contains("## [0.2.0] - 2026-12-01\n\n### Fixed\n\n- Thing."));
         assert!(out.contains("[0.2.0]: https://github.com/owner/repo/compare/v0.1.0...v0.2.0\n"));
         assert!(out.contains("[0.1.0]: https://github.com/owner/repo/releases/tag/v0.1.0\n"));
-        assert_eq!(validate(FILE, &out), Vec::<String>::new());
+        assert_eq!(validate(FILE_EN, &out), Vec::<String>::new());
     }
 }

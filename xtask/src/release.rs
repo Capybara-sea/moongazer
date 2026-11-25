@@ -129,8 +129,8 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
 const RELEASE_FILES: [&str; 4] = [
     "Cargo.toml",
     "Cargo.lock",
-    changelog::FILE,
     changelog::FILE_ZH,
+    changelog::FILE_EN,
 ];
 
 /// One changelog file before and after moving its Unreleased notes.

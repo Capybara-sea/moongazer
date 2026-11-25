@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { Check, UserRound } from "lucide-react"
-import type { ReactNode } from "react"
+import { Check, Trash2, UserRound } from "lucide-react"
+import { type ReactNode, useState } from "react"
+import { ConfirmDelete } from "@/components/ConfirmDelete"
 import { ProfileAvatar } from "@/components/ProfileAvatar"
 import type { Tone } from "@/components/StatusDot"
-import { Tip } from "@/components/Tip"
+import { Tip, useTip } from "@/components/Tip"
 import { type AccountGroup, liveUid, timeLabel } from "@/domain/accounts"
+import { isHead, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime, maskUid } from "@/lib/format"
 import { accountName, useAccountStore } from "@/stores/accountStore"
 import { useAppearanceStore } from "@/stores/appearanceStore"
 import { syncOn, useCaptureStore } from "@/stores/captureStore"
+import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 
 const t = text.accounts
@@ -102,9 +105,11 @@ export function AccountFace({ tone, line, trailing }: FaceProps) {
 
 /**
  * Every account, the shown one in bold with a check and the one auto sync
- * reads tagged; picking one shows it and closes the panel.
+ * reads tagged; picking one shows it and closes the panel. Each has a delete
+ * button, which closes the panel and hands the account to `onDelete`; the
+ * one auto sync reads cannot be deleted.
  */
-export function AccountList() {
+export function AccountList({ onDelete }: { onDelete: (account: AccountGroup) => void }) {
   const accounts = useAccountStore(s => s.accounts)
   const group = useAccountStore(s => s.group)
   const names = useAccountStore(s => s.names)
@@ -123,7 +128,7 @@ export function AccountList() {
           const syncing = item.uid !== null && item.uid === live
           const newest = item.snapshots[0]
           return (
-            <li key={item.token}>
+            <li key={item.token} className="flex items-center gap-1">
               <button
                 type="button"
                 aria-current={current ? "true" : undefined}
@@ -132,7 +137,7 @@ export function AccountList() {
                   useCaptureStore.getState().setPanelOpen(false)
                 }}
                 className={cn(
-                  "flex min-h-12 w-full cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 text-left text-[13px] transition-colors duration-150 motion-reduce:transition-none",
+                  "flex min-h-12 min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-[8px] px-2.5 text-left text-[13px] transition-colors duration-150 motion-reduce:transition-none",
                   current ? "bg-(--accent-soft)" : "hover:bg-default/60",
                 )}
               >
@@ -169,6 +174,14 @@ export function AccountList() {
                 </span>
                 {current && <Check aria-hidden className="size-4 flex-none text-(--accent-text)" />}
               </button>
+              <DeleteButton
+                name={name}
+                syncing={syncing}
+                onPress={() => {
+                  useCaptureStore.getState().setPanelOpen(false)
+                  onDelete(item)
+                }}
+              />
             </li>
           )
         })}
@@ -176,5 +189,78 @@ export function AccountList() {
       {/* Only auto sync follows the login. */}
       {capture && <p className="px-2.5 pt-1 text-[11px] text-muted">{t.follows}</p>}
     </div>
+  )
+}
+
+type DeleteProps = { name: string; syncing: boolean; onPress: () => void }
+
+/** A row's delete button; the account auto sync reads says why it cannot be deleted instead. */
+function DeleteButton({ name, syncing, onPress }: DeleteProps) {
+  const tip = useTip<HTMLButtonElement>(syncing ? t.deleteSyncing : t.deleteLabel(name))
+  return (
+    <button
+      {...tip.props}
+      type="button"
+      aria-label={t.deleteLabel(name)}
+      aria-disabled={syncing || undefined}
+      onClick={() => {
+        if (!syncing) onPress()
+      }}
+      className={cn(
+        "flex size-8 flex-none items-center justify-center rounded-[8px] text-muted transition-colors duration-150 motion-reduce:transition-none",
+        syncing
+          ? "cursor-not-allowed opacity-40"
+          : "cursor-pointer hover:bg-default/60 hover:text-(--err)",
+      )}
+    >
+      <Trash2 aria-hidden className="size-4" />
+      {tip.bubble}
+    </button>
+  )
+}
+
+/**
+ * Asks before deleting `account` (open while it is set): its snapshots, timelines, planner and
+ * tasks. A failure stays in the dialog. The shown account follows the newest again if it was it.
+ */
+export function DeleteAccountDialog({
+  account,
+  onClose,
+}: {
+  account: AccountGroup | null
+  onClose: () => void
+}) {
+  const accounts = useAccountStore(s => s.accounts)
+  const names = useAccountStore(s => s.names)
+  const uidText = useUidText()
+  const [error, setError] = useState<string | null>(null)
+  const name = account ? (accountName(accounts, names, account.token) ?? "") : ""
+  const snapshots = account?.snapshots.filter(s => !isHead(s)).length ?? 0
+  const close = () => {
+    setError(null)
+    onClose()
+  }
+  const remove = async (target: AccountGroup) => {
+    try {
+      await useSnapshotStore.getState().removeAccount(target.uid)
+      const store = useAccountStore.getState()
+      if (store.account === target.token) store.selectAccount(null)
+      close()
+    } catch (e) {
+      setError(`${t.deleteFailed}: ${toBackendError(e).message}`)
+    }
+  }
+  return (
+    <ConfirmDelete
+      open={account !== null}
+      title={t.deleteTitle}
+      onAnswer={yes => {
+        if (yes && account) void remove(account)
+        else close()
+      }}
+    >
+      {account && <p>{t.deleteBody(name, uidText(account), snapshots)}</p>}
+      {error && <p className="mt-2 select-text text-(--err)">{error}</p>}
+    </ConfirmDelete>
   )
 }

@@ -5,6 +5,7 @@ import { create } from "zustand"
 import { NAME_KINDS, type NameKind, unnamed } from "@/domain/names"
 import {
   BackendError,
+  deleteAccount,
   deleteSnapshot,
   type ImportWarning,
   importSnapshot,
@@ -53,6 +54,8 @@ type SnapshotState = {
    */
   keep: (id: number) => Promise<void>
   remove: (id: number) => Promise<void>
+  /** Deletes an account, as `deleteAccount`; thrown and loadError as for `remove`. */
+  removeAccount: (uid: number | null) => Promise<void>
 }
 
 let answer: ((save: boolean) => void) | null = null
@@ -154,6 +157,11 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
 
   async remove(id) {
     await deleteSnapshot(id)
+    await get().load()
+  },
+
+  async removeAccount(uid) {
+    await deleteAccount(uid)
     await get().load()
   },
 }))

@@ -219,6 +219,25 @@ pub async fn delete_snapshot(storage: State<'_, Storage>, id: i64) -> Result<(),
     Ok(())
 }
 
+/// Deletes an account: all its snapshots with their sessions' batches, and
+/// its planner and tasks. `uid` `None` is the snapshots of no account.
+#[tauri::command]
+pub async fn delete_account(
+    storage: State<'_, Storage>,
+    uid: Option<u64>,
+) -> Result<(), SnapshotError> {
+    let settings: Vec<String> = uid
+        .map(|uid| vec![crate::planner::key(uid), crate::tasks::key(uid)])
+        .unwrap_or_default();
+    let mut guard = storage.lock();
+    let db = guard
+        .as_mut()
+        .map_err(|err| SnapshotError::Storage(err.clone()))?;
+    let snapshots = db.delete_account(uid, &settings).map_err(storage_error)?;
+    tracing::info!(snapshots, "account deleted");
+    Ok(())
+}
+
 impl Storage {
     /// A stored setting; `None` when unset.
     pub fn read_setting(&self, key: &str) -> Result<Option<String>, SnapshotError> {

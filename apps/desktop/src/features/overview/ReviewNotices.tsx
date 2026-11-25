@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { AlertDialog, Button } from "@heroui/react"
+import { Button } from "@heroui/react"
 import { TriangleAlert } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { ConfirmDelete } from "@/components/ConfirmDelete"
 import { Panel } from "@/components/Panel"
 import { type Snapshot, toBackendError } from "@/lib/backend"
 import { formatDateTime } from "@/lib/format"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { text } from "@/text/zh"
 import { checkedAgainst, deleteTakes, reviewReasons } from "./review"
-
-/** How long the delete button in the confirmation stays disabled, against a hasty click. */
-const DELETE_DELAY_S = 3
 
 /**
  * A notice for each snapshot auto sync saved although it looked wrong, to keep
@@ -86,75 +84,17 @@ function ReviewNotice({ snapshot, previous, takes }: NoticeProps) {
       </div>
       <ConfirmDelete
         open={confirming}
-        when={when}
-        takes={takes}
+        title={text.review.confirmTitle}
         onAnswer={remove => {
           setConfirming(false)
           if (remove) void answer(false)
         }}
-      />
+      >
+        <p>
+          {text.review.confirmBody(when)}
+          {takes}
+        </p>
+      </ConfirmDelete>
     </Panel>
-  )
-}
-
-type ConfirmProps = {
-  open: boolean
-  when: string
-  takes: string | null
-  onAnswer: (remove: boolean) => void
-}
-
-/** Asks before a delete, which cannot be undone; its delete button counts down first. */
-function ConfirmDelete({ open, when, takes, onAnswer }: ConfirmProps) {
-  const [left, setLeft] = useState(DELETE_DELAY_S)
-  // Set back during render, so a dialog opened again never shows the button enabled.
-  const [wasOpen, setWasOpen] = useState(open)
-  if (open !== wasOpen) {
-    setWasOpen(open)
-    if (open) setLeft(DELETE_DELAY_S)
-  }
-  useEffect(() => {
-    if (!open || left === 0) return
-    const timer = setTimeout(() => setLeft(left - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [open, left])
-  return (
-    <AlertDialog
-      isOpen={open}
-      onOpenChange={next => {
-        if (!next) onAnswer(false)
-      }}
-    >
-      {/* Esc cancels: the handler above runs on any dismissal. */}
-      <AlertDialog.Backdrop isKeyboardDismissDisabled={false}>
-        <AlertDialog.Container>
-          <AlertDialog.Dialog>
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>{text.review.confirmTitle}</AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Body className="text-[13px]">
-              <p>
-                {text.review.confirmBody(when)}
-                {takes}
-              </p>
-            </AlertDialog.Body>
-            <AlertDialog.Footer>
-              <Button variant="tertiary" onPress={() => onAnswer(false)}>
-                {text.review.cancel}
-              </Button>
-              <Button
-                variant="danger"
-                isDisabled={left > 0}
-                onPress={() => onAnswer(true)}
-                className="tabular"
-              >
-                {left > 0 ? text.review.deleteIn(left) : text.review.delete}
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
-    </AlertDialog>
   )
 }

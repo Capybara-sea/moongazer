@@ -623,6 +623,23 @@ impl Db {
         Ok(())
     }
 
+    /// Deletes an account: every snapshot of `uid` (of no account when
+    /// `None`), the batches of their sessions, and the settings `settings`
+    /// names. How many snapshots went.
+    pub fn delete_account(&mut self, uid: Option<u64>, settings: &[String]) -> Result<usize> {
+        let tx = self.conn.transaction()?;
+        tx.execute(
+            "DELETE FROM batches WHERE session IN (SELECT id FROM snapshots WHERE uid IS ?1)",
+            params![uid],
+        )?;
+        let gone = tx.execute("DELETE FROM snapshots WHERE uid IS ?1", params![uid])?;
+        for key in settings {
+            tx.execute("DELETE FROM settings WHERE key = ?1", [key])?;
+        }
+        tx.commit()?;
+        Ok(gone)
+    }
+
     /// A setting's stored value; `None` until one is set.
     pub fn setting(&self, key: &str) -> Result<Option<String>> {
         Ok(self

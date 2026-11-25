@@ -136,6 +136,7 @@ fn main() {
             snapshots::import_snapshot,
             snapshots::keep_snapshot,
             snapshots::delete_snapshot,
+            snapshots::delete_account,
             snapshots::list_snapshots,
             snapshots::snapshot_export,
             snapshots::session_timeline,

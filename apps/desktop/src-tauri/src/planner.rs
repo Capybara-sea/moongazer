@@ -9,7 +9,7 @@ use tauri::State;
 
 use crate::snapshots::{SnapshotError, Storage};
 
-fn key(uid: u64) -> String {
+pub(crate) fn key(uid: u64) -> String {
     format!("planner:{uid}")
 }
 

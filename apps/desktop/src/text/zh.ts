@@ -208,6 +208,12 @@ export const text = {
     none: "无账号",
     noneHint: (capture: boolean, syncOn: boolean) =>
       !capture ? "请先导入文件" : syncOn ? "等待首次同步" : "请先导入或同步",
+    deleteLabel: (name: string) => `删除账号「${name}」`,
+    deleteSyncing: "正在同步此账号，停止同步后才能删除",
+    deleteTitle: "删除此账号？",
+    deleteBody: (name: string, uid: string, snapshots: number) =>
+      `将删除「${name}」（UID ${uid}）的全部 ${snapshots.toLocaleString("en-US")} 份快照、同步时间线，以及此账号的规划和待办设置。删除后无法恢复。`,
+    deleteFailed: "删除失败",
   },
   tiles: {
     label: "数量",
@@ -625,7 +631,10 @@ export const text = {
     confirmBody: (when: string) => `将删除自动同步于 ${when} 保存的快照，删除后无法恢复。`,
     takesSession: "此次登录记录的变化也将一并删除。",
     takesLatest: "此次登录在上一份快照之后记录的变化也将一并删除。",
+  },
+  confirmDelete: {
     cancel: "取消",
+    delete: "删除",
     deleteIn: (seconds: number) => `删除（${seconds}）`,
   },
   sync: {

@@ -308,6 +308,11 @@ export async function deleteSnapshot(id: number) {
   await call("delete_snapshot", { id })
 }
 
+/** Deletes an account's snapshots, timelines, planner and tasks; `null` is no account's. */
+export async function deleteAccount(uid: number | null) {
+  await call("delete_account", { uid })
+}
+
 /** Where the data is; only the installed build can move it. */
 export type DataDir = { dir: string; isDefault: boolean; movable: boolean }
 /** A folder the data can go to; existing: it already has data of its own, used as it is. */

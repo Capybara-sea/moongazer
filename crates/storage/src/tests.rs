@@ -695,3 +695,52 @@ fn a_snapshot_of_a_session_whose_login_snapshot_was_deleted_starts_a_new_one() {
     assert_eq!(next.session, Some(next.id));
     assert!(append(&db, next.id, &texts[3], &export_text(7000, 4, 1)).is_some());
 }
+
+#[test]
+fn deleting_an_account_takes_its_snapshots_batches_and_settings_only() {
+    let mut db = Db::open_in_memory().unwrap();
+    // Two accounts, each with a login, a batch and a later snapshot.
+    let mut logins = Vec::new();
+    for (uid, start) in [(1, 1000), (2, 1500)] {
+        let text = |n: i64| export_text(n, 1, uid);
+        let login = saved(import_into(
+            &mut db,
+            &text(start),
+            Check::Mark,
+            Some(Session::New),
+        ));
+        append(&db, login.id, &text(start), &text(start + 1000)).unwrap();
+        saved(import(&mut db, &text(start + 2000), Check::Confirmed));
+        logins.push(login);
+    }
+    saved(import(
+        &mut db,
+        &export_without_uid(9000, 1),
+        Check::Confirmed,
+    ));
+    for key in ["planner:1", "tasks:1", "planner:2", "sync.autoStart"] {
+        db.set_setting(key, "x").unwrap();
+    }
+
+    let keys = ["planner:1".to_owned(), "tasks:1".to_owned()];
+    assert_eq!(db.delete_account(Some(1), &keys).unwrap(), 2);
+    let uids = |db: &Db| {
+        db.list()
+            .unwrap()
+            .iter()
+            .filter(|s| s.id > 0)
+            .map(|s| s.uid)
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(uids(&db), [None, Some(2), Some(2)]);
+    assert!(db.timeline(logins[0].id).unwrap().is_empty());
+    assert_eq!(db.timeline(logins[1].id).unwrap().len(), 1);
+    assert_eq!(db.setting("planner:1").unwrap(), None);
+    assert_eq!(db.setting("tasks:1").unwrap(), None);
+    assert!(db.setting("planner:2").unwrap().is_some());
+    assert!(db.setting("sync.autoStart").unwrap().is_some());
+
+    // The snapshots of no account go on their own.
+    assert_eq!(db.delete_account(None, &[]).unwrap(), 1);
+    assert_eq!(uids(&db), [Some(2), Some(2)]);
+}

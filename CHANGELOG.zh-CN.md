@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-11-26
+
 ### 新增
 
 - 收集新增"摆设套装"（尚可领取的伙伴原石，以及这些套装所需摆设的清单、背包里缺多少和获取方式）和按地区列出的"旋曜玉帛"。自动同步会读取背包中的摆设数量。
@@ -151,7 +153,8 @@
 - 设置页、明暗主题、界面动效；游戏图标在第一次显示时下载。
 - 关于页：帮助与反馈、致谢和第三方许可。
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.4...HEAD
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/Capybara-sea/moongazer/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/Capybara-sea/moongazer/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/Capybara-sea/moongazer/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/Capybara-sea/moongazer/compare/v0.3.1...v0.3.2

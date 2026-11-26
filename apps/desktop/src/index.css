@@ -678,6 +678,9 @@ button#decorum-tb-close:hover {
  * Thin, rounded scrollbars in the theme's blue-gray, darker on hover. Light
  * comes first for the same reason as above. --scrollbar-thumb shares its name
  * with HeroUI's own variable on purpose, so HeroUI tables match.
+ * Only scroll boxes darken: a hover style on every element repaints the
+ * hovered text, and in the side menu's panel that repaint lands it up to a
+ * pixel off the rest, so the text jumps.
  */
 :root,
 .light,
@@ -695,6 +698,13 @@ button#decorum-tb-close:hover {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
-*:hover {
+:is(
+  [class*="overflow-auto"],
+  [class*="overflow-x-auto"],
+  [class*="overflow-y-auto"],
+  [class*="overflow-scroll"],
+  [class*="overflow-x-scroll"],
+  [class*="overflow-y-scroll"]
+):hover {
   scrollbar-color: var(--scrollbar-thumb-hover) transparent;
 }

@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The account list in the side panel can delete an account, with its snapshots, sync
   timelines, planner and tasks; the one auto sync is reading cannot be deleted.
 
+### Fixed
+
+- Text in the auto sync panel no longer jumps when the pointer moves over it.
+
 ## [0.3.5] - 2026-11-26
 
 ### Added

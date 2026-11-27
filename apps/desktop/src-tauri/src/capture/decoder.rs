@@ -177,16 +177,14 @@ impl Decoder {
     }
 
     fn handle(&mut self, event: SnifferEvent, at_ms: u64, fed: &mut Fed) {
-        let (commands, key) = match event {
+        let (commands, report) = match event {
             SnifferEvent::SessionReset => {
                 self.replacement.connection_reset();
                 fed.connection = true;
                 fed.reset = true;
                 return;
             }
-            SnifferEvent::Packet(GamePacket::Commands(commands), report) => {
-                (commands, report.state)
-            }
+            SnifferEvent::Packet(GamePacket::Commands(commands), report) => (commands, report),
             SnifferEvent::Packet(GamePacket::Connection(connection), _) => {
                 if matches!(
                     connection,
@@ -197,6 +195,7 @@ impl Decoder {
                 return;
             }
         };
+        let key = report.state;
         if key == KeyState::Session && !commands.is_empty() {
             fed.session_traffic = true;
         }
@@ -217,7 +216,8 @@ impl Decoder {
             .map(|(id, _)| *id)
             .collect();
         if !classified.is_empty() {
-            match self.replacement.verdict_for_batch(key, &mut classified) {
+            let verdict = self.replacement.verdict_for_batch(key, &mut classified);
+            match verdict {
                 DataVerdict::Apply => {}
                 // A new login: its data replaces the account held so far.
                 DataVerdict::ReplaceThenApply => {
@@ -231,6 +231,8 @@ impl Decoder {
                 }
                 DataVerdict::Hold => return,
             }
+            // After the replacement: the login's UID is the new data's.
+            decode::adopt_login_uid(&mut self.player_data, &verdict, report);
             for (id, found) in &classified {
                 if let CommandMatch::Anecdotes(data) = found
                     && let Some(command) = commands.iter().find(|c| !c.sent && c.command_id == *id)

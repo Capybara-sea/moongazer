@@ -23,7 +23,7 @@ log = { version = "0.4.35", features = ["max_level_info", "release_max_level_inf
 # The packet monitor bindings Teyvat.me Capture captures with, from the same
 # repository and tag as its decoding crates (see those). Without `tokio`:
 # capture runs on plain threads here.
-pktmon = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.18.4" }
+pktmon = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.18.5" }
 # No default features: they add a statement cache and a WebAssembly VFS.
 # `fallible_uint` stores u64 values, failing on any above i64::MAX.
 rusqlite = { version = "0.43", default-features = false, features = ["bundled", "fallible_uint"] }
@@ -52,9 +52,9 @@ tauri-plugin-updater = "~2.14"
 # take the crates they share for a second source and the types would not
 # match. Without default features game-data has no downloader (and no second
 # reqwest).
-teyvatme-core = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.18.4", default-features = false }
-teyvatme-game-data = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.18.4", default-features = false }
-teyvatme-protocol = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.18.4", default-features = false }
+teyvatme-core = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.18.5", default-features = false }
+teyvatme-game-data = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.18.5", default-features = false }
+teyvatme-protocol = { git = "https://github.com/tawan475/teyvat.me-capture", tag = "v1.18.5", default-features = false }
 # Only for the channel type teyvatme-core's decoder sends its events on.
 tokio = { version = "1.47", default-features = false, features = ["sync"] }
 toml_edit = "0.25"

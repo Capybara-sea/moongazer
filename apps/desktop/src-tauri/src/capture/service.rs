@@ -1112,6 +1112,7 @@ impl Supervisor {
         let key = self.key.unwrap_or(KeyReport {
             state: KeyState::None,
             recovery_failed: false,
+            login_uid: None,
         });
         status.entered = key.state == KeyState::Session && self.game.is_some();
 

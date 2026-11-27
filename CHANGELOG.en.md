@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Text in the auto sync panel no longer jumps when the pointer moves over it.
+- Auto sync now links Teyvat.me Capture v1.18.5: Bilibili server accounts are expected to be read
+  too (not yet tested); the UID comes from the game's login reply first; in another player's
+  world, the host's boss data is no longer taken as your own.
 
 ## [0.3.5] - 2026-11-26
 

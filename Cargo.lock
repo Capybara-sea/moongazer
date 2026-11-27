@@ -824,7 +824,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d045de693cb712d0b22c6a64be5b953f67b3ce00ab5ad3dd5d8b441886ab8e1a"
 dependencies = [
  "quote",
- "syn 2.0.119",
+ "syn 3.0.10",
 ]
 
 [[package]]
@@ -2292,7 +2292,7 @@ dependencies = [
 [[package]]
 name = "kcp"
 version = "0.6.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.5#7617ffc586161315196aa78194bd8b5735de3d10"
 dependencies = [
  "bytes",
  "log",
@@ -3296,7 +3296,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 [[package]]
 name = "pktmon"
 version = "0.6.2"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.5#7617ffc586161315196aa78194bd8b5735de3d10"
 dependencies = [
  "async-stream",
  "cidr",
@@ -5059,7 +5059,7 @@ dependencies = [
 [[package]]
 name = "teyvatme-core"
 version = "0.0.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.5#7617ffc586161315196aa78194bd8b5735de3d10"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -5080,7 +5080,7 @@ dependencies = [
 [[package]]
 name = "teyvatme-game-data"
 version = "0.1.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.5#7617ffc586161315196aa78194bd8b5735de3d10"
 dependencies = [
  "anyhow",
  "flate2",
@@ -5092,7 +5092,7 @@ dependencies = [
 [[package]]
 name = "teyvatme-protocol"
 version = "1.4.0"
-source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.4#03f2d460ed63e315e331f5f3a8e0df076e29249e"
+source = "git+https://github.com/tawan475/teyvat.me-capture?tag=v1.18.5#7617ffc586161315196aa78194bd8b5735de3d10"
 dependencies = [
  "base64 0.22.1",
  "etherparse",

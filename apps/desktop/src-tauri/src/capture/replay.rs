@@ -158,13 +158,27 @@ fn matches_the_reference(dir: &Path) -> bool {
 
     let mut reference: Value =
         serde_json::from_slice(&fs::read(dir.join("reference.json")).unwrap()).unwrap();
-    let ours: Value = serde_json::from_str(&ours).unwrap();
+    let mut ours: Value = serde_json::from_str(&ours).unwrap();
     // The intended differences: who wrote the export, which data set its
     // tables came from (upstream's own, or AnimeGameData's), and the
     // anecdotes recorded while playing, which Capture does not follow (see
     // anecdotes.rs).
     reference["source"] = ours["source"].clone();
     reference["gi_player"]["gameData"] = ours["gi_player"]["gameData"].clone();
+    // Each artifact's substat rolls, which upstream exports since 1.18.5 and
+    // the references' Capture did not. Remove once the references come from
+    // 1.18.5 or later.
+    let mut rolled = 0;
+    let unrolled = reference["artifacts"].as_array().is_some_and(|all| {
+        all.iter()
+            .all(|artifact| artifact.get("gi_rolls").is_none())
+    });
+    if unrolled && let Some(artifacts) = ours["artifacts"].as_array_mut() {
+        for artifact in artifacts.iter_mut().filter_map(Value::as_object_mut) {
+            rolled += usize::from(artifact.remove("gi_rolls").is_some());
+        }
+    }
+    println!("artifact rolls the reference lacks: {rolled}");
     // Which twin the Traveler is, which only Moongazer writes.
     let twin = &ours[TRAVELER_KEY];
     println!(

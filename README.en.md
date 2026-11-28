@@ -29,7 +29,7 @@ Windows 10/11 (64-bit) · Free · English and Simplified Chinese interface · Ea
 - **Planner** (规划): set goals for characters and weapons, and see the missing materials and what to craft first.
 - **Reminders**: Original Resin full, expeditions complete, commission rewards unclaimed, Spiral Abyss about to reset and more; also sent as Windows notifications while Moongazer runs in the background.
 - **Multiple accounts**, switched automatically when you log in to the game.
-- Planned: artifact optimizer, Serenitea Pot set reward checklist.
+- Planned: artifact optimizer.
 
 ## Before you start
 
@@ -70,7 +70,7 @@ Moongazer starts in English, or in Chinese when Windows is set to Chinese; chang
    If you were already in the game when sync started, return to the title screen and enter again.
 4. Before each later session, open Moongazer and start sync: click **Auto sync is off** (自动同步未开启) at the bottom left, then **Start auto sync** (开启自动同步). After sync is first started, Moongazer asks whether to start it whenever Moongazer opens; choose **Turn on** (自动开启) to skip this step. This can be changed later in Settings (设置).
 
-Closing the window does not quit Moongazer: it stays in the tray at the bottom right of the taskbar (click the ^ arrow there if the icon is not shown), as reminders and sync need it running. To quit, right-click the tray icon and choose **Quit Moongazer** (退出望月). Moongazer does not start with Windows.
+By default, closing the window does not quit Moongazer: it stays in the tray at the bottom right of the taskbar (click the ^ arrow there if the icon is not shown), as reminders and sync need it running. To quit, right-click the tray icon and choose **Quit Moongazer** (退出望月). To have closing the window quit instead, choose Quit Moongazer under Settings › Interface › When the window is closed. Moongazer does not start with Windows.
 
 As an alternative to auto sync, you can import a Leyline file (.json) exported by [Teyvat.me Capture](https://github.com/tawan475/teyvat.me-capture): click **Import file** (导入文件) on the Overview (总览) page. If you have not used Teyvat.me Capture, skip this.
 

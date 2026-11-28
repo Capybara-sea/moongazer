@@ -14,7 +14,7 @@ Every build contains data generated from:
 - [Snap.Metadata](https://github.com/SnapHutaoRemasteringProject/Snap.Metadata):
   Copyright (c) 2022 DGP Studio
 
-Builds with the `capture` feature also contain code from these, some of it
+Every build also contains code from these, some of it
 adapted (each such file says where from), the rest linked through Teyvat.me
 Capture's crates:
 
@@ -42,11 +42,11 @@ and the license text are in `xtask/licenses/Sarasa-Gothic.txt`.
 
 No licence here covers the following; none of it is in this repository:
 
-- the game data compiled into every build, and `game_data.gz` in builds with
-  the `capture` feature, are generated from the tables of
+- the game data compiled into every build, and `game_data.gz`, are generated
+  from the tables of
   [DimbreathBot/AnimeGameData](https://github.com/DimbreathBot/AnimeGameData),
   which has no licence and asks for credit;
-- builds with the `capture` feature ship the game client's keys (`gi.json`,
+- every build ships the game client's keys (`gi.json`,
   and two RSA keys in `teyvatme-protocol`), which Teyvat.me Capture took from
   irminsul and auto-artifactarium and does not license.
 

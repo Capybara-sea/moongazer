@@ -37,21 +37,16 @@ pub fn run_job(root: &Path, job: &str) -> Result<()> {
     match job {
         "guard" => guard::run(root, guard::Mode::All),
         "fmt" => util::run(util::cargo(root).args(["fmt", "--all", "--check"])),
-        "clippy" => for_feature_sets(|features| {
-            util::run(
-                util::cargo(root)
-                    .args(["clippy", "--locked", "--workspace", "--all-targets"])
-                    .args(features)
-                    .args(["--", "-D", "warnings"]),
-            )
-        }),
-        "test" => for_feature_sets(|features| {
-            util::run(
-                util::cargo(root)
-                    .args(["test", "--locked", "--workspace"])
-                    .args(features),
-            )
-        }),
+        "clippy" => util::run(util::cargo(root).args([
+            "clippy",
+            "--locked",
+            "--workspace",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings",
+        ])),
+        "test" => util::run(util::cargo(root).args(["test", "--locked", "--workspace"])),
         "frontend" => frontend(root),
         "deny" => util::run(
             util::cargo(root).args(["deny", "--locked", "check", "licenses", "bans", "sources"]),
@@ -67,14 +62,6 @@ pub fn run_job(root: &Path, job: &str) -> Result<()> {
             JOBS.join(", ")
         ),
     }
-}
-
-/// Runs once with default features and once more with `capture`. `capture`
-/// stays out of every `default` feature list, so the first run is always the
-/// build without capture, which must keep working.
-fn for_feature_sets(mut run: impl FnMut(&[&str]) -> Result<()>) -> Result<()> {
-    run(&[])?;
-    run(&["--features", "capture"])
 }
 
 fn frontend(root: &Path) -> Result<()> {

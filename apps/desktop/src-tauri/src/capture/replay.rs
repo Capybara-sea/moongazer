@@ -10,8 +10,7 @@
 //!
 //! ```text
 //! cargo xtask pack
-//! MOONGAZER_REGRESSION=<dir> cargo test --locked -p moongazer --features capture \
-//!     -- --ignored --nocapture replay
+//! MOONGAZER_REGRESSION=<dir> cargo test --locked -p moongazer -- --ignored --nocapture replay
 //! ```
 //!
 //! `<dir>`, an absolute path, holds one folder per recording (or is one):

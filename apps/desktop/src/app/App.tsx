@@ -18,6 +18,8 @@ import { SettingsPage } from "@/features/settings/SettingsPage"
 import { AutoStartDialog } from "@/features/sync/AutoStartDialog"
 import { SyncEvents } from "@/features/sync/SyncEvents"
 import { WeaponsPage } from "@/features/weapons/WeaponsPage"
+import { WishEvents } from "@/features/wishes/WishEvents"
+import { WishesPage } from "@/features/wishes/WishesPage"
 import { useAppearanceStore } from "@/stores/appearanceStore"
 import { AppShell } from "./AppShell"
 import { RestartDialog } from "./RestartDialog"
@@ -36,6 +38,7 @@ export function App() {
           artifacts: <ArtifactsPage key={numbers} />,
           materials: <MaterialsPage key={numbers} />,
           collection: <CollectionPage key={numbers} />,
+          wishes: <WishesPage key={numbers} />,
           planner: <PlannerPage key={numbers} />,
           settings: <SettingsPage />,
           about: <AboutPage />,
@@ -49,6 +52,7 @@ export function App() {
       {/* Reminders (features/messages/ReminderTimer) stay off until they are confirmed. */}
       <BackgroundEvents />
       <SyncEvents />
+      <WishEvents />
       <LogoWarmUp />
     </>
   )

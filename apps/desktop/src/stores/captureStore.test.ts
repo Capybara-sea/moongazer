@@ -26,7 +26,6 @@ vi.mock("@/lib/backend", async importOriginal => ({
     portable: false,
     updatesEnabled: false,
     updatesInPlace: false,
-    capture: true,
     testBuild: false,
   })),
 }))
@@ -162,7 +161,7 @@ describe("load", () => {
     let answer: (status: CaptureStatus) => void = () => {}
     vi.mocked(getCaptureStatus).mockReturnValueOnce(new Promise(resolve => (answer = resolve)))
     const loading = store().load()
-    await vi.waitFor(() => expect(store().capture).toBe(true))
+    await vi.waitFor(() => expect(store().version).toBe("0.6.0"))
     store().setStatus(connected)
     answer(off)
     await loading
@@ -172,13 +171,14 @@ describe("load", () => {
   it("keeps a failure apart from the commands' errors", async () => {
     vi.mocked(getCaptureStatus).mockRejectedValueOnce({ kind: "ipc", message: "gone" })
     await store().load()
-    expect(store()).toMatchObject({ capture: true, status: null, loadError: "gone", error: null })
+    expect(store()).toMatchObject({ status: null, loadError: "gone", error: null })
   })
 
-  it("shows a failure to read the app info rather than hide auto sync", async () => {
+  it("shows a failure to read the app info, and still reads auto sync's state", async () => {
     vi.mocked(getAppInfo).mockRejectedValueOnce({ kind: "ipc", message: "gone" })
     await store().load()
-    expect(store()).toMatchObject({ capture: true, version: null, loadError: "gone" })
+    expect(store()).toMatchObject({ version: null, loadError: "gone", autoStart: true })
+    expect(store().status).not.toBeNull()
   })
 
   it("drops a failure once a status comes, unless the settings are still unread", async () => {

@@ -16,6 +16,14 @@ describe("parseAccount on the task board's parts", () => {
     expect(tasks?.weeklyBosses).toEqual({ left: 1, limit: 3 })
   })
 
+  it("reads the Epitomized Path, its weapon and points", () => {
+    const { tasks } = leyline({
+      gi_tasks: { wishPath: { weapon: "FakeBow", points: 1, max: 1 } },
+    })
+    expect(tasks?.wishPath).toEqual({ weapon: "FakeBow", points: 1 })
+    expect(leyline({ gi_tasks: { wishPath: { points: 1 } } }).tasks?.wishPath).toBeUndefined()
+  })
+
   it("reads an old export's discounts, which gave the count used as left", () => {
     const { tasks } = leyline({ gi_tasks: { weeklyBosses: { left: 1, limit: 3 } } })
     expect(tasks?.weeklyBosses).toEqual({ left: 2, limit: 3 })

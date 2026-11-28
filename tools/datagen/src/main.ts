@@ -6,8 +6,8 @@
 // game data the overview page needs; builds.json, constellation talent boosts, artifact main stat
 // values and what character stats are computed from; collection.json, the achievements,
 // anecdotes, furnishing sets and spincrystals; planner.json, what raising characters and weapons
-// costs; and activities.json, the names and types of the game's events; from the commits pinned
-// in sources.json. Those with text are written in English too, under en/, with the same entries.
+// costs; activities.json, the names and types of the game's events; and wishes.json, the event
+// wish banners and wish item ids; from the commits pinned in sources.json. Those with text are written in English too, under en/, with the same entries.
 // `--update` first moves the pins to the latest commits.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises"
@@ -28,12 +28,13 @@ import { type Builds, buildBuilds } from "./builds.ts"
 import { buildCollection } from "./collection.ts"
 import { latestCommit } from "./download.ts"
 import { buildFurnishings } from "./furnishing.ts"
-import { cities, offerings, theaterLevels, travelerNames } from "./manual.ts"
+import { cities, offerings, standardFiveStars, theaterLevels, travelerNames } from "./manual.ts"
 import { crossCheck } from "./optimizer.ts"
 import { buildOverview, type Overview } from "./overview.ts"
 import { buildPlanner, type Planner } from "./planner.ts"
 import { visionNames } from "./snap.ts"
 import { buildTables, type Tables } from "./tables.ts"
+import { buildWishes, standardIds } from "./wishes.ts"
 
 type Source = { repo: string; branch: string; commit: string }
 type Sources = { snapMetadata: Source; genshinOptimizer: Source; animeGameData: Source }
@@ -65,6 +66,7 @@ const COLLECTION_MINIMUM: Record<string, number> = {
   spincrystalAreas: 9,
 }
 const ACTIVITIES_MINIMUM = 300
+const WISHES_MINIMUM: Record<string, number> = { items: 300, banners: 250, standard: 10 }
 const PLANNER_MINIMUM: Partial<Record<keyof Planner, number>> = {
   costs: 300,
   characters: 100,
@@ -128,12 +130,18 @@ const materialKeys = new Set(Object.keys(zhItems.tables.materials))
 // Neither has text, so one file serves every language.
 const builds = await buildBuilds(zh, zhItems.ids)
 const planner = await buildPlanner(zh, zhItems.ids, materialKeys)
+// By the Chinese names the hand-written list uses.
+const standard = standardIds(zhItems.tables, zhItems.ids, standardFiveStars)
 
-/** Each file in `g`'s language by its path under `dir`, with the counts of its tables. */
+/**
+ * Each file in `g`'s language, which Snap.Metadata calls `language`, by its path under `dir`,
+ * with the counts of its tables.
+ */
 const localized = async (
   g: Game,
   { profiles, tables, ids }: typeof zhItems,
   dir: string,
+  language: string,
 ): Promise<[string, string, object][]> => {
   const collection = {
     ...(await buildCollection(snap, g, keys)),
@@ -145,6 +153,7 @@ const localized = async (
   }
   const overview = await buildOverview(snap, g, ids.characters)
   const activities = await buildActivities(g)
+  const wishes = await buildWishes(snap, language, ids, standard)
   const manual = (texts: Record<string, string>) =>
     Object.fromEntries(Object.entries(texts).map(([id, text]) => [id, g.manual(text)]))
   return [
@@ -189,14 +198,25 @@ const localized = async (
       count({ activities }, { activities: ACTIVITIES_MINIMUM }),
       { sources: { animeGameData: sources.animeGameData.commit }, activities },
     ],
+    [
+      join(dir, "wishes.json"),
+      count(wishes, WISHES_MINIMUM),
+      {
+        sources: {
+          snapMetadata: sources.snapMetadata.commit,
+          animeGameData: sources.animeGameData.commit,
+        },
+        ...wishes,
+      },
+    ],
   ]
 }
 
 const en = inEnglish(zh)
 // All are checked before any is written, so a failed run leaves no mismatched set.
 const files: [string, string, object][] = [
-  ...(await localized(zh, zhItems, OUTPUT)),
-  ...(await localized(en, await items(en, "EN"), join(OUTPUT, "en"))),
+  ...(await localized(zh, zhItems, OUTPUT, "CHS")),
+  ...(await localized(en, await items(en, "EN"), join(OUTPUT, "en"), "EN")),
   [join(OUTPUT, "builds.json"), count(builds, BUILDS_MINIMUM), builds],
   [
     join(OUTPUT, "planner.json"),

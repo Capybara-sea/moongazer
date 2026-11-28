@@ -29,6 +29,8 @@ export type Tasks = {
   bargains?: { at: number; fates: Fate[] }
   /** Original Resin spent on the game day of `at`, as the training event (5294) counts it. */
   resinSpent?: { value: number; at: number }
+  /** The weapon event's Epitomized Path as the wish screen last showed it. */
+  wishPath?: { weapon: string; points: number }
 }
 
 /** One reward tier of an event. */
@@ -68,6 +70,12 @@ function bargains(value: unknown): Tasks["bargains"] {
     return [{ item: name, currency: str(fate.currency) ?? "", bought: count(fate.bought), limit }]
   })
   return { at, fates }
+}
+
+function wishPath(value: unknown): Tasks["wishPath"] {
+  const raw = record(value)
+  const weapon = str(raw?.weapon)
+  return weapon === undefined ? undefined : { weapon, points: count(raw?.points) }
 }
 
 /**
@@ -120,6 +128,7 @@ export function parseTasks(
     arRewards: list(raw.arRewards)?.flatMap(rank => num(rank) ?? []),
     bargains: bargains(raw.bargains),
     resinSpent: resinSpent(raw.resinSpent),
+    wishPath: wishPath(raw.wishPath),
   }
 }
 

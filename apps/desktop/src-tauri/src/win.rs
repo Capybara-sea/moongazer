@@ -2,9 +2,8 @@
 // Copyright (c) 2026 Capybara_sea
 
 //! The app's Windows FFI: native dialogs that work without the webview, and
-//! (`capture`) what auto sync needs from Windows.
+//! what auto sync needs from Windows.
 
-#[cfg(feature = "capture")]
 pub mod capture;
 
 use windows_sys::Win32::Globalization::GetUserDefaultUILanguage;

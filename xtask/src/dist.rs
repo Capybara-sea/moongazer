@@ -22,9 +22,8 @@
 //! points the download links in latest.json somewhere other than the GitHub
 //! release.
 //!
-//! The build has auto sync: it runs `pack` first, and build.rs builds the
-//! capture pack into the exe. `--no-capture` builds without it (hard rule:
-//! a build without capture must always be possible).
+//! The build runs `pack` first, and build.rs builds the capture pack into the
+//! exe.
 
 use std::fs::{self, File};
 use std::io::{BufWriter, Write};
@@ -37,7 +36,7 @@ use zip::CompressionMethod;
 use zip::write::{SimpleFileOptions, ZipWriter};
 
 use crate::changelog::{self, Heading};
-use crate::{gen_data, guard, notices, util};
+use crate::{gen_data, guard, notices, pack, util};
 
 const PACKAGE: &str = "@moongazer/desktop";
 const TAURI_CONF: &str = "apps/desktop/src-tauri/tauri.conf.json";
@@ -54,7 +53,6 @@ const NOTICES: &str = "THIRD_PARTY_NOTICES.txt";
 struct Options {
     config: Option<PathBuf>,
     base_url: Option<String>,
-    capture: bool,
     sign: bool,
 }
 
@@ -62,7 +60,6 @@ fn parse(args: &[&str]) -> Result<Options> {
     let mut options = Options {
         config: None,
         base_url: None,
-        capture: true,
         sign: true,
     };
     let mut rest = args.iter();
@@ -77,11 +74,10 @@ fn parse(args: &[&str]) -> Result<Options> {
                 let url = rest.next().context("--base-url needs a URL")?;
                 options.base_url = Some(format!("{}/", url.trim_end_matches('/')));
             }
-            "--no-capture" => options.capture = false,
             "--no-sign" => options.sign = false,
             other => {
                 bail!(
-                    "usage: cargo xtask dist [--config <file>] [--no-capture] [--base-url <url> | --no-sign]; got `{other}`"
+                    "usage: cargo xtask dist [--config <file>] [--base-url <url> | --no-sign]; got `{other}`"
                 )
             }
         }
@@ -166,9 +162,6 @@ pub fn run(root: &Path, args: &[&str]) -> Result<()> {
     let notes = release_notes(root, &release.version)?;
     let mut child = util::command(std::env::current_exe().context("finding xtask")?, root);
     util::without_key(&mut child).args(["dist", "--no-sign"]);
-    if !options.capture {
-        child.arg("--no-capture");
-    }
     if let Some(path) = &options.config {
         child.arg("--config").arg(path);
     }
@@ -195,9 +188,8 @@ pub fn manifest(root: &Path, dir: &str) -> Result<()> {
 fn build(root: &Path, options: &Options, release: &Release) -> Result<()> {
     let zip_time = commit_time(root)?;
     let target = target_dir(root)?;
-    if options.capture {
-        build_pack(root)?;
-    }
+    // The capture pack, written before the app is built so build.rs builds it in.
+    pack::run(root)?;
     let out = release.out_dir(&target);
     if out.exists() {
         fs::remove_dir_all(&out).with_context(|| format!("clearing {}", out.display()))?;
@@ -210,18 +202,13 @@ fn build(root: &Path, options: &Options, release: &Release) -> Result<()> {
     // (createUpdaterArtifacts).
     util::run(util::without_key(&mut gen_data::command(root, false)))?;
     util::run(util::without_key(&mut gen_data::font_command(root)))?;
-    notices::write_app_json(root, options.capture)?;
+    notices::write_app_json(root)?;
     util::run(
         util::without_key(&mut util::node_tool("pnpm", root))
             .args(["--filter", PACKAGE, "run", "build"]),
     )?;
     let notices_file = out.join(NOTICES);
-    notices::write_text(
-        root,
-        options.capture,
-        &root.join(FRONTEND_DIST),
-        &notices_file,
-    )?;
+    notices::write_text(root, &root.join(FRONTEND_DIST), &notices_file)?;
     // Not in the dist folder: SHA256SUMS.txt covers everything there.
     let patch = target.join("dist").join("bundle.conf.json");
     fs::write(&patch, serde_json::to_string_pretty(&bundle_patch())?)?;
@@ -229,9 +216,6 @@ fn build(root: &Path, options: &Options, release: &Release) -> Result<()> {
     util::without_key(&mut tauri)
         .args(["--filter", PACKAGE, "tauri", "build", "--config"])
         .arg(&patch);
-    if options.capture {
-        tauri.args(["--features", "capture"]);
-    }
     if let Some(path) = &options.config {
         tauri.arg("--config").arg(path);
     }
@@ -414,19 +398,6 @@ fn target_dir(root: &Path) -> Result<PathBuf> {
         .context("cargo metadata has no target_directory")
 }
 
-/// The capture pack, written before the app is built so build.rs builds it in.
-#[cfg(feature = "capture")]
-fn build_pack(root: &Path) -> Result<()> {
-    crate::pack::run(root)
-}
-
-#[cfg(not(feature = "capture"))]
-fn build_pack(_root: &Path) -> Result<()> {
-    bail!(
-        "this xtask was built without `capture`: run `cargo xtask dist` (the alias has it), or add --no-capture"
-    )
-}
-
 fn write_portable_zip(path: &Path, exe: &Path, product: &str, time: zip::DateTime) -> Result<()> {
     let options = SimpleFileOptions::default()
         .compression_method(CompressionMethod::Deflated)
@@ -510,11 +481,11 @@ mod tests {
 
     #[test]
     fn options_parse_and_base_url_needs_signing() {
-        let options = parse(&["--no-capture", "--base-url", "http://127.0.0.1:8000"]).unwrap();
-        assert!(!options.capture && options.sign);
+        let options = parse(&["--base-url", "http://127.0.0.1:8000"]).unwrap();
+        assert!(options.sign);
         assert_eq!(options.base_url.as_deref(), Some("http://127.0.0.1:8000/"));
         let options = parse(&["--no-sign"]).unwrap();
-        assert!(options.capture && !options.sign && options.base_url.is_none());
+        assert!(!options.sign && options.base_url.is_none());
         assert!(parse(&["--no-sign", "--base-url", "http://127.0.0.1:8000"]).is_err());
         assert!(parse(&["--config"]).is_err());
         assert!(parse(&["--sign"]).is_err());

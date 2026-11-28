@@ -18,9 +18,8 @@ use crate::{notices, util};
 pub fn run(root: &Path, update: bool) -> Result<()> {
     util::run(&mut command(root, update))?;
     util::run(&mut font_command(root))?;
-    // The About page imports it. Dev, check and CI get the build with auto
-    // sync; `dist` writes the one for the build it makes.
-    notices::write_app_json(root, true)
+    // The About page imports it.
+    notices::write_app_json(root)
 }
 
 pub fn command(root: &Path, update: bool) -> Command {

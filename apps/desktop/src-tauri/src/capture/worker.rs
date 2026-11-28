@@ -13,6 +13,7 @@ use std::time::{Duration, Instant};
 
 use teyvatme_core::decode::KeyReport;
 use teyvatme_core::delta::{self, Keyed};
+use teyvatme_core::wish::hub::WishEvent;
 
 use super::decoder::{Decoder, Exported};
 use super::now_ms;
@@ -66,6 +67,8 @@ pub enum Output {
     Batch(Exported),
     /// An export failed (serialising it, which should not happen).
     ExportFailed,
+    /// Wish history messages, with the login's UID when known.
+    Wish(Vec<WishEvent>, Option<u32>),
 }
 
 /// Shared with the supervisor: when commands under the session key last
@@ -144,7 +147,7 @@ pub fn run(
         .fold(IDLE, Duration::min);
         match input.recv_timeout(wait) {
             Ok(Input::Frame(frame, at_ms)) => {
-                let fed = decoder.feed(frame, at_ms);
+                let mut fed = decoder.feed(frame, at_ms);
                 if fed.new_login {
                     settle = Settle::default();
                     settled = false;
@@ -163,6 +166,9 @@ pub fn run(
                 }
                 if let Some(chinese) = fed.chinese_client {
                     out(Output::ChineseClient(chinese));
+                }
+                if !fed.wish.is_empty() {
+                    out(Output::Wish(std::mem::take(&mut fed.wish), decoder.uid()));
                 }
                 if fed.one_way {
                     out(Output::OneWay);

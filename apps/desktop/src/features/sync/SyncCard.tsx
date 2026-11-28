@@ -25,21 +25,20 @@ export type SyncSide = {
 
 /**
  * Auto sync's state for the side menu's panel, with the panel's clock; null
- * without auto sync and before its state is read. Connected to another
- * account than `shownUid`, the line says whose data it reads.
+ * before its state is read. Connected to another account than `shownUid`,
+ * the line says whose data it reads.
  */
 export function useSyncSide(shownUid: number | null): { side: SyncSide | null; now: number } {
-  const capture = useCaptureStore(s => s.capture)
   const status = useCaptureStore(s => s.status)
   const loadError = useCaptureStore(s => s.loadError)
   const batches = useCaptureStore(s => s.batches)
   const now = useNow(15_000)
   if (!status) {
-    const failed = capture && loadError !== null
     return {
-      side: failed
-        ? { tone: "bad", label: t.loadFailed, duration: null, line: t.card.loadFailed[0] }
-        : null,
+      side:
+        loadError !== null
+          ? { tone: "bad", label: t.loadFailed, duration: null, line: t.card.loadFailed[0] }
+          : null,
       now,
     }
   }

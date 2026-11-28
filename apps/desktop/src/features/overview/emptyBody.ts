@@ -4,9 +4,7 @@
 import { syncOn, useCaptureStore } from "@/stores/captureStore"
 import { text } from "@/text"
 
-/** The pages' line before the first snapshot, by whether auto sync exists and is on. */
+/** The pages' line before the first snapshot, by whether auto sync is on. */
 export function useEmptyBody() {
-  const capture = useCaptureStore(s => s.capture)
-  const on = useCaptureStore(syncOn)
-  return text.overview.emptyBody(capture, on)
+  return text.overview.emptyBody(useCaptureStore(syncOn))
 }

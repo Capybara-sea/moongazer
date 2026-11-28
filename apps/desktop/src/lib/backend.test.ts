@@ -43,11 +43,9 @@ describe("backend responses", () => {
       portable: false,
       updatesEnabled: false,
       updatesInPlace: true,
-      capture: true,
       testBuild: false,
     }
     expect(parseAppInfo(info)).toEqual(info)
-    expect(() => parseAppInfo({ ...info, capture: undefined })).toThrow(BackendError)
     expect(() => parseAppInfo({ ...info, testBuild: undefined })).toThrow(BackendError)
     expect(() => parseAppInfo({ version: "0.1.0" })).toThrow(BackendError)
     expect(() => parseAppInfo(null)).toThrow(BackendError)

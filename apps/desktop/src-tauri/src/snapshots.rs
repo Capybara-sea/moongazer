@@ -108,7 +108,6 @@ pub async fn import_snapshot(
 }
 
 /// The snapshot an auto sync export went to.
-#[cfg(feature = "capture")]
 pub struct Captured {
     /// False when the same content was stored already.
     pub saved: bool,
@@ -118,7 +117,6 @@ pub struct Captured {
 
 /// Saves an export auto sync read (`text`, parsed as `export`), marked for
 /// review when it looks wrong next to its account's snapshot before it.
-#[cfg(feature = "capture")]
 pub fn import_capture(
     storage: &Storage,
     export: &Export,
@@ -219,15 +217,21 @@ pub async fn delete_snapshot(storage: State<'_, Storage>, id: i64) -> Result<(),
     Ok(())
 }
 
-/// Deletes an account: all its snapshots with their sessions' batches, and
-/// its planner and tasks. `uid` `None` is the snapshots of no account.
+/// Deletes an account: all its snapshots with their sessions' batches, its
+/// wishes, and its planner and tasks. `uid` `None` is the snapshots of no account.
 #[tauri::command]
 pub async fn delete_account(
     storage: State<'_, Storage>,
     uid: Option<u64>,
 ) -> Result<(), SnapshotError> {
     let settings: Vec<String> = uid
-        .map(|uid| vec![crate::planner::key(uid), crate::tasks::key(uid)])
+        .map(|uid| {
+            vec![
+                crate::planner::key(uid),
+                crate::tasks::key(uid),
+                crate::wishes::read_at_key(uid),
+            ]
+        })
         .unwrap_or_default();
     let mut guard = storage.lock();
     let db = guard
@@ -239,6 +243,18 @@ pub async fn delete_account(
 }
 
 impl Storage {
+    /// Runs `f` on the database.
+    pub fn with_db<T>(
+        &self,
+        f: impl FnOnce(&mut Db) -> anyhow::Result<T>,
+    ) -> Result<T, SnapshotError> {
+        let mut guard = self.lock();
+        let db = guard
+            .as_mut()
+            .map_err(|err| SnapshotError::Storage(err.clone()))?;
+        f(db).map_err(storage_error)
+    }
+
     /// A stored setting; `None` when unset.
     pub fn read_setting(&self, key: &str) -> Result<Option<String>, SnapshotError> {
         let guard = self.lock();
@@ -255,10 +271,7 @@ impl Storage {
             .map_err(|err| SnapshotError::Storage(err.clone()))?;
         db.set_setting(key, value).map_err(storage_error)
     }
-}
 
-#[cfg(feature = "capture")]
-impl Storage {
     /// A stored setting; `None` when unset or when the database is
     /// unavailable.
     pub fn setting(&self, key: &str) -> Option<String> {

@@ -12,7 +12,6 @@ pub struct Text {
     pub test_build: &'static str,
     pub tray_open: &'static str,
     pub tray_quit: &'static str,
-    #[cfg(feature = "capture")]
     pub sync: Sync,
     pub pick_data_dir: &'static str,
     pub move_data_failed: &'static str,
@@ -22,7 +21,6 @@ pub struct Text {
 }
 
 /// Auto sync's state in the tray menu and tooltip.
-#[cfg(feature = "capture")]
 pub struct Sync {
     pub off: &'static str,
     pub starting: &'static str,
@@ -39,7 +37,6 @@ const ZH: Text = Text {
     test_build: "测试版",
     tray_open: "打开望月",
     tray_quit: "退出望月",
-    #[cfg(feature = "capture")]
     sync: Sync {
         off: "自动同步：未开启",
         starting: "自动同步：正在开启",
@@ -67,7 +64,6 @@ const EN: Text = Text {
     test_build: "Test build",
     tray_open: "Open Moongazer",
     tray_quit: "Quit Moongazer",
-    #[cfg(feature = "capture")]
     sync: Sync {
         off: "Auto sync: off",
         starting: "Auto sync: starting",

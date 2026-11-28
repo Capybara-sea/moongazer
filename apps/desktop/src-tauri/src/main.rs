@@ -6,7 +6,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod background;
-#[cfg(feature = "capture")]
 mod capture;
 mod data_location;
 mod icons;
@@ -23,6 +22,7 @@ mod webview2;
     reason = "the app's one Windows FFI module: dialogs, and auto sync's elevation and pipes"
 )]
 mod win;
+mod wishes;
 
 use anyhow::Context;
 use tauri::window::Color;
@@ -35,7 +35,6 @@ const DARK_BACKGROUND: Color = Color(0x14, 0x1c, 0x30, 0xff);
 fn main() {
     // The elevated capture mode is this exe too, and branches off before
     // anything of the app's own runs.
-    #[cfg(feature = "capture")]
     if let Some(code) = capture::helper::run_if_asked() {
         std::process::exit(code);
     }
@@ -48,7 +47,6 @@ fn main() {
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
         default_hook(info);
-        #[cfg(feature = "capture")]
         if std::thread::current().name() == Some(capture::DECODER_THREAD) {
             tracing::error!(
                 message = info.payload_as_str().unwrap_or(""),
@@ -119,7 +117,6 @@ fn main() {
             window.show()?;
             background::tray(app.handle())?;
             background::on_notification_click(app.handle())?;
-            #[cfg(feature = "capture")]
             app.manage(capture::service::AutoSync::spawn(
                 app.handle(),
                 window.hwnd().ok().map(|hwnd| hwnd.0 as isize),
@@ -155,24 +152,24 @@ fn main() {
             planner::save_planner_data,
             tasks::tasks_data,
             tasks::save_tasks_data,
+            wishes::wish_records,
+            wishes::read_wish_file,
+            wishes::import_wish_file,
+            wishes::export_wish_file,
+            wishes::reveal_file,
+            wishes::open_uigf,
             update::app_info,
             update::check_update,
             update::download_update,
             update::install_update,
-            #[cfg(feature = "capture")]
             capture::service::capture_status,
-            #[cfg(feature = "capture")]
             capture::service::capture_changes,
-            #[cfg(feature = "capture")]
             capture::service::capture_start,
-            #[cfg(feature = "capture")]
             capture::service::capture_stop,
-            #[cfg(feature = "capture")]
             capture::service::capture_save_now,
-            #[cfg(feature = "capture")]
             capture::settings::sync_settings,
-            #[cfg(feature = "capture")]
             capture::settings::set_sync_auto_start,
+            capture::settings::set_wish_auto_read,
         ])
         .build(context);
 
@@ -190,12 +187,9 @@ fn main() {
 /// The app is exiting (not on a fatal error or an installer update, which
 /// exit at once; the capture mode then sees its pipe close and exits too).
 fn on_exit(app: &tauri::AppHandle) {
-    #[cfg(feature = "capture")]
     if let Some(sync) = app.try_state::<capture::service::AutoSync>() {
         sync.shutdown();
     }
-    #[cfg(not(feature = "capture"))]
-    let _ = app;
 }
 
 /// Shows the error and exits. The release build has no console, so the

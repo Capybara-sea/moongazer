@@ -106,7 +106,10 @@ describe("auto sync responses", () => {
   })
 
   it("reads the sync settings", () => {
-    expect(parseSyncSettings({ autoStart: false })).toEqual({ autoStart: false })
+    expect(parseSyncSettings({ autoStart: false, wishAutoRead: true })).toEqual({
+      autoStart: false,
+      wishAutoRead: true,
+    })
     expect(() => parseSyncSettings({ autoStart: "yes" })).toThrow(BackendError)
   })
 })

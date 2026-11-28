@@ -5,7 +5,6 @@
 //! tray icon brings it back or quits, a second launch shows the running app,
 //! and system notifications open the page they are about.
 
-#[cfg(feature = "capture")]
 use std::sync::{Mutex, PoisonError};
 
 use serde::Serialize;
@@ -18,7 +17,6 @@ use crate::text;
 
 const OPEN: &str = "open";
 const QUIT: &str = "quit";
-#[cfg(feature = "capture")]
 const SYNC: &str = "sync";
 /// What the page is told when the window was closed to the tray.
 const HIDDEN_EVENT: &str = "hidden-to-tray";
@@ -50,9 +48,7 @@ pub fn tray(app: &AppHandle) -> tauri::Result<()> {
     let text = text::text();
     let open = MenuItem::with_id(app, OPEN, text.tray_open, true, None::<&str>)?;
     let quit = MenuItem::with_id(app, QUIT, text.tray_quit, true, None::<&str>)?;
-    #[cfg(feature = "capture")]
     let sync = MenuItem::with_id(app, SYNC, text.sync.off, false, None::<&str>)?;
-    #[cfg(feature = "capture")]
     let menu = Menu::with_items(
         app,
         &[
@@ -63,8 +59,6 @@ pub fn tray(app: &AppHandle) -> tauri::Result<()> {
             &quit,
         ],
     )?;
-    #[cfg(not(feature = "capture"))]
-    let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &quit])?;
     let mut builder = TrayIconBuilder::with_id("main")
         .tooltip(tray_name(app))
         .menu(&menu)
@@ -91,9 +85,7 @@ pub fn tray(app: &AppHandle) -> tauri::Result<()> {
     app.manage(TrayItems {
         open,
         quit,
-        #[cfg(feature = "capture")]
         sync,
-        #[cfg(feature = "capture")]
         phase: Mutex::default(),
     });
     Ok(())
@@ -104,14 +96,11 @@ pub fn tray(app: &AppHandle) -> tauri::Result<()> {
 struct TrayItems {
     open: MenuItem<tauri::Wry>,
     quit: MenuItem<tauri::Wry>,
-    #[cfg(feature = "capture")]
     sync: MenuItem<tauri::Wry>,
-    #[cfg(feature = "capture")]
     phase: Mutex<crate::capture::service::Phase>,
 }
 
 /// Shows auto sync's state in the tray menu and the tray icon's tooltip.
-#[cfg(feature = "capture")]
 pub fn sync_status(app: &AppHandle, status: &crate::capture::service::Status) {
     if let Some(items) = app.try_state::<TrayItems>() {
         *items.phase.lock().unwrap_or_else(PoisonError::into_inner) = status.phase;
@@ -132,7 +121,6 @@ fn refresh_tray(app: &AppHandle) {
         set_label(&items.open, text.tray_open);
         set_label(&items.quit, text.tray_quit);
         let tooltip = tray_name(&handle);
-        #[cfg(feature = "capture")]
         let tooltip = sync_line(&items, &tooltip).unwrap_or(tooltip);
         if let Some(tray) = handle.tray_by_id("main")
             && let Err(err) = tray.set_tooltip(Some(tooltip))
@@ -152,7 +140,6 @@ fn set_label(item: &MenuItem<tauri::Wry>, label: &str) {
 }
 
 /// Writes auto sync's line; the tooltip with its state when that is worth one.
-#[cfg(feature = "capture")]
 fn sync_line(items: &TrayItems, name: &str) -> Option<String> {
     use crate::capture::service::Phase;
     let text = &text::text().sync;

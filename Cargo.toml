@@ -47,7 +47,7 @@ tauri-plugin-notification = "~2.8"
 tauri-plugin-opener = "~2.7"
 tauri-plugin-single-instance = "~2.5"
 tauri-plugin-updater = "~2.14"
-# Teyvat.me Capture's decoding crates, behind the `capture` feature. Each is
+# Teyvat.me Capture's decoding crates. Each is
 # named once, with one URL and one tag: spelled any other way, Cargo would
 # take the crates they share for a second source and the types would not
 # match. Without default features game-data has no downloader (and no second

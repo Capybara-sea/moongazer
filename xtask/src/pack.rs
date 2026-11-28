@@ -141,7 +141,6 @@ fn upstream(root: &Path) -> Result<(String, PathBuf)> {
     let metadata = util::output(util::without_key(&mut util::cargo(root)).args([
         "metadata",
         "--locked",
-        "--all-features",
         "--format-version",
         "1",
     ]))?;

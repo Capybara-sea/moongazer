@@ -17,8 +17,6 @@ import {
 import { readStored, writeStored } from "@/lib/storage"
 
 type CaptureState = {
-  /** Whether this build has auto sync; without it nothing of it shows. */
-  capture: boolean
   /** The app's version once read; "has to be updated" is said once per version. */
   version: string | null
   /** Null until read; auto sync shows from then on. */
@@ -116,7 +114,6 @@ export const useCaptureStore = create<CaptureState>((set, get) => {
     }
   }
   return {
-    capture: false,
     version: null,
     status: null,
     loadError: null,
@@ -129,19 +126,8 @@ export const useCaptureStore = create<CaptureState>((set, get) => {
     askAutoStart: false,
 
     async load() {
-      const failed = (error: unknown) =>
-        set({ capture: true, loadError: toBackendError(error).message })
-      try {
-        const info = await getAppInfo()
-        set({ version: info.version })
-        if (!info.capture) return
-        set({ capture: true })
-      } catch (error) {
-        // Without the app info it is unknown whether this build has auto sync;
-        // release builds have it, so the failure shows rather than hides.
-        failed(error)
-        return
-      }
+      const failed = (error: unknown) => set({ loadError: toBackendError(error).message })
+      await getAppInfo().then(info => set({ version: info.version }), failed)
       await getSyncSettings().then(settings => set({ autoStart: settings.autoStart }), failed)
       await getCaptureStatus().then(status => {
         // A status event that came meanwhile is newer.

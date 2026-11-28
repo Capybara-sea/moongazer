@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Library,
   Settings,
+  Sparkles,
   Sword,
   Users,
 } from "lucide-react"
@@ -34,6 +35,7 @@ const NAV_ICONS = {
   artifacts: Gem,
   materials: Backpack,
   collection: Library,
+  wishes: Sparkles,
   planner: ClipboardList,
   settings: Settings,
   about: Info,

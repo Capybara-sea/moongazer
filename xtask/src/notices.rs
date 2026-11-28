@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! `cargo xtask notices [--no-capture] [--text <file>]`: the third-party
-//! notices for what ships inside moongazer.exe.
+//! `cargo xtask notices [--text <file>]`: the third-party notices for what
+//! ships inside moongazer.exe.
 //!
 //! The Rust part lists the crates compiled into the exe: the app's normal
 //! dependencies for its Windows target, without proc-macro crates and build
@@ -18,7 +18,7 @@ use serde_json::{Map, Value, json};
 
 use crate::util;
 
-const USAGE: &str = "usage: cargo xtask notices [--no-capture] [--text <file>]";
+const USAGE: &str = "usage: cargo xtask notices [--text <file>]";
 const TARGET: &str = "x86_64-pc-windows-msvc";
 const DESKTOP: &str = "apps/desktop";
 const APP_JSON: &str = "apps/desktop/src/generated/notices.json";
@@ -56,7 +56,7 @@ const CSS_PACKAGES: [(&str, &[&str]); 2] = [
     ("tailwindcss", &[]),
     ("tw-animate-css", &["@heroui/styles"]),
 ];
-/// Projects whose code THIRD_PARTY_NOTICES.md says the capture build contains.
+/// Projects whose code THIRD_PARTY_NOTICES.md says Moongazer contains.
 /// Listed only when no crate already carries the same copyright line.
 const ADAPTED: [(&str, &str, &str); 5] = [
     (
@@ -172,27 +172,25 @@ const FIXES: &[Fix] = &[
 ];
 
 pub fn run(root: &Path, args: &[&str]) -> Result<()> {
-    let mut capture = true;
     let mut text = None;
     let mut args = args.iter();
     while let Some(arg) = args.next() {
         match *arg {
-            "--no-capture" => capture = false,
             "--text" => text = Some(PathBuf::from(args.next().context(USAGE)?)),
             _ => bail!(USAGE),
         }
     }
-    write_app_json(root, capture)?;
+    write_app_json(root)?;
     if let Some(out) = text {
-        write_text(root, capture, &root.join(DESKTOP).join("dist"), &out)?;
+        write_text(root, &root.join(DESKTOP).join("dist"), &out)?;
     }
     Ok(())
 }
 
 /// Writes `apps/desktop/src/generated/notices.json`, which the About page
-/// imports, for the build with or without the capture feature.
-pub fn write_app_json(root: &Path, capture: bool) -> Result<()> {
-    let notices = collect(root, capture)?;
+/// imports.
+pub fn write_app_json(root: &Path) -> Result<()> {
+    let notices = collect(root)?;
     let groups: Vec<Value> = notices
         .groups
         .iter()
@@ -213,7 +211,6 @@ pub fn write_app_json(root: &Path, capture: bool) -> Result<()> {
         fs::create_dir_all(dir)?;
     }
     let body = serde_json::to_string_pretty(&json!({
-        "capture": capture,
         "groups": groups,
         "texts": texts,
     }))? + "\n";
@@ -229,8 +226,8 @@ pub fn write_app_json(root: &Path, capture: bool) -> Result<()> {
 
 /// Writes the plain-text notices published with each release. Runs after the frontend build, whose bundled-package list
 /// it reads from `frontend_dist`.
-pub fn write_text(root: &Path, capture: bool, frontend_dist: &Path, out: &Path) -> Result<()> {
-    let mut notices = collect(root, capture)?;
+pub fn write_text(root: &Path, frontend_dist: &Path, out: &Path) -> Result<()> {
+    let mut notices = collect(root)?;
     let npm = vite_packages(root, frontend_dist, &mut notices.texts)?;
     let frontend = notices
         .groups
@@ -249,11 +246,8 @@ pub fn write_text(root: &Path, capture: bool, frontend_dist: &Path, out: &Path) 
     );
     s += "\n\nThird-party notices\n\n";
     s += &wrap(
-        &format!(
-            "Moongazer, built {} auto sync, contains the software and data below. Each entry \
-             names its license texts, which follow at the end.",
-            if capture { "with" } else { "without" },
-        ),
+        "Moongazer contains the software and data below. Each entry names its license texts, \
+         which follow at the end.",
         "",
     );
     for group in notices.groups.iter().filter(|g| !g.entries.is_empty()) {
@@ -422,18 +416,14 @@ impl Texts {
 
 /// Everything except the npm packages Vite lists, which only the text file
 /// includes (the About page reads Vite's file itself).
-fn collect(root: &Path, capture: bool) -> Result<Notices> {
+fn collect(root: &Path) -> Result<Notices> {
     let mut texts = Texts::new(root)?;
-    let crates = rust_crates(root, capture, &mut texts)?;
+    let crates = rust_crates(root, &mut texts)?;
     let components = components(&crates, &mut texts)?;
-    let adapted = if capture {
-        adapted(&crates, &mut texts)?
-    } else {
-        Vec::new()
-    };
+    let adapted = adapted(&crates, &mut texts)?;
     let frontend = css_packages(root, &mut texts)?;
     let fonts = fonts(root, &mut texts)?;
-    let data = data(capture, &mut texts)?;
+    let data = data(&mut texts)?;
     let group = |id, title, entries| Group { id, title, entries };
     Ok(Notices {
         groups: vec![
@@ -456,15 +446,14 @@ fn collect(root: &Path, capture: bool) -> Result<Notices> {
     })
 }
 
-fn rust_crates(root: &Path, capture: bool, texts: &mut Texts) -> Result<Vec<Entry>> {
+fn rust_crates(root: &Path, texts: &mut Texts) -> Result<Vec<Entry>> {
     let allow = allowed_licenses(root)?;
-    let shipped = shipped_crates(root, capture)?;
+    let shipped = shipped_crates(root)?;
     let metadata = util::output(util::cargo(root).args([
         "metadata",
         "--locked",
         "--format-version",
         "1",
-        "--all-features",
         "--filter-platform",
         TARGET,
     ]))?;
@@ -506,21 +495,19 @@ fn rust_crates(root: &Path, capture: bool, texts: &mut Texts) -> Result<Vec<Entr
 }
 
 /// `(name, version)` of every package compiled into the exe, our own included.
-fn shipped_crates(root: &Path, capture: bool) -> Result<BTreeSet<(String, String)>> {
-    let mut tree = util::cargo(root);
-    tree.args(["tree", "--locked", "-p", "moongazer", "--target", TARGET])
-        .args([
-            "-e",
-            "normal,no-proc-macro",
-            "--prefix",
-            "none",
-            "--format",
-            "{p}",
-        ]);
-    if capture {
-        tree.args(["--features", "capture"]);
-    }
-    let out = util::output(&mut tree)?;
+fn shipped_crates(root: &Path) -> Result<BTreeSet<(String, String)>> {
+    let out = util::output(
+        util::cargo(root)
+            .args(["tree", "--locked", "-p", "moongazer", "--target", TARGET])
+            .args([
+                "-e",
+                "normal,no-proc-macro",
+                "--prefix",
+                "none",
+                "--format",
+                "{p}",
+            ]),
+    )?;
     Ok(out
         .lines()
         .filter_map(|line| {
@@ -1001,8 +988,8 @@ fn adapted(crates: &[Entry], texts: &mut Texts) -> Result<Vec<Entry>> {
     Ok(entries)
 }
 
-fn data(capture: bool, texts: &mut Texts) -> Result<Vec<Entry>> {
-    let mut entries = vec![
+fn data(texts: &mut Texts) -> Result<Vec<Entry>> {
+    Ok(vec![
         Entry {
             name: "Snap.Metadata".to_owned(),
             license: Some("MIT".to_owned()),
@@ -1022,9 +1009,7 @@ fn data(capture: bool, texts: &mut Texts) -> Result<Vec<Entry>> {
             links: vec!["https://github.com/DimbreathBot/AnimeGameData".to_owned()],
             ..Entry::default()
         },
-    ];
-    if capture {
-        entries.push(Entry {
+        Entry {
             name: "game_data.gz".to_owned(),
             note: Some(
                 "Built into the program: a game database made from the tables of \
@@ -1032,8 +1017,8 @@ fn data(capture: bool, texts: &mut Texts) -> Result<Vec<Entry>> {
                     .to_owned(),
             ),
             ..Entry::default()
-        });
-        entries.push(Entry {
+        },
+        Entry {
             name: "Game client keys".to_owned(),
             note: Some(
                 "gi.json, built into the program, and two RSA keys in teyvatme-protocol are the \
@@ -1048,9 +1033,8 @@ fn data(capture: bool, texts: &mut Texts) -> Result<Vec<Entry>> {
                 "https://github.com/hashblen/auto-artifactarium".to_owned(),
             ],
             ..Entry::default()
-        });
-    }
-    Ok(entries)
+        },
+    ])
 }
 
 /// The UI font, built in unmodified.

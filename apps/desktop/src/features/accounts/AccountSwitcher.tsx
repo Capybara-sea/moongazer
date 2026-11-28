@@ -47,7 +47,7 @@ export function useShownAccount() {
 }
 
 type FaceProps = {
-  /** Auto sync's state as a dot on the picture; none without auto sync. */
+  /** Auto sync's state as a dot on the picture, or none. */
   tone: Tone | null
   /** The line under the name; the account's UID, or before the first snapshot what to do. */
   line?: ReactNode
@@ -63,7 +63,6 @@ type FaceProps = {
 export function AccountFace({ tone, line, trailing }: FaceProps) {
   const shown = useShownAccount()
   const faces = useAccountStore(s => s.faces)
-  const capture = useCaptureStore(s => s.capture)
   const on = useCaptureStore(syncOn)
   const face = shown ? faces[shown.group.token] : undefined
   return (
@@ -95,7 +94,7 @@ export function AccountFace({ tone, line, trailing }: FaceProps) {
           {shown ? shown.name : t.none}
         </Tip>
         <span className="truncate text-[11px] text-muted leading-[1.4] tabular">
-          {line ?? (shown ? shown.uid : t.noneHint(capture, on))}
+          {line ?? (shown ? shown.uid : t.noneHint(on))}
         </span>
       </span>
       {trailing}
@@ -114,7 +113,6 @@ export function AccountList({ onDelete }: { onDelete: (account: AccountGroup) =>
   const group = useAccountStore(s => s.group)
   const names = useAccountStore(s => s.names)
   const faces = useAccountStore(s => s.faces)
-  const capture = useCaptureStore(s => s.capture)
   const live = useCaptureStore(s => liveUid(s.status))
   const uidText = useUidText()
   return (
@@ -186,8 +184,7 @@ export function AccountList({ onDelete }: { onDelete: (account: AccountGroup) =>
           )
         })}
       </ul>
-      {/* Only auto sync follows the login. */}
-      {capture && <p className="px-2.5 pt-1 text-[11px] text-muted">{t.follows}</p>}
+      <p className="px-2.5 pt-1 text-[11px] text-muted">{t.follows}</p>
     </div>
   )
 }

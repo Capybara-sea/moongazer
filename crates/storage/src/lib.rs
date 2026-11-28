@@ -13,6 +13,8 @@
 //! (see `account::delta`). A login is a session, named by the id of its
 //! first snapshot (its login snapshot); its batches and later snapshots
 //! carry that id.
+//!
+//! Each account's wish history is kept too ([`wishes`]).
 
 use std::fs;
 use std::io::{Read, Write};
@@ -27,6 +29,10 @@ use flate2::write::DeflateEncoder;
 use rusqlite::{Connection, OptionalExtension, Row, Transaction, params};
 use serde::Serialize;
 
+mod wishes;
+
+pub use wishes::Wish;
+
 pub const FULL_SNAPSHOTS: u32 = 100;
 
 type Migration = fn(&Transaction<'_>) -> Result<()>;
@@ -37,6 +43,7 @@ const MIGRATIONS: &[Migration] = &[
     add_rarities_and_essence,
     add_settings_and_review,
     add_sessions_and_batches,
+    wishes::create_wishes,
 ];
 
 fn create_snapshots(tx: &Transaction<'_>) -> Result<()> {
@@ -624,8 +631,8 @@ impl Db {
     }
 
     /// Deletes an account: every snapshot of `uid` (of no account when
-    /// `None`), the batches of their sessions, and the settings `settings`
-    /// names. How many snapshots went.
+    /// `None`), the batches of their sessions, its wishes, and the settings
+    /// `settings` names. How many snapshots went.
     pub fn delete_account(&mut self, uid: Option<u64>, settings: &[String]) -> Result<usize> {
         let tx = self.conn.transaction()?;
         tx.execute(
@@ -633,6 +640,7 @@ impl Db {
             params![uid],
         )?;
         let gone = tx.execute("DELETE FROM snapshots WHERE uid IS ?1", params![uid])?;
+        tx.execute("DELETE FROM wishes WHERE uid IS ?1", params![uid])?;
         for key in settings {
             tx.execute("DELETE FROM settings WHERE key = ?1", [key])?;
         }

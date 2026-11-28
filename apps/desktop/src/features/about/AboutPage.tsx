@@ -8,7 +8,6 @@ import { AnimatedLogo } from "@/components/brand/AnimatedLogo"
 import { Panel } from "@/components/Panel"
 import { openGroupChat, openHomepage, openLogDir, toBackendError } from "@/lib/backend"
 import { useRoute } from "@/lib/route"
-import { useCaptureStore } from "@/stores/captureStore"
 import { useUpdateStore } from "@/stores/updateStore"
 import { text } from "@/text"
 import { ChangelogPage } from "./ChangelogPage"
@@ -156,7 +155,6 @@ function ActionRow({ title, hint, icon: Icon, label, failed, run, beside }: Acti
 }
 
 function Credits() {
-  const capture = useCaptureStore(s => s.capture)
   return (
     <Panel aria-label={text.about.credits}>
       <div className="flex items-center justify-between gap-2">
@@ -164,7 +162,7 @@ function Credits() {
         <SubpageLink to={SUBPAGES.licenses} label={text.about.thirdParty} />
       </div>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2 text-[13px]">
-        {text.about.creditList(capture).map(credit => (
+        {text.about.creditList.map(credit => (
           <li
             key={credit.name}
             className="glass-inset flex flex-col gap-px rounded-[10px] bg-surface-secondary px-3 py-2.5"

@@ -33,6 +33,7 @@ use super::link::{Link, LinkError};
 use super::now_ms;
 use super::pack::Pack;
 use super::settings;
+use super::wishes::Reader;
 use super::worker::{self, Clocks, Input, Output};
 use crate::snapshots;
 
@@ -176,6 +177,8 @@ enum Event {
     Shutdown(Sender<bool>),
     /// The update sync was stopped for did not install.
     UpdateFailed,
+    /// Reading the wish history was turned on or off.
+    WishAutoRead(bool),
     // The rest come from a run's own threads and name the run, so a late
     // event from a run that ended never touches the next one.
     Report(u64, Report),
@@ -285,6 +288,10 @@ impl AutoSync {
         self.send(Event::UpdateFailed);
     }
 
+    pub fn set_wish_auto_read(&self, on: bool) {
+        self.send(Event::WishAutoRead(on));
+    }
+
     fn send(&self, event: Event) {
         let _ = self.events.send(event);
     }
@@ -374,6 +381,7 @@ struct Supervisor {
     connection_at: Option<Instant>,
     chinese_client: Option<bool>,
     chain: Option<Chain>,
+    wishes: Reader,
 }
 
 impl Supervisor {
@@ -388,6 +396,7 @@ impl Supervisor {
         let status = shared.lock().unwrap_or_else(|e| e.into_inner()).clone();
         Self {
             compatible: settings::compatible_capture(&app),
+            wishes: Reader::new(settings::wish_auto_read(&app)),
             app,
             owner,
             events,
@@ -442,6 +451,7 @@ impl Supervisor {
                     self.status.problem = Some(Problem::UpdateFailed);
                 }
             }
+            Event::WishAutoRead(on) => self.wishes.set_on(on),
             Event::Report(run, report) if self.is_current(run) => self.on_report(report),
             Event::LinkClosed(run) if self.is_current(run) => self.on_link_closed(),
             Event::Decoded(run, output) if self.is_current(run) => self.on_decoded(output),
@@ -606,6 +616,7 @@ impl Supervisor {
             self.status.problem = None;
             self.clear_login();
         }
+        self.wishes.new_login();
         // Dropping the input ends the decoding thread.
         drop(run.decoder);
         let exited = run.link.close(EXIT_WAIT);
@@ -691,6 +702,7 @@ impl Supervisor {
             // Who logged in is known again once the new login settles; its
             // session key came already.
             Output::NewLogin => {
+                self.wishes.new_login();
                 let login_at = self.status.login_at;
                 self.clear_login();
                 self.status.login_at = login_at;
@@ -707,6 +719,7 @@ impl Supervisor {
             Output::Ended(exported) => self.store(exported, true),
             Output::Batch(exported) => self.on_batch(exported),
             Output::ExportFailed => tracing::error!("an export failed"),
+            Output::Wish(events, uid) => self.wishes.forward(events, uid),
         }
     }
 
@@ -985,6 +998,7 @@ impl Supervisor {
     }
 
     fn tick(&mut self) {
+        self.wishes.tick(&self.app);
         let now = Instant::now();
         if self.run.is_some() && now >= self.next_scan {
             self.next_scan = now + GAME_SCAN;

@@ -41,8 +41,7 @@ jobs:
       - name: Check that the release notes exist
         run: cargo xtask changelog "$GITHUB_REF_NAME" > /dev/null
       # Built here so the sign job compiles nothing: no build script or proc
-      # macro runs next to its tokens. Without `capture`, which only
-      # `xtask pack` needs.
+      # macro runs next to its tokens.
       - name: Build xtask for the sign job
         run: cargo build --locked -p xtask
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

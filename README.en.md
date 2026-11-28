@@ -25,6 +25,7 @@ Windows 10/11 (64-bit) · Free · English and Simplified Chinese interface · Ea
 - **Overview** (总览): daily tasks (Original Resin, Daily Commissions, Realm Currency and more), Spiral Abyss and other challenge progress, Mora and Primogem trends, and the changes from each login.
 - **Characters, weapons, artifacts and inventory**: synced automatically, with filters.
 - **Collection** (收集): achievements, anecdotes, furnishing sets and spincrystals.
+- **Wishes** (祈愿): wish history by banner with pity and past banners, UIGF import and export, and what the wishes you have are likely to bring.
 - **Planner** (规划): set goals for characters and weapons, and see the missing materials and what to craft first.
 - **Reminders**: Original Resin full, expeditions complete, commission rewards unclaimed, Spiral Abyss about to reset and more; also sent as Windows notifications while Moongazer runs in the background.
 - **Multiple accounts**, switched automatically when you log in to the game.
@@ -33,7 +34,7 @@ Windows 10/11 (64-bit) · Free · English and Simplified Chinese interface · Ea
 ## Before you start
 
 - Requires 64-bit Windows 10 or 11, with the PC version of Genshin Impact running on the same computer. Mobile, cloud and console versions cannot be synced. Auto sync has so far been tested only with the Chinese (mainland) PC client.
-- No HoYoLAB, miHoYo or other login is required. Account data is stored only on this computer; Moongazer goes online only to check for updates and to download game icons.
+- No HoYoLAB, miHoYo or other login is required. Account data is stored only on this computer; Moongazer goes online only to check for updates, to download game icons and, once "read wish history automatically" is on, to read the wish history.
 - Auto sync requires administrator rights, and Windows asks for confirmation each time it starts. Auto sync only reads the game's network traffic; it never sends anything to the game and never modifies game files. Moongazer is an unofficial tool, used at your own risk.
 
 ## Download and installation

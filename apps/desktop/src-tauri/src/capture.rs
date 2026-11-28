@@ -2,8 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 //! Auto sync: capturing game traffic and turning it into account snapshots,
-//! with Teyvat.me Capture's crates. Everything here is behind the `capture`
-//! feature.
+//! with Teyvat.me Capture's crates.
 //!
 //! Two processes of this same exe take part. The capture mode (`helper`),
 //! started elevated, only captures frames and passes them on; the app
@@ -35,6 +34,7 @@ mod replay;
 pub mod service;
 pub mod settings;
 mod settle;
+mod wishes;
 mod worker;
 
 pub use worker::THREAD_NAME as DECODER_THREAD;

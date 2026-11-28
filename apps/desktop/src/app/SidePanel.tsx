@@ -13,6 +13,7 @@ import {
 } from "@/features/accounts/AccountSwitcher"
 import { SyncLoadFailed, SyncSummary, useSyncSide } from "@/features/sync/SyncCard"
 import { SyncPanel } from "@/features/sync/SyncPanel"
+import { WishReading } from "@/features/wishes/WishReading"
 import { cn } from "@/lib/cn"
 import { useAccountStore } from "@/stores/accountStore"
 import { useCaptureStore } from "@/stores/captureStore"
@@ -27,11 +28,10 @@ const ARROW = <ChevronRight aria-hidden className="size-3.5 flex-none self-start
  * The side menu's bottom: the account the pages show and auto sync's state
  * in one block. In a tall window each has its own lines; in a short one they
  * share two. It opens a panel beside the side menu with every account and the
- * auto sync panel. Without auto sync and with one account it does not open.
+ * auto sync panel.
  * Deleting an account asks outside the panel, which closes on the click.
  */
 export function SidePanel() {
-  const capture = useCaptureStore(s => s.capture)
   const status = useCaptureStore(s => s.status)
   const open = useCaptureStore(s => s.panelOpen)
   const accounts = useAccountStore(s => s.accounts)
@@ -40,7 +40,7 @@ export function SidePanel() {
   const [deleting, setDeleting] = useState<AccountGroup | null>(null)
   const dialog = <DeleteAccountDialog account={deleting} onClose={() => setDeleting(null)} />
   // Nothing to show yet while auto sync's state is read, with one account.
-  const opens = accounts.length > 1 || (capture && (status !== null || side !== null))
+  const opens = accounts.length > 1 || side !== null
   const shortLine = side
     ? [side.label, side.duration].filter(Boolean).join(" · ")
     : (shown?.uid ?? undefined)
@@ -54,6 +54,7 @@ export function SidePanel() {
           <>
             <span aria-hidden className="h-px bg-(--separator)" />
             <SyncSummary side={side} />
+            <WishReading />
           </>
         )}
       </span>
@@ -99,9 +100,11 @@ export function SidePanel() {
             aria-label={text.accounts.panel}
             className="max-h-[calc(100vh-56px)] overflow-y-auto p-0 outline-none"
           >
-            {accounts.length > 1 && <AccountList onDelete={setDeleting} />}
-            {accounts.length > 1 && capture && (
-              <span aria-hidden className="mx-5 block h-px bg-(--separator)" />
+            {accounts.length > 1 && (
+              <>
+                <AccountList onDelete={setDeleting} />
+                <span aria-hidden className="mx-5 block h-px bg-(--separator)" />
+              </>
             )}
             {status ? <SyncPanel now={now} /> : side && <SyncLoadFailed />}
           </Popover.Dialog>

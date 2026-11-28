@@ -27,8 +27,6 @@ export type AppInfo = {
   updatesEnabled: boolean
   /** An update is downloaded and put in place on restart, not only announced. */
   updatesInPlace: boolean
-  /** This build has auto sync; its commands exist only then. */
-  capture: boolean
   /** A test build: made with its own identifier, so its data stays apart. */
   testBuild: boolean
 }
@@ -98,7 +96,6 @@ export function parseAppInfo(value: unknown): AppInfo {
     typeof value.portable === "boolean" &&
     typeof value.updatesEnabled === "boolean" &&
     typeof value.updatesInPlace === "boolean" &&
-    typeof value.capture === "boolean" &&
     typeof value.testBuild === "boolean"
   ) {
     return {
@@ -106,7 +103,6 @@ export function parseAppInfo(value: unknown): AppInfo {
       portable: value.portable,
       updatesEnabled: value.updatesEnabled,
       updatesInPlace: value.updatesInPlace,
-      capture: value.capture,
       testBuild: value.testBuild,
     }
   }

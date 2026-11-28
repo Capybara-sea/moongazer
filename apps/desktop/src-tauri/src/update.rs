@@ -46,8 +46,6 @@ pub struct AppInfo {
     /// Whether an update is downloaded and put in place on restart, rather
     /// than only pointing to the download page.
     updates_in_place: bool,
-    /// Whether this build has auto sync.
-    capture: bool,
     /// Whether this is a test build: one made with its own identifier, so
     /// its data stays apart from the release's.
     test_build: bool,
@@ -92,7 +90,6 @@ pub fn app_info(app: AppHandle, mode: State<'_, portable::Mode>) -> AppInfo {
         portable: mode.portable,
         updates_enabled: updates_enabled(&app),
         updates_in_place: !mode.portable || mode.replaceable,
-        capture: cfg!(feature = "capture"),
         test_build: is_test_build(&app.config().identifier),
     }
 }
@@ -203,13 +200,10 @@ pub async fn install_update(
     // The capture mode runs this same exe, which the update replaces; it has
     // to be gone first. Checked before the package is taken, so a failure
     // keeps it for another try.
-    #[cfg(feature = "capture")]
     let sync = tauri::Manager::try_state::<crate::capture::service::AutoSync>(&app);
-    #[cfg(feature = "capture")]
     let sync_was_on = sync
         .as_ref()
         .is_some_and(|sync| sync.status().phase != crate::capture::service::Phase::Off);
-    #[cfg(feature = "capture")]
     if let Some(sync) = &sync
         && !sync.shutdown()
     {
@@ -238,7 +232,6 @@ pub async fn install_update(
     if installed.is_err() {
         // Kept, so the user can try again without downloading it again.
         *lock(&pending.package) = Some(package);
-        #[cfg(feature = "capture")]
         if sync_was_on && let Some(sync) = &sync {
             sync.update_failed();
         }

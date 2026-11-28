@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   anecdotes uses the official English names, and the tray menu and update notes follow too.
 - The account list in the side panel can delete an account, with its snapshots, sync
   timelines, planner and tasks; the one auto sync is reading cannot be deleted.
+- A wishes page: records by banner with pity and past banners, and what your wishes are likely
+  to bring. Records import from and export to UIGF v4; automatic reading (off by default) reads
+  the game's wish history online when you open it in the game.
 
 ### Fixed
 

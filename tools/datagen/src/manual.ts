@@ -639,3 +639,29 @@ export const talentOrders: Record<string, ("auto" | "skill" | "burst")[]> = {
   TravelerElectro: ["burst", "skill", "auto"],
   TravelerDendro: ["burst", "skill", "auto"],
 }
+
+/**
+ * The five-star characters and weapons of the standard wish, by Chinese name. Written by hand: the
+ * game's data has no wish pools. The wishes page shows these as "in the standard wish" in the
+ * banner history.
+ */
+export const standardFiveStars = [
+  "迪卢克",
+  "琴",
+  "莫娜",
+  "七七",
+  "刻晴",
+  "提纳里",
+  "迪希雅",
+  "梦见月瑞希",
+  "风鹰剑",
+  "天空之刃",
+  "天空之傲",
+  "狼的末路",
+  "天空之脊",
+  "和璞鸢",
+  "天空之卷",
+  "四风原典",
+  "天空之翼",
+  "阿莫斯之弓",
+]

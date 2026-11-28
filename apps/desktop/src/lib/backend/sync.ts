@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-/**
- * Auto sync's part of the backend. Its commands exist only in builds with
- * AppInfo.capture, except session_timeline, which every build has.
- */
+/** Auto sync's part of the backend. */
 
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
 import { parseSnapshot, type Snapshot } from "@/lib/backend"
@@ -88,7 +85,7 @@ export type Changed = { path: string[]; before: unknown; after: unknown; key: st
 export type Batch = { at: number; changes: Changed[] }
 /** A stored batch of a session, by its id. */
 export type TimelineBatch = Batch & { id: number }
-export type SyncSettings = { autoStart: boolean }
+export type SyncSettings = { autoStart: boolean; wishAutoRead: boolean }
 
 function parseProblem(value: unknown): CaptureProblem | null {
   if (value === null) return null
@@ -179,7 +176,13 @@ export function parseTimeline(value: unknown): TimelineBatch[] {
 }
 
 export function parseSyncSettings(value: unknown): SyncSettings {
-  if (isRecord(value) && typeof value.autoStart === "boolean") return { autoStart: value.autoStart }
+  if (
+    isRecord(value) &&
+    typeof value.autoStart === "boolean" &&
+    typeof value.wishAutoRead === "boolean"
+  ) {
+    return { autoStart: value.autoStart, wishAutoRead: value.wishAutoRead }
+  }
   throw protocolError("sync settings")
 }
 
@@ -228,6 +231,11 @@ export async function getSyncSettings() {
 
 export async function setSyncAutoStart(on: boolean) {
   await call("set_sync_auto_start", { on })
+}
+
+/** Reading the wish history when the game's history opens. */
+export async function setWishAutoRead(on: boolean) {
+  await call("set_wish_auto_read", { on })
 }
 
 /** Auto sync's status changed. A malformed one is dropped; the next replaces it anyway. */

@@ -721,6 +721,9 @@ fn deleting_an_account_takes_its_snapshots_batches_and_settings_only() {
     for key in ["planner:1", "tasks:1", "planner:2", "sync.autoStart"] {
         db.set_setting(key, "x").unwrap();
     }
+    for uid in [1, 2] {
+        db.add_wishes(uid, &[test_wish(5)]).unwrap();
+    }
 
     let keys = ["planner:1".to_owned(), "tasks:1".to_owned()];
     assert_eq!(db.delete_account(Some(1), &keys).unwrap(), 2);
@@ -739,8 +742,39 @@ fn deleting_an_account_takes_its_snapshots_batches_and_settings_only() {
     assert_eq!(db.setting("tasks:1").unwrap(), None);
     assert!(db.setting("planner:2").unwrap().is_some());
     assert!(db.setting("sync.autoStart").unwrap().is_some());
+    assert_eq!(db.wish_count(1).unwrap(), 0);
+    assert_eq!(db.wish_count(2).unwrap(), 1);
 
     // The snapshots of no account go on their own.
     assert_eq!(db.delete_account(None, &[]).unwrap(), 1);
     assert_eq!(uids(&db), [Some(2), Some(2)]);
+}
+
+fn test_wish(id: u64) -> Wish {
+    Wish {
+        id,
+        gacha_type: 200,
+        item_id: 11_301,
+        name: "Test Sword".to_owned(),
+        item_type: "Weapon".to_owned(),
+        rank: 3,
+        time: 1_000,
+    }
+}
+
+#[test]
+fn a_v4_database_upgrades_empty_or_with_rows_and_has_no_wishes() {
+    for rows in [false, true] {
+        let dir = TempDir::new(&format!("v4-{rows}"));
+        let path = dir.0.join("moongazer.db");
+        let conn = old_database(&path, 4);
+        if rows {
+            insert_v1(&conn, 1000, Some(export_text(1000, 1, 1).as_bytes()));
+        }
+        drop(conn);
+        let mut db = Db::open(&path).unwrap();
+        assert_eq!(db.list().unwrap().len(), usize::from(rows));
+        assert_eq!(db.wish_count(1).unwrap(), 0);
+        assert_eq!(db.add_wishes(1, &[test_wish(1)]).unwrap(), 1);
+    }
 }

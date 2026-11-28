@@ -11,6 +11,7 @@ import {
 } from "./collection"
 import { planner } from "./planner"
 import { resinPlan, tasks, upgrade } from "./tasks"
+import { wishes } from "./wishes"
 
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many)
 /** For counts that come formatted already, as "1" or "1,234". */
@@ -141,12 +142,10 @@ export const en: Text = {
     importFile: "Import file",
     importing: (done: number, total: number) => `Importing ${done}/${total}…`,
     emptyTitle: "No snapshots",
-    emptyBody: (capture: boolean, syncOn: boolean) =>
-      !capture
-        ? `To view account data, ${importHint}.`
-        : syncOn
-          ? `Auto sync is on. The first snapshot is saved once you enter Teyvat. You can also ${importHint}.`
-          : `Click "Start sync" on Home to read account data and save a snapshot whenever you log in to the game. You can also ${importHint}.`,
+    emptyBody: (syncOn: boolean) =>
+      syncOn
+        ? `Auto sync is on. The first snapshot is saved once you enter Teyvat. You can also ${importHint}.`
+        : `Click "Start sync" on Home to read account data and save a snapshot whenever you log in to the game. You can also ${importHint}.`,
     loadFailed: "Failed to read snapshots",
     recent: "Recent snapshots",
     latestOnly: "To-do and Resin plan are shown only for the latest snapshot.",
@@ -229,8 +228,7 @@ export const en: Text = {
     meta: (uid: string, at: string) => `UID ${uid} · ${at}`,
     follows: "Switch accounts automatically when you log in to the game",
     none: "No account",
-    noneHint: (capture: boolean, syncOn: boolean) =>
-      !capture ? "Import a file first" : syncOn ? "Awaiting first sync" : "Import or sync first",
+    noneHint: (syncOn: boolean) => (syncOn ? "Awaiting first sync" : "Import or sync first"),
     deleteLabel: (name: string) => `Delete account "${name}"`,
     deleteSyncing: "This account is syncing. Stop sync to delete it.",
     deleteTitle: "Delete this account?",
@@ -369,6 +367,7 @@ export const en: Text = {
   tasks,
   resinPlan,
   upgrade,
+  wishes,
   collections: {
     title: "Collection",
     outfits: "Outfits",
@@ -933,13 +932,8 @@ export const en: Text = {
     thirdParty: "Third-party licenses",
     where: "Breadcrumb",
     back: "About",
-    creditList: (capture: boolean) => [
-      {
-        name: "Teyvat.me Capture",
-        what: capture
-          ? "The Leyline format and the decoding behind auto sync."
-          : "The Leyline format.",
-      },
+    creditList: [
+      { name: "Teyvat.me Capture", what: "The Leyline format and the decoding behind auto sync." },
       { name: "DimbreathBot/AnimeGameData", what: "Game data." },
       { name: "Snap.Metadata", what: "Game data." },
       { name: "Genshin Optimizer", what: "The GOOD format." },

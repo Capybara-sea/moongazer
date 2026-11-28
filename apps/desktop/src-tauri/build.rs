@@ -9,14 +9,12 @@ fn main() {
     // `cargo xtask icons` would otherwise keep the old ones in local builds.
     println!("cargo:rerun-if-changed=icons");
     println!("cargo::rustc-check-cfg=cfg(capture_pack)");
-    if std::env::var_os("CARGO_FEATURE_CAPTURE").is_some() {
-        upstream_source();
-        capture_pack();
-        // The exe's own imports load from System32 only, not from the folder
-        // it sits in: it also runs elevated, as auto sync's capture mode.
-        // Dynamic loads are covered at run time (`win::capture`).
-        println!("cargo:rustc-link-arg-bin=moongazer=/DEPENDENTLOADFLAG:0x800");
-    }
+    upstream_source();
+    capture_pack();
+    // The exe's own imports load from System32 only, not from the folder it
+    // sits in: it also runs elevated, as auto sync's capture mode. Dynamic
+    // loads are covered at run time (`win::capture`).
+    println!("cargo:rustc-link-arg-bin=moongazer=/DEPENDENTLOADFLAG:0x800");
     tauri_build::build();
 }
 

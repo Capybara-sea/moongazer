@@ -16,7 +16,6 @@ mod gen_data;
 mod guard;
 mod icons;
 mod notices;
-#[cfg(feature = "capture")]
 mod pack;
 mod release;
 mod util;
@@ -39,16 +38,14 @@ commands:
   changelog <X.Y.Z|Unreleased>    print one version's release notes, English then Chinese
   verify-tag <tag>                check that a tag matches the workspace version
   release <X.Y.Z> [--dry-run]     bump the version, date the changelog, commit and tag
-  dist [--config <file>] [--no-capture] [--base-url <url> | --no-sign]
+  dist [--config <file>] [--base-url <url> | --no-sign]
                                   build the signed installer, portable zip, latest.json and checksums
-                                  (with auto sync and its capture pack unless --no-capture;
-                                  --base-url: where latest.json links to; --no-sign: build only)
+                                  (--base-url: where latest.json links to; --no-sign: build only)
   manifest <dir>                  write latest.json and checksums for a build signed elsewhere (CI)
   icons <source>                  regenerate the app icons from the logo (SVG or square PNG)
   gen-data [--update]             generate the game data tables and fetch the UI font (--update:
                                   move the source pins to the latest upstream commits first)
-  notices [--no-capture] [--text <file>]
-                                  write the third-party notices the About page shows
+  notices [--text <file>]         write the third-party notices the About page shows
                                   (--text: also the plain text shipped with the app)
   pack                            build the capture pack: upstream's keys and a game database
                                   from the pinned AnimeGameData tables
@@ -87,7 +84,6 @@ fn run(args: &[String]) -> Result<()> {
             _ => bail!("usage: cargo xtask gen-data [--update]"),
         },
         Some("notices") => notices::run(&root, &rest),
-        #[cfg(feature = "capture")]
         Some("pack") => pack::run(&root),
         Some("help" | "-h" | "--help") | None => {
             print!("{USAGE}");

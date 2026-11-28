@@ -106,6 +106,9 @@ pub struct Fed {
     /// The login's key was given up on while the capture delivered only this
     /// PC's sends: only the compatible capture can read such a PC.
     pub one_way: bool,
+    /// Wish history messages, for reading the wish history; the wish key
+    /// among them is as good as a password, and is dropped unless that is on.
+    pub wish: Vec<WishEvent>,
 }
 
 /// An export, with what the export left out and its keyed form (for telling
@@ -201,13 +204,13 @@ impl Decoder {
         }
         let mut classified = decode::classify_commands(&commands);
         commissions::fill_in(&mut classified, &commands, &self.commission_cities);
-        // Wish history messages are not account data, and the wish key among
-        // them is as good as a password: dropped unread. Only the client's
-        // version is looked at, for which server this is.
+        // Wish history messages are not account data. The client's version
+        // also says which server this is.
         for event in take_wish_events(&mut classified) {
-            if let WishEvent::ClientVersion(version) = event {
+            if let WishEvent::ClientVersion(version) = &event {
                 fed.chinese_client = Some(version.starts_with("CN"));
             }
+            fed.wish.push(event);
         }
         // Commands upstream recognised; `Flat` is what it did not.
         let read: Vec<u16> = classified
@@ -273,6 +276,11 @@ impl Decoder {
                 fed.data = true;
             }
         }
+    }
+
+    /// The login's UID, once its player data is in.
+    pub fn uid(&self) -> Option<u32> {
+        self.player_data.gi_player().and_then(|player| player.uid)
     }
 
     pub fn key(&self) -> KeyReport {

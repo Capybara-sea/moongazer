@@ -64,8 +64,8 @@ function Next() {
 
 function FirstSteps() {
   const phase = useCaptureStore(s => s.status?.phase ?? null)
-  // Auto sync comes first where it can start, and stays first once it is on;
-  // importing a file is the way round.
+  // Auto sync comes first once its state is read, and stays first once it is
+  // on; importing a file is the way round.
   const sync = phase !== null
   return (
     <div className="first-steps flex flex-col items-center gap-3">

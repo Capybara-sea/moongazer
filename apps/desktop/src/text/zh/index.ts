@@ -17,6 +17,7 @@ import {
 } from "./collection"
 import { planner } from "./planner"
 import { resinPlan, tasks, upgrade } from "./tasks"
+import { wishes } from "./wishes"
 
 /** Stat names by GOOD stat key; percentage and flat stats share a name. */
 const stats: Record<string, string> = {
@@ -120,12 +121,10 @@ export const zh = {
     importFile: "导入文件",
     importing: (done: number, total: number) => `正在导入 ${done}/${total}…`,
     emptyTitle: "暂无快照",
-    emptyBody: (capture: boolean, syncOn: boolean) =>
-      !capture
-        ? `${importHint}，即可查看账号数据。`
-        : syncOn
-          ? `自动同步已开启，进入提瓦特后将自动保存第一份快照。也可${importHint}。`
-          : `在首页点击“开始同步”，登录游戏时将自动读取账号数据并保存快照；也可${importHint}。`,
+    emptyBody: (syncOn: boolean) =>
+      syncOn
+        ? `自动同步已开启，进入提瓦特后将自动保存第一份快照。也可${importHint}。`
+        : `在首页点击“开始同步”，登录游戏时将自动读取账号数据并保存快照；也可${importHint}。`,
     loadFailed: "读取快照失败",
     recent: "最近快照",
     latestOnly: "待办和体力规划仅在查看最新快照时显示。",
@@ -206,8 +205,7 @@ export const zh = {
     meta: (uid: string, at: string) => `UID ${uid} · ${at}`,
     follows: "游戏登录时自动切换账号",
     none: "无账号",
-    noneHint: (capture: boolean, syncOn: boolean) =>
-      !capture ? "请先导入文件" : syncOn ? "等待首次同步" : "请先导入或同步",
+    noneHint: (syncOn: boolean) => (syncOn ? "等待首次同步" : "请先导入或同步"),
     deleteLabel: (name: string) => `删除账号「${name}」`,
     deleteSyncing: "正在同步此账号，停止同步后才能删除",
     deleteTitle: "删除此账号？",
@@ -345,6 +343,7 @@ export const zh = {
   tasks,
   resinPlan,
   upgrade,
+  wishes,
   collections: {
     title: "收集",
     outfits: "衣装",
@@ -888,11 +887,8 @@ export const zh = {
     thirdParty: "第三方许可",
     where: "位置",
     back: "关于",
-    creditList: (capture: boolean) => [
-      {
-        name: "Teyvat.me Capture",
-        what: capture ? "Leyline 格式，以及自动同步背后的解码。" : "Leyline 格式。",
-      },
+    creditList: [
+      { name: "Teyvat.me Capture", what: "Leyline 格式，以及自动同步背后的解码。" },
       { name: "DimbreathBot/AnimeGameData", what: "游戏数据。" },
       { name: "Snap.Metadata", what: "游戏数据。" },
       { name: "Genshin Optimizer", what: "GOOD 格式。" },

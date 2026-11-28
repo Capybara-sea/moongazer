@@ -20,6 +20,7 @@ import { type ThemeMode, useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useMessageStore } from "@/stores/messageStore"
 import { useRestartStore } from "@/stores/restartStore"
+import { useWishStore } from "@/stores/wishStore"
 import { LANG_NAMES, type Lang, lang, text } from "@/text"
 
 const THEMES: { value: ThemeMode; label: string }[] = [
@@ -78,10 +79,47 @@ export function SettingsPage() {
     <div className="mx-auto flex max-w-[1240px] flex-col gap-4.5 p-6">
       <h1 className="font-semibold text-[20px] leading-[1.3]">{text.settings.title}</h1>
       <SyncSection />
+      <WishSection />
       <NotificationsPanel />
       <DataPanel />
       <AppearancePanel />
     </div>
+  )
+}
+
+/** The wishes page's settings. */
+function WishSection() {
+  const autoRead = useWishStore(s => s.autoRead)
+  const error = useWishStore(s => s.autoReadError)
+  const hideEmpty = useWishStore(s => s.hideEmpty)
+  const hideNovice = useWishStore(s => s.hideNovice)
+  const store = useWishStore.getState
+  const t = text.wishes
+  return (
+    <Section title={t.settings.title}>
+      <Row
+        title={t.settings.autoRead}
+        hint={t.settings.autoReadHint}
+        error={error && `${t.settings.saveFailed}: ${error}`}
+      >
+        <Switch
+          checked={autoRead === true}
+          label={t.settings.autoRead}
+          disabled={autoRead === null}
+          onChange={on => void store().setAutoRead(on)}
+        />
+      </Row>
+      <Row title={t.display.hideEmpty} hint={t.settings.hideEmptyHint}>
+        <Switch checked={hideEmpty} label={t.display.hideEmpty} onChange={store().setHideEmpty} />
+      </Row>
+      <Row title={t.display.hideNovice} hint={t.settings.hideNoviceHint}>
+        <Switch
+          checked={hideNovice}
+          label={t.display.hideNovice}
+          onChange={store().setHideNovice}
+        />
+      </Row>
+    </Section>
   )
 }
 
@@ -109,14 +147,12 @@ function Row({ title, hint, error, children }: RowProps) {
   )
 }
 
-/** Auto sync's settings; builds without auto sync leave the section out. */
+/** Auto sync's settings. */
 function SyncSection() {
-  const capture = useCaptureStore(s => s.capture)
   const loaded = useCaptureStore(s => s.status !== null)
   const loadError = useCaptureStore(s => s.loadError)
   const autoStart = useCaptureStore(s => s.autoStart)
   const error = useCaptureStore(s => s.autoStartError)
-  if (!capture) return null
   const store = useCaptureStore.getState
   return (
     <Section title={text.settings.sync}>

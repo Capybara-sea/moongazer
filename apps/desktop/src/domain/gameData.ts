@@ -31,3 +31,7 @@ export const collection: typeof import("@/generated/collection.json") = (
 export const activities: typeof import("@/generated/activities.json") = (
   en ? await import("@/generated/en/activities.json") : await import("@/generated/activities.json")
 ).default
+
+export const wishes: typeof import("@/generated/wishes.json") = (
+  en ? await import("@/generated/en/wishes.json") : await import("@/generated/wishes.json")
+).default

@@ -10,39 +10,14 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
-[features]
-# Decodes captured game traffic with Teyvat.me Capture's crates. Never in
-# `default`: the app must always build without them.
-capture = [
-    "dep:base64",
-    "dep:flate2",
-    "dep:teyvatme-core",
-    "dep:teyvatme-game-data",
-    "dep:teyvatme-protocol",
-    "dep:tokio",
-    "dep:pktmon",
-    "dep:socket2",
-    "dep:windows",
-    "windows-sys/Win32_Foundation",
-    "windows-sys/Win32_Security",
-    "windows-sys/Win32_Storage_FileSystem",
-    "windows-sys/Win32_System_Diagnostics_ToolHelp",
-    "windows-sys/Win32_System_IO",
-    "windows-sys/Win32_System_LibraryLoader",
-    "windows-sys/Win32_System_Pipes",
-    "windows-sys/Win32_System_Registry",
-    "windows-sys/Win32_System_Threading",
-    "windows-sys/Win32_UI_Shell",
-]
-
 [build-dependencies]
 tauri-build.workspace = true
 
 [dependencies]
 account.workspace = true
 anyhow.workspace = true
-base64 = { workspace = true, optional = true }
-flate2 = { workspace = true, optional = true }
+base64.workspace = true
+flate2.workspace = true
 log.workspace = true
 reqwest.workspace = true
 rustls.workspace = true
@@ -56,10 +31,10 @@ tauri-plugin-notification.workspace = true
 tauri-plugin-opener.workspace = true
 tauri-plugin-single-instance.workspace = true
 tauri-plugin-updater.workspace = true
-teyvatme-core = { workspace = true, optional = true }
-teyvatme-game-data = { workspace = true, optional = true }
-teyvatme-protocol = { workspace = true, optional = true }
-tokio = { workspace = true, optional = true }
+teyvatme-core.workspace = true
+teyvatme-game-data.workspace = true
+teyvatme-protocol.workspace = true
+tokio.workspace = true
 tracing.workspace = true
 tracing-appender.workspace = true
 tracing-subscriber.workspace = true
@@ -67,10 +42,21 @@ tracing-subscriber.workspace = true
 zip = { workspace = true, features = ["deflate-flate2-zlib-rs"] }
 
 [target.'cfg(windows)'.dependencies]
-pktmon = { workspace = true, optional = true }
-socket2 = { workspace = true, optional = true }
-windows = { workspace = true, optional = true }
-windows-sys.workspace = true
+pktmon.workspace = true
+socket2.workspace = true
+windows.workspace = true
+windows-sys = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_IO",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Pipes",
+    "Win32_System_Registry",
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+] }
 
 [lints]
 workspace = true

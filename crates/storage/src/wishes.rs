@@ -110,6 +110,33 @@ impl Db {
                 row.get(0)
             })?)
     }
+
+    /// Fills in the item id of the account's wishes stored without one,
+    /// where `id_of(item_type, name)` knows the item, in one transaction;
+    /// how many it filled.
+    pub fn fill_item_ids(
+        &mut self,
+        uid: u64,
+        id_of: impl Fn(&str, &str) -> Option<u32>,
+    ) -> Result<usize> {
+        let tx = self.conn.transaction()?;
+        let mut filled = 0;
+        {
+            let without: Vec<(u64, String, String)> = tx
+                .prepare("SELECT id, item_type, name FROM wishes WHERE uid = ?1 AND item_id = 0")?
+                .query_map([uid], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
+                .collect::<rusqlite::Result<_>>()?;
+            let mut update =
+                tx.prepare("UPDATE wishes SET item_id = ?3 WHERE uid = ?1 AND id = ?2")?;
+            for (id, item_type, name) in without {
+                if let Some(item_id) = id_of(&item_type, &name) {
+                    filled += update.execute(params![uid, id, item_id])?;
+                }
+            }
+        }
+        tx.commit()?;
+        Ok(filled)
+    }
 }
 
 #[cfg(test)]
@@ -147,6 +174,31 @@ mod tests {
         db.add_wishes(1, &[wish(7, 301)]).unwrap();
         assert_eq!(db.add_wishes(2, &[wish(7, 301)]).unwrap(), 1);
         assert_eq!(db.wish_count(2).unwrap(), 1);
+    }
+
+    #[test]
+    fn item_ids_are_filled_in_where_known() {
+        let mut db = Db::open_in_memory().unwrap();
+        let without = |id, name: &str| Wish {
+            item_id: 0,
+            name: name.to_owned(),
+            ..wish(id, 301)
+        };
+        db.add_wishes(
+            1,
+            &[without(1, "Known"), without(2, "Unknown"), wish(3, 301)],
+        )
+        .unwrap();
+        db.add_wishes(2, &[without(1, "Known")]).unwrap();
+        let id_of = |item_type: &str, name: &str| {
+            (item_type == "Weapon" && name == "Known").then_some(11_302)
+        };
+        assert_eq!(db.fill_item_ids(1, id_of).unwrap(), 1);
+        let ids: Vec<u32> = db.wishes(1).unwrap().iter().map(|w| w.item_id).collect();
+        assert_eq!(ids, [11_302, 0, 11_301]);
+        // Another account's are left alone, and filling again finds nothing.
+        assert_eq!(db.wishes(2).unwrap()[0].item_id, 0);
+        assert_eq!(db.fill_item_ids(1, id_of).unwrap(), 0);
     }
 
     #[test]

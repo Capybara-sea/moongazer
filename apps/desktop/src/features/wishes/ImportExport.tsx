@@ -5,7 +5,7 @@ import { AlertDialog, Button, Popover } from "@heroui/react"
 import { ChevronDown, ExternalLink, Upload } from "lucide-react"
 import { useMemo, useRef, useState } from "react"
 import { CheckboxField } from "@/components/CheckboxField"
-import { itemOf, type WishRecord } from "@/domain/wishes"
+import { ITEM_IDS, itemOf, type WishRecord } from "@/domain/wishes"
 import { text } from "@/i18n"
 import { toBackendError } from "@/lib/backend"
 import {
@@ -175,20 +175,21 @@ export function ExportMenu({ uid, name, records }: ExportProps) {
   const store = useWishStore.getState
   const run = async () => {
     setOpen(false)
+    // Every known item, not only those of the records shown: a read under way
+    // may have stored newer ones.
     const items: Record<number, [string, string]> = {}
-    for (const record of records) {
-      const item = itemOf(record.itemId)
-      if (!item || record.itemId in items) continue
-      items[record.itemId] = [itemView(record.itemId).name, t.itemTypes[item.kind]]
+    for (const itemId of ITEM_IDS) {
+      const item = itemOf(itemId)
+      if (item) items[itemId] = [itemView(itemId).name, t.itemTypes[item.kind]]
     }
     try {
-      const path = await exportWishFile(
+      const exported = await exportWishFile(
         uid,
         items,
         t.uigfLang,
         t.exportName(name, formatDate(Date.now()).replaceAll("-", "")),
       )
-      if (path !== null) store().setNotice({ kind: "export", count: records.length, path })
+      if (exported !== null) store().setNotice({ kind: "export", ...exported })
     } catch (error) {
       store().setNotice({
         kind: "error",

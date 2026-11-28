@@ -13,6 +13,7 @@ use storage::Wish;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 
+use crate::capture::ItemIds;
 use crate::snapshots::{SnapshotError, Storage};
 
 /// The banners whose wishes are kept: novice, standard, the character
@@ -72,12 +73,27 @@ pub fn read_at_key(uid: u64) -> String {
     format!("wishes.readAt:{uid}")
 }
 
+/// The account's wishes, oldest first. Those stored without an item id get
+/// one first where the game data knows the name: records read before the
+/// reader filled them in, or from a file without them.
+fn stored_wishes(storage: &Storage, uid: u64) -> Result<Vec<Wish>, SnapshotError> {
+    storage.with_db(|db| {
+        if let Some(ids) = ItemIds::built_in() {
+            let filled = db.fill_item_ids(uid, |item_type, name| ids.id(item_type, name))?;
+            if filled > 0 {
+                tracing::info!(filled, "wish item ids filled in");
+            }
+        }
+        db.wishes(uid)
+    })
+}
+
 /// The account's wishes, oldest first, each `[id, gacha_type, item_id,
 /// rank, time, name]` with the id as text (it does not fit a JS number),
 /// and when the history was last read from the game (Unix ms).
 #[tauri::command]
 pub async fn wish_records(storage: State<'_, Storage>, uid: u64) -> Result<String, SnapshotError> {
-    let wishes = storage.with_db(|db| db.wishes(uid))?;
+    let wishes = stored_wishes(&storage, uid)?;
     let read_at = storage
         .read_setting(&read_at_key(uid))?
         .and_then(|at| at.parse::<i64>().ok());
@@ -123,9 +139,12 @@ pub async fn import_wish_file(
     uids: Vec<u64>,
 ) -> Result<Vec<Imported>, WishFileError> {
     let mut results = Vec::new();
-    for account in parse(&text)? {
+    for mut account in parse(&text)? {
         if !uids.contains(&account.uid) {
             continue;
+        }
+        if let Some(ids) = ItemIds::built_in() {
+            ids.fill(&mut account.wishes);
         }
         let uid = account.uid;
         let (before, added) = storage.with_db(|db| {
@@ -147,10 +166,17 @@ pub async fn import_wish_file(
     Ok(results)
 }
 
+/// A UIGF file written.
+#[derive(Debug, Serialize)]
+pub struct Exported {
+    pub path: String,
+    pub count: usize,
+}
+
 /// Writes the account's wishes as a UIGF v4.0 file where the user picks;
-/// the path, or `None` when they cancel. `items` are the items' name and
-/// item type in `lang` by item id, which the file is written in; an item
-/// without one keeps what it came with.
+/// `None` when they cancel. `items` are the items' name and item type in
+/// `lang` by item id, which the file is written in; an item without one
+/// keeps what it came with.
 #[tauri::command]
 pub async fn export_wish_file(
     app: AppHandle,
@@ -159,8 +185,8 @@ pub async fn export_wish_file(
     items: HashMap<u32, (String, String)>,
     lang: String,
     file_name: String,
-) -> Result<Option<String>, WishFileError> {
-    let wishes = storage.with_db(|db| db.wishes(uid))?;
+) -> Result<Option<Exported>, WishFileError> {
+    let wishes = stored_wishes(&storage, uid)?;
     let version = app.package_info().version.to_string();
     let json = to_uigf(uid, &wishes, &items, &lang, now_ms() / 1000, &version);
     let mut dialog = app
@@ -179,7 +205,10 @@ pub async fn export_wish_file(
         .map_err(|err| WishFileError::Save(err.to_string()))?;
     std::fs::write(&path, json).map_err(|err| WishFileError::Save(err.to_string()))?;
     tracing::info!(records = wishes.len(), "wish file exported");
-    Ok(Some(path.display().to_string()))
+    Ok(Some(Exported {
+        path: path.display().to_string(),
+        count: wishes.len(),
+    }))
 }
 
 /// Shows a file in its folder.

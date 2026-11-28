@@ -37,6 +37,7 @@ mod settle;
 mod wishes;
 mod worker;
 
+pub use wishes::ItemIds;
 pub use worker::THREAD_NAME as DECODER_THREAD;
 
 /// Unix milliseconds.

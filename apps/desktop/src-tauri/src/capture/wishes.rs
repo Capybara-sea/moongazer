@@ -11,8 +11,10 @@
 //! game's other keys, builds the link and says when to read (its
 //! `Schedule`); the reading runs on a thread of its own.
 
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
 use serde::Serialize;
@@ -26,6 +28,7 @@ use teyvatme_core::wish::hub::{HubReceivers, Trigger, WishEvent, WishHub};
 use teyvatme_core::wish::link::{PAGE_SIZE, WishKey};
 use teyvatme_core::wish::sync::Schedule;
 
+use super::pack::Pack;
 use crate::snapshots::Storage;
 use crate::wishes::{parse_time, timezone};
 
@@ -37,6 +40,82 @@ pub const READ_EVENT: &str = "wishes-read";
 /// More pages than any banner has: six months of wishes are a few hundred.
 const MAX_PAGES: u32 = 2_000;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(20);
+
+/// The playable characters' avatar ids; the game data's others are test
+/// bodies, never a wish.
+const CHARACTER_IDS: Range<u32> = 10_000_000..11_000_000;
+
+/// Item ids by English name. The API sends its records without an item id,
+/// the Chinese servers' too, and in English: upstream's link asks for
+/// `lang=en`, and upstream fills its own files' ids from its game data the
+/// same way. Names match exactly.
+pub struct ItemIds {
+    characters: HashMap<String, u32>,
+    weapons: HashMap<String, u32>,
+}
+
+impl ItemIds {
+    /// From the game data built into the exe, read once; `None` when it
+    /// cannot be read.
+    pub fn built_in() -> Option<&'static Self> {
+        static IDS: OnceLock<Option<ItemIds>> = OnceLock::new();
+        IDS.get_or_init(|| match Pack::built_in() {
+            Ok(pack) => Some(Self::new(
+                pack.game_data.characters(),
+                pack.game_data.weapons(),
+            )),
+            Err(err) => {
+                tracing::warn!("no game data to name wish items by: {err:#}");
+                None
+            }
+        })
+        .as_ref()
+    }
+
+    /// From `(id, name)` pairs. A name with several ids keeps the lowest:
+    /// the later ones are the game's trial or quest copies.
+    fn new<'a>(
+        characters: impl IntoIterator<Item = (u32, &'a str)>,
+        weapons: impl IntoIterator<Item = (u32, &'a str)>,
+    ) -> Self {
+        fn by_name<'a>(pairs: impl IntoIterator<Item = (u32, &'a str)>) -> HashMap<String, u32> {
+            let mut ids = HashMap::new();
+            for (id, name) in pairs {
+                ids.entry(name.to_owned())
+                    .and_modify(|lowest: &mut u32| *lowest = (*lowest).min(id))
+                    .or_insert(id);
+            }
+            ids
+        }
+        Self {
+            characters: by_name(
+                characters
+                    .into_iter()
+                    .filter(|(id, _)| CHARACTER_IDS.contains(id)),
+            ),
+            weapons: by_name(weapons),
+        }
+    }
+
+    /// The id of the item a record names, by its `item_type`.
+    pub fn id(&self, item_type: &str, name: &str) -> Option<u32> {
+        match item_type {
+            "Character" => self.characters.get(name),
+            "Weapon" => self.weapons.get(name),
+            _ => None,
+        }
+        .copied()
+    }
+
+    /// Fills in the item ids `wishes` came without, where the name is known.
+    pub fn fill(&self, wishes: &mut [Wish]) {
+        for wish in wishes.iter_mut().filter(|wish| wish.item_id == 0) {
+            if let Some(id) = self.id(&wish.item_type, &wish.name) {
+                wish.item_id = id;
+            }
+        }
+    }
+}
 
 pub struct Reader {
     hub: WishHub,
@@ -242,12 +321,15 @@ async fn read_banner(
         if read.records.iter().any(|record| record.uid != uid_text) {
             return Err("otherAccount");
         }
-        let wishes: Vec<Wish> = read
+        let mut wishes: Vec<Wish> = read
             .records
             .iter()
             .map(|record| wish(record, zone))
             .collect::<Option<_>>()
             .ok_or("failed")?;
+        if let Some(ids) = ItemIds::built_in() {
+            ids.fill(&mut wishes);
+        }
         let known = storage
             .with_db(|db| {
                 wishes
@@ -334,5 +416,58 @@ struct ThreadSleep;
 impl Sleeper for ThreadSleep {
     async fn sleep(&self, duration: Duration) {
         std::thread::sleep(duration);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ids() -> ItemIds {
+        ItemIds::new(
+            [
+                (10_000_002, "Test Hero"),
+                (10_000_001, "Test Hero"),
+                // A test body's name is not a wish's.
+                (11_000_001, "Test Body"),
+            ],
+            [
+                (11_506, "Test Blade"),
+                (11_505, "Test Blade"),
+                (12_301, "Test Hero"),
+            ],
+        )
+    }
+
+    #[test]
+    fn a_name_gets_its_lowest_id_of_its_item_type() {
+        let ids = ids();
+        assert_eq!(ids.id("Character", "Test Hero"), Some(10_000_001));
+        assert_eq!(ids.id("Weapon", "Test Hero"), Some(12_301));
+        assert_eq!(ids.id("Weapon", "Test Blade"), Some(11_505));
+        assert_eq!(ids.id("Character", "Test Body"), None);
+        assert_eq!(ids.id("Character", "test hero"), None);
+        assert_eq!(ids.id("Material", "Test Hero"), None);
+    }
+
+    #[test]
+    fn only_wishes_without_an_item_id_are_filled_in() {
+        let wish = |item_id, name: &str| Wish {
+            id: 1,
+            gacha_type: 301,
+            item_id,
+            name: name.to_owned(),
+            item_type: "Weapon".to_owned(),
+            rank: 4,
+            time: 0,
+        };
+        let mut wishes = [
+            wish(0, "Test Blade"),
+            wish(11_999, "Test Blade"),
+            wish(0, "Newer Blade"),
+        ];
+        ids().fill(&mut wishes);
+        let filled: Vec<u32> = wishes.iter().map(|w| w.item_id).collect();
+        assert_eq!(filled, [11_505, 11_999, 0]);
     }
 }

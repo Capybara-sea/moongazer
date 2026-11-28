@@ -129,17 +129,21 @@ export async function importWishFile(text: string, uids: number[]) {
 }
 
 /**
- * Writes the account's UIGF file where the user picks; the path, or null when
- * they cancel. `items`: each item's name and type in `lang`, by item id.
+ * Writes the account's UIGF file where the user picks: where, and how many
+ * records it holds; null when they cancel. `items`: each item's name and type
+ * in `lang`, by item id.
  */
 export async function exportWishFile(
   uid: number,
   items: Record<number, [string, string]>,
   lang: string,
   fileName: string,
-) {
+): Promise<{ path: string; count: number } | null> {
   const value = await call("export_wish_file", { uid, items, lang, fileName })
-  if (value === null || typeof value === "string") return value
+  if (value === null) return null
+  if (isRecord(value) && typeof value.path === "string" && isNumber(value.count)) {
+    return { path: value.path, count: value.count }
+  }
   throw protocolError("wish export")
 }
 

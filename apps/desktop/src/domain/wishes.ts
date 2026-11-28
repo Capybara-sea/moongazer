@@ -69,6 +69,9 @@ export const BANNERS: readonly Banner[] = data.banners
 const STANDARD = new Set<number>(data.standard)
 const ITEMS: Record<string, string> = data.items
 
+/** Every item id the bundled data knows. */
+export const ITEM_IDS: readonly number[] = Object.keys(ITEMS).map(Number)
+
 /** What an item id is, as a GOOD key: undefined for one the bundled data does not know. */
 export function itemOf(
   itemId: number,

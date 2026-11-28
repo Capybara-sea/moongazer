@@ -12,6 +12,7 @@ import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatNumber } from "@/lib/format"
 import { itemView, TAG_TONES } from "./items"
+import { PullTip } from "./PoolRow"
 
 const t = text.wishes.banners
 const FILTERS = ["all", "character", "weapon", "chronicled"] as const
@@ -151,7 +152,7 @@ function BannerCard({ pulls: b }: { pulls: BannerPulls }) {
         </span>
       </div>
       <b className="-mt-1.5 font-semibold text-[16px]">{b.banner.name}</b>
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="flex items-end gap-2">
         {b.banner.up5.map(id => {
           const { name, icon } = itemView(id)
           return (
@@ -164,19 +165,21 @@ function BannerCard({ pulls: b }: { pulls: BannerPulls }) {
             </Tip>
           )
         })}
-        <span aria-hidden className="mx-0.5 h-7 w-px bg-(--separator)" />
-        {b.banner.up4.map(id => {
-          const { name, icon } = itemView(id)
-          return (
-            <Tip key={id} content={t.up4(name)} className="contents">
-              <GameIcon
-                icon={icon}
-                label={name}
-                className={cn("size-[30px] rounded-[7px] text-[11px]", iconTone(4))}
-              />
-            </Tip>
-          )
-        })}
+        <span aria-hidden className="mx-0.5 h-7 w-px flex-none self-center bg-(--separator)" />
+        <span className="flex min-w-0 flex-1 flex-wrap items-end gap-2">
+          {b.banner.up4.map(id => {
+            const { name, icon } = itemView(id)
+            return (
+              <Tip key={id} content={t.up4(name)} className="contents">
+                <GameIcon
+                  icon={icon}
+                  label={name}
+                  className={cn("size-[30px] rounded-[7px] text-[11px]", iconTone(4))}
+                />
+              </Tip>
+            )
+          })}
+        </span>
       </div>
       <div className="flex min-h-[52px] items-center gap-3 rounded-[10px] bg-surface-secondary px-3 py-2">
         <span className="flex min-w-14 flex-col">
@@ -186,14 +189,14 @@ function BannerCard({ pulls: b }: { pulls: BannerPulls }) {
           </span>
           <span className="text-[11px] text-muted tabular">{t.fours(b.fours)}</span>
         </span>
-        <span className="flex flex-1 flex-wrap justify-end gap-2.5">
+        <span className="grid flex-1 gap-x-3 gap-y-2 [grid-template-columns:repeat(auto-fill,minmax(140px,1fr))]">
           {b.fives.map(pull => {
             const { name, icon } = itemView(pull.itemId, pull.name)
             const tag = pull.tag ? text.wishes.tags[pull.tag] : ""
             return (
               <Tip
                 key={pull.id}
-                content={t.gotTip(name, pull.pity, tag)}
+                content={<PullTip name={name} time={pull.time} />}
                 className="flex items-center gap-1.5"
               >
                 <GameIcon
@@ -220,7 +223,7 @@ function BannerCard({ pulls: b }: { pulls: BannerPulls }) {
             )
           })}
           {b.fives.length === 0 && (
-            <span className="text-[12px] text-muted">
+            <span className="col-span-full justify-self-end text-[12px] text-muted">
               {b.pulls === 0 ? t.notPulled : b.carried > 0 ? t.carried(b.carried) : t.noFive}
             </span>
           )}

@@ -7,7 +7,6 @@ import { GameIcon } from "@/components/GameIcon"
 import { LabeledSelect } from "@/components/LabeledSelect"
 import { Panel } from "@/components/Panel"
 import { Segmented } from "@/components/Segmented"
-import { Switch } from "@/components/Switch"
 import { Tip } from "@/components/Tip"
 import type { Account } from "@/domain/account"
 import { lookup } from "@/domain/names"
@@ -26,25 +25,22 @@ import {
   weaponArrivals,
 } from "@/domain/wishOdds"
 import { text } from "@/i18n"
-import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
-import { formatDateTime, formatNumber } from "@/lib/format"
+import { formatNumber } from "@/lib/format"
 import { CalcTargets, copiesFor, type Target } from "./CalcTargets"
 import { ChanceBar, StepChip } from "./calcParts"
 
 const t = text.wishes.calc
-const MAX_EXTRA = 250
 
 type Props = {
   pools: readonly PoolSummary[]
   account: Account | undefined
-  snapshot: Snapshot | undefined
-  /** The Epitomized Path's points the records page goes by. */
+  /** The Epitomized Path's points the records view goes by. */
   fate: number
 }
 
 /** The bag's currencies worked out in wishes, and what those wishes likely bring. */
-export function WishCalc({ pools, account, snapshot, fate }: Props) {
+export function WishCalc({ pools, account, fate }: Props) {
   const [genesis, setGenesis] = useState(true)
   const [refund, setRefund] = useState(true)
   const [extra, setExtra] = useState(0)
@@ -114,32 +110,20 @@ export function WishCalc({ pools, account, snapshot, fate }: Props) {
       have: budget.genesis,
       dim: !genesis,
       side: (
-        <button
-          type="button"
-          aria-pressed={genesis}
-          aria-label={t.genesisLabel}
-          onClick={() => setGenesis(!genesis)}
-          className={cn(
-            "h-6 cursor-pointer rounded-full border px-2.5 text-[11px]",
-            genesis ? "border-accent bg-(--accent-soft)" : "border-border",
-          )}
-        >
-          {genesis ? t.genesisOn(budgetWishes(budget, true).genesis) : t.genesisOff}
-        </button>
+        <CountButton
+          on={genesis}
+          label={t.genesisLabel}
+          wishes={budgetWishes(budget, true).genesis}
+          onToggle={() => setGenesis(!genesis)}
+        />
       ),
     },
   ]
 
   return (
-    <Panel aria-label={t.title} className="gap-4 p-[18px]">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="font-semibold text-[15px]">{t.title}</h2>
-        <span className="text-[12px] text-muted">
-          {snapshot && account ? t.sub(formatDateTime(snapshot.takenAt)) : t.noBag}
-        </span>
-      </div>
+    <section aria-label={t.title} className="flex flex-col gap-4">
       <div className="grid items-start gap-4 [grid-template-columns:300px_minmax(0,1fr)] max-[860px]:grid-cols-1">
-        <div className="flex flex-col gap-3.5 rounded-[12px] bg-surface-secondary p-4">
+        <Panel className="gap-3.5 p-4">
           <div className="flex flex-col gap-0.5 rounded-[10px] bg-(--accent-soft) px-3.5 py-3">
             <span className="text-[12px] text-muted">{t.total}</span>
             <span className="flex items-baseline gap-1.5">
@@ -147,13 +131,13 @@ export function WishCalc({ pools, account, snapshot, fate }: Props) {
                 {formatNumber(total)}
               </span>
               <span className="text-[14px]">{t.unit}</span>
-              <span className="ml-auto text-[12px] text-muted tabular">
-                {[
-                  `${t.parts.have} ${have}`,
-                  ...(refund ? [`${t.parts.refund} ${returned}`] : []),
-                  ...(extra > 0 ? [`${t.parts.extra} ${extra}`] : []),
-                ].join(" + ")}
-              </span>
+            </span>
+            <span className="text-[12px] text-muted tabular">
+              {[
+                `${t.parts.have} ${formatNumber(have)}`,
+                ...(refund ? [`${t.parts.refund} ${formatNumber(returned)}`] : []),
+                ...(extra > 0 ? [`${t.parts.extra} ${formatNumber(extra)}`] : []),
+              ].join(" + ")}
             </span>
             <span className="text-[12px] text-muted">{t.acquaint(budget.acquaint)}</span>
           </div>
@@ -175,28 +159,35 @@ export function WishCalc({ pools, account, snapshot, fate }: Props) {
                 </li>
               )
             })}
+            <li
+              className={cn(
+                "flex h-[38px] items-center gap-2.5 border-(--separator) border-b px-1",
+                !refund && "opacity-75",
+              )}
+            >
+              <GameIcon
+                icon={lookup("materials", "MasterlessStarglitter").icon}
+                label={t.refund}
+                className="size-[30px] rounded-[6px]"
+              />
+              <Tip
+                content={t.refundNote(
+                  perWish.starglitter.toFixed(2),
+                  budget.maxed,
+                  budget.fourStars,
+                )}
+              >
+                <b className="font-semibold text-[14px]">{t.refund}</b>
+              </Tip>
+              <span className="flex-1" />
+              <CountButton
+                on={refund}
+                label={t.refundLabel}
+                wishes={returned}
+                onToggle={() => setRefund(!refund)}
+              />
+            </li>
           </ul>
-          <div className="flex items-center gap-2.5 px-1">
-            <GameIcon
-              icon={lookup("materials", "MasterlessStarglitter").icon}
-              label={t.refund}
-              className="size-[30px] rounded-[6px]"
-            />
-            <span className="mr-auto flex min-w-0 flex-col">
-              <span className="text-[13px]">{t.refund}</span>
-              <span className="text-[11px] text-muted tabular">
-                {refund
-                  ? t.refundNote(
-                      returned,
-                      perWish.starglitter.toFixed(2),
-                      budget.maxed,
-                      budget.fourStars,
-                    )
-                  : t.refundOff}
-              </span>
-            </span>
-            <Switch checked={refund} label={t.refundLabel} onChange={setRefund} />
-          </div>
           <div className="flex items-center gap-2.5">
             <span className="mr-auto flex flex-col">
               <b className="font-semibold text-[13px]">{t.extra}</b>
@@ -215,16 +206,17 @@ export function WishCalc({ pools, account, snapshot, fate }: Props) {
                 type="number"
                 inputMode="numeric"
                 min={0}
-                max={MAX_EXTRA}
                 aria-label={t.extra}
                 value={extra}
-                onChange={e => setExtra(clamp(e.currentTarget.valueAsNumber, MAX_EXTRA))}
-                className="h-8 w-12 bg-transparent text-center font-semibold text-[14px] tabular [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                onChange={e =>
+                  setExtra(clamp(e.currentTarget.valueAsNumber, Number.MAX_SAFE_INTEGER))
+                }
+                className="h-8 min-w-12 bg-transparent px-1 [field-sizing:content] text-center font-semibold text-[14px] tabular [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
               />
               <button
                 type="button"
                 aria-label={t.extraInc}
-                onClick={() => setExtra(Math.min(MAX_EXTRA, extra + 10))}
+                onClick={() => setExtra(extra + 10)}
                 className="flex h-8 w-[30px] cursor-pointer items-center justify-center text-muted"
               >
                 <Plus aria-hidden size={14} />
@@ -270,7 +262,7 @@ export function WishCalc({ pools, account, snapshot, fate }: Props) {
             onGuaranteed={g => edit(s => ({ ...s, weapon: { ...s.weapon, guaranteed: g } }))}
             onThird={value => edit(s => ({ ...s, weapon: { ...s.weapon, fate: value } }))}
           />
-        </div>
+        </Panel>
         <div className="flex min-w-0 flex-col gap-3">
           <Segmented
             label={t.modeLabel}
@@ -287,7 +279,27 @@ export function WishCalc({ pools, account, snapshot, fate }: Props) {
         </div>
       </div>
       <p className="text-[11px] text-muted leading-[1.6]">{t.model}</p>
-    </Panel>
+    </section>
+  )
+}
+
+type CountProps = { on: boolean; label: string; wishes: number; onToggle: () => void }
+
+/** Whether a source of wishes is counted: "Counted +N" when on, "Count" when off. */
+function CountButton({ on, label, wishes, onToggle }: CountProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      aria-label={label}
+      onClick={onToggle}
+      className={cn(
+        "h-6 cursor-pointer rounded-full border px-2.5 text-[11px]",
+        on ? "border-accent bg-(--accent-soft)" : "border-border",
+      )}
+    >
+      {on ? t.counted(wishes) : t.count}
+    </button>
   )
 }
 

@@ -12,12 +12,16 @@ const counted = (value: number, one: string, many = `${one}s`) =>
   `${n(value)} ${value === 1 ? one : many}`
 
 export const wishes: Text["wishes"] = {
-  title: "Wish history",
   nav: "Wishes",
   list: (items: readonly string[]) => items.join(", "),
   subtitle: (name: string, count: number, from: string, to: string) =>
     `${name} · ${counted(count, "record")} · ${from} to ${to}`,
-  views: { records: "Records", banners: "Past banners", history: "Banner history" },
+  views: {
+    records: "Wish records",
+    predict: "Wish forecast",
+    banners: "Past banners",
+    history: "Banner history",
+  },
   viewLabel: "Wishes",
   noAccount:
     "Import or sync account data first. Wish history is kept per account, so Moongazer needs to know the account.",
@@ -47,7 +51,6 @@ export const wishes: Text["wishes"] = {
     last: (when: string) => `Last read ${when}`,
     settings: "Settings ›",
     reading: "Reading the wish history",
-    readingShort: "Reading the wish history…",
     waiting: "Waiting",
     pending: "Reading…",
     bannerAdded: (count: number) => `${n(count)} new`,
@@ -56,6 +59,7 @@ export const wishes: Text["wishes"] = {
     close: "Close",
     readDone: (added: number, parts: string) =>
       added > 0 ? `Read: ${counted(added, "new record")} (${parts})` : "Read: no new records",
+    readSaved: (added: number, parts: string) => `Saved ${counted(added, "new record")} (${parts})`,
     readPart: (pool: string, count: number) => `${pool} ${n(count)}`,
     readErrors: {
       expired: "The wish history key has expired. Open the history in the game again.",
@@ -63,7 +67,7 @@ export const wishes: Text["wishes"] = {
       failed: "Reading failed. Open the history in the game again later.",
       otherAccount:
         "The records read belong to another account than the one logged in; reading stopped.",
-      stopped: "The login changed; reading stopped.",
+      stopped: "Reading stopped.",
     },
     imported: (added: number, known: number) =>
       `Imported: ${counted(added, "new record")}, ${n(known)} already kept`,
@@ -135,7 +139,6 @@ export const wishes: Text["wishes"] = {
     none4: "No 4-stars",
     current: "Pity",
     currentTip: (count: number) => `${counted(count, "wish", "wishes")} since the last 5-star`,
-    tip: (name: string, pity: number, date: string) => `${name} · wish ${pity} · ${date}`,
   },
   tags: {
     won: "Won",
@@ -143,7 +146,6 @@ export const wishes: Text["wishes"] = {
     lost: "Lost",
     radiance: "Radiance",
   },
-  tagTip: (tag: string, note: string) => `${tag}: ${note}`,
   tagNotes: {
     won: "won the 50/50",
     guaranteed: "the featured one after a lost 50/50",
@@ -182,7 +184,7 @@ export const wishes: Text["wishes"] = {
   },
   autoReadSwitch: "Read wish history automatically",
   calc: {
-    title: "What your wishes can get",
+    title: "Wish forecast",
     sub: (when: string) => `From the bag as of ${when} · shared by the three event banners`,
     noBag: "No bag data; currencies are counted as 0",
     total: "Event wishes available",
@@ -192,13 +194,12 @@ export const wishes: Text["wishes"] = {
     pulls: (count: number) => counted(count, "wish", "wishes"),
     stardust: (count: number) => `${n(count)} more this month`,
     stardustGuess: "This month's purchases were not read; counted as none",
-    genesisOn: (count: number) => `Counted +${n(count)}`,
-    genesisOff: "Count",
+    counted: (count: number) => `Counted +${n(count)}`,
+    count: "Count",
     genesisLabel: "Count Genesis Crystals",
-    refund: "Turn Starglitter from wishes into fates too",
-    refundNote: (count: number, starglitter: string, maxed: number, total: number) =>
-      `About +${counted(count, "wish", "wishes")} · ${starglitter} Starglitter back a wish on average (${maxed} of ${total} 4-star characters at C6)`,
-    refundOff: "Not counted",
+    refund: "Refunds",
+    refundNote: (starglitter: string, maxed: number, total: number) =>
+      `Starglitter from wishes turned into fates too: ${starglitter} back a wish on average (${maxed} of ${total} 4-star characters at C6)`,
     refundLabel: "Count the Starglitter wishes give back",
     extra: "Extra wishes",
     extraHint: "Such as what you still get before the banner ends",
@@ -229,6 +230,9 @@ export const wishes: Text["wishes"] = {
     addCharacter: "+ Character",
     addWeapon: "+ Weapon",
     pickCharacter: "Add a character",
+    addCustom: "Custom character",
+    customName: "New character",
+    customNameLabel: "Character name",
     pickWeapon: "Add a weapon",
     pickSearch: "Search",
     close: "Close",
@@ -268,8 +272,6 @@ export const wishes: Text["wishes"] = {
     notPulled: "Not wished on",
     up5: (name: string) => `${name} (featured 5-star)`,
     up4: (name: string) => `${name} (featured 4-star)`,
-    gotTip: (name: string, pity: number, tag: string) =>
-      tag ? `${name} · wish ${pity} · ${tag}` : `${name} · wish ${pity}`,
     more: (from: string, to: string) => `Show earlier versions (${from} … ${to})`,
     empty: "No banner wished on in this range",
     version: (version: string) => `Version ${version}`,

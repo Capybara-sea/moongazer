@@ -8,7 +8,7 @@ import { Tip } from "@/components/Tip"
 import { HARD_PITY, luckOf, type PoolSummary, type Pull } from "@/domain/wishes"
 import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { formatDate, formatDateTime, formatNumber } from "@/lib/format"
+import { formatDate, formatDateTime, formatNumber, formatTimeWithSeconds } from "@/lib/format"
 import { itemView, LUCK_TONES, TAG_TONES } from "./items"
 
 const t = text.wishes
@@ -91,12 +91,12 @@ export function PoolRow({ pool, fate, onOpen }: Props) {
           </button>
         </div>
       </div>
-      <div className="flex min-w-0 items-center gap-4 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3 px-3 py-3">
         <div
           role="tablist"
           aria-label={t.row.rarityLabel(name)}
           aria-orientation="vertical"
-          className="flex w-[188px] flex-none flex-col gap-1 tabular"
+          className="flex w-[164px] flex-none flex-col gap-1 tabular"
         >
           {(
             [
@@ -218,17 +218,27 @@ function Strip({ pool, rank, label }: { pool: PoolSummary; rank: 4 | 5; label: s
   )
 }
 
+/** A pull's hover text: the item, and when it was pulled to the second. */
+export function PullTip({ name, time }: { name: string; time: number }) {
+  return (
+    <span className="flex flex-col">
+      <span>{name}</span>
+      <span className="text-muted tabular">
+        {formatDate(time)} {formatTimeWithSeconds(time)}
+      </span>
+    </span>
+  )
+}
+
 function PullItem({ pull, of, rank }: { pull: Pull; of: number; rank: 4 | 5 }) {
   const { name, icon } = itemView(pull.itemId, pull.name)
   const tag = pull.tag
-  const tip = [
-    t.row.tip(name, pull.pity, formatDate(pull.time)),
-    tag ? t.tagTip(t.tags[tag], t.tagNotes[tag]) : "",
-  ]
-    .filter(Boolean)
-    .join(" · ")
   return (
-    <Tip as="li" content={tip} className="flex w-[50px] flex-none flex-col items-center gap-1">
+    <Tip
+      as="li"
+      content={<PullTip name={name} time={pull.time} />}
+      className="flex w-[50px] flex-none flex-col items-center gap-1"
+    >
       <GameIcon
         icon={icon}
         label={name}

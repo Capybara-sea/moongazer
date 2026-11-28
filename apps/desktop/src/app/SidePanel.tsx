@@ -13,7 +13,6 @@ import {
 } from "@/features/accounts/AccountSwitcher"
 import { SyncLoadFailed, SyncSummary, useSyncSide } from "@/features/sync/SyncCard"
 import { SyncPanel } from "@/features/sync/SyncPanel"
-import { WishReading } from "@/features/wishes/WishReading"
 import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { useAccountStore } from "@/stores/accountStore"
@@ -54,7 +53,6 @@ export function SidePanel() {
           <>
             <span aria-hidden className="h-px bg-(--separator)" />
             <SyncSummary side={side} />
-            <WishReading />
           </>
         )}
       </span>

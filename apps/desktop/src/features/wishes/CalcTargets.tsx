@@ -18,8 +18,20 @@ import { itemView } from "./items"
 
 const t = text.wishes.calc
 
-/** A wanted item: a character to a constellation (0 is C0), or a weapon to a refinement. */
-export type Target = { id: number; kind: "characters" | "weapons"; itemId: number; to: number }
+/**
+ * A wanted item: a character to a constellation (0 is C0), or a weapon to a
+ * refinement. A custom character has no item and a name of the user's.
+ */
+export type Target = {
+  id: number
+  kind: "characters" | "weapons"
+  itemId: number
+  to: number
+  name?: string
+}
+
+/** The item id of a custom character. */
+const CUSTOM = 0
 
 /** The account's constellation of a character (-1 without it), or best refinement of a weapon (0). */
 function current(target: Pick<Target, "kind" | "itemId">, account: Account | undefined) {
@@ -67,7 +79,10 @@ export function CalcTargets({ account, targets, onTargets, odds }: Props) {
         if (target.kind === "characters") characters += copies
         else weapons += copies
         const { chance, mean } = odds(characters, weapons)
-        const { name, icon } = itemView(target.itemId)
+        const custom = target.itemId === CUSTOM
+        const { name, icon } = custom
+          ? { name: target.name || t.customName, icon: undefined }
+          : itemView(target.itemId)
         const now = current(target, account)
         const levels = target.kind === "characters" ? [-1, 0, 1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 5]
         const label = (level: number) =>
@@ -93,10 +108,25 @@ export function CalcTargets({ account, targets, onTargets, odds }: Props) {
             <GameIcon
               icon={icon}
               label={name}
+              placeholder={custom ? "?" : undefined}
               className={cn("row-span-2 size-14 rounded-[12px] text-[18px]", iconTone(5))}
             />
             <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1.5">
-              <b className="font-semibold text-[14px]">{name}</b>
+              {custom ? (
+                <input
+                  type="text"
+                  aria-label={t.customNameLabel}
+                  value={target.name ?? ""}
+                  placeholder={t.customName}
+                  onChange={e => {
+                    const value = e.currentTarget.value
+                    onTargets(targets.map(x => (x.id === target.id ? { ...x, name: value } : x)))
+                  }}
+                  className="h-7 w-[9em] rounded-[7px] border border-(--field-border) bg-field px-2 font-semibold text-[14px]"
+                />
+              ) : (
+                <b className="font-semibold text-[14px]">{name}</b>
+              )}
               <span className="text-[11px] text-muted">
                 {[
                   target.kind === "characters" ? t.character : t.weapon,
@@ -173,7 +203,8 @@ export function CalcTargets({ account, targets, onTargets, odds }: Props) {
             kind === "characters" ? 6 : 5,
             Math.max(now + 1, kind === "characters" ? 0 : 1),
           )
-          onTargets([...targets, { id: Date.now(), kind, itemId, to }])
+          const name = itemId === CUSTOM ? t.customName : undefined
+          onTargets([...targets, { id: Date.now(), kind, itemId, to, name }])
           setAdding(null)
         }}
       />
@@ -181,7 +212,7 @@ export function CalcTargets({ account, targets, onTargets, odds }: Props) {
   )
 }
 
-/** Featured five-stars of a kind, the most recently featured first. */
+/** Featured five-stars of a kind, the most recently featured first; for characters, a custom one first. */
 function Picker({
   kind,
   onClose,
@@ -205,6 +236,7 @@ function Picker({
     [kind],
   )
   const shown = items.filter(item => query === "" || item.name.includes(query.trim()))
+  const custom = kind === "characters" && (query === "" || t.addCustom.includes(query.trim()))
   return (
     <AlertDialog
       isOpen={kind !== null}
@@ -225,6 +257,24 @@ function Picker({
             <AlertDialog.Body className="flex flex-col gap-3">
               <SearchBox value={query} onChange={setQuery} label={t.pickSearch} />
               <div className="grid h-[360px] auto-rows-min grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-2 overflow-y-auto">
+                {custom && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery("")
+                      onPick(CUSTOM)
+                    }}
+                    className="flex cursor-pointer flex-col items-center gap-1 rounded-[10px] p-1.5 hover:bg-default/60"
+                  >
+                    <GameIcon
+                      icon={undefined}
+                      label={t.addCustom}
+                      placeholder="?"
+                      className={cn("size-14 rounded-[12px] text-[18px]", iconTone(5))}
+                    />
+                    <span className="w-full truncate text-center text-[12px]">{t.addCustom}</span>
+                  </button>
+                )}
                 {shown.map(item => (
                   <button
                     key={item.itemId}

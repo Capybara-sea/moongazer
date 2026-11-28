@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import type { Account } from "@/domain/account"
 import { lookup } from "@/domain/names"
 import { itemOf, type Luck, type PoolKey, type PoolSummary, type Tag } from "@/domain/wishes"
+import type { Snapshot } from "@/lib/backend"
 
 /** An item of a wish record by id: its name and icon, or the record's own name. */
 export function itemView(itemId: number, fallback = "") {
@@ -36,6 +38,20 @@ export const LUCK_BARS: Record<Luck, string> = {
 
 /** Event banners tag their five-stars; the others do not. */
 export const TAGGED: ReadonlySet<PoolKey> = new Set(["character", "weapon"])
+
+/**
+ * The weapon banner's Epitomized Path points: the snapshot's, as of when it
+ * was taken, when it has them; else 1 after an off-banner five-star.
+ */
+export function fateOf(
+  pools: readonly PoolSummary[],
+  account: Account | undefined,
+  snapshot: Snapshot | undefined,
+): { points: number; at?: number } {
+  const path = account?.tasks?.wishPath
+  if (path) return { points: path.points, at: snapshot?.takenAt }
+  return { points: pools.find(pool => pool.key === "weapon")?.guaranteed ? 1 : 0 }
+}
 
 /** Whether the page leaves a pool out, as the display settings say. */
 export function poolHidden(pool: PoolSummary, hideEmpty: boolean, hideNovice: boolean) {

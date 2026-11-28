@@ -7,13 +7,12 @@ const n = (value: number) => value.toLocaleString("en-US")
 const pct = (share: number) => `${(share * 100).toFixed(2)}%`
 
 export const wishes = {
-  title: "祈愿记录",
   nav: "祈愿",
   /** Names in a sentence, joined by the enumeration comma. */
   list: (items: readonly string[]) => items.join("、"),
   subtitle: (name: string, count: number, from: string, to: string) =>
     `${name} · ${n(count)} 条 · ${from} 至 ${to}`,
-  views: { records: "记录", banners: "往期卡池", history: "卡池历史" },
+  views: { records: "祈愿记录", predict: "祈愿预测", banners: "往期卡池", history: "卡池历史" },
   viewLabel: "祈愿",
   noAccount: "请先导入或同步账号数据。祈愿记录按账号保存，望月需要先识别此账号。",
   noUid: "此快照中没有 UID，无法保存祈愿记录。",
@@ -43,7 +42,6 @@ export const wishes = {
     last: (when: string) => `上次读取 ${when}`,
     settings: "设置 ›",
     reading: "正在读取祈愿记录",
-    readingShort: "正在读取祈愿记录…",
     waiting: "等待",
     pending: "读取中…",
     bannerAdded: (count: number) => `新增 ${n(count)} 条`,
@@ -52,13 +50,14 @@ export const wishes = {
     close: "关闭提示",
     readDone: (added: number, parts: string) =>
       added > 0 ? `读取完成：新增 ${n(added)} 条（${parts}）` : "读取完成，暂无新记录",
+    readSaved: (added: number, parts: string) => `已保存新增 ${n(added)} 条（${parts}）`,
     readPart: (pool: string, count: number) => `${pool} ${n(count)}`,
     readErrors: {
       expired: "祈愿历史的临时密钥已失效，请在游戏中重新打开历史记录",
       busy: "官方接口繁忙，请稍后在游戏中重新打开历史记录",
       failed: "读取失败，请稍后在游戏中重新打开历史记录",
       otherAccount: "读取到的记录不属于当前登录的账号，已停止读取",
-      stopped: "登录已切换，读取已停止",
+      stopped: "读取已中断",
     },
     imported: (added: number, known: number) => `已导入：新增 ${n(added)} 条，已有 ${n(known)} 条`,
     importedOther: (uid: string, added: number) => `UID ${uid}：新增 ${n(added)} 条`,
@@ -102,7 +101,7 @@ export const wishes = {
     small: "小保底",
     smallTip: "下一个五星有 50% 的概率为 UP",
     smallWeaponTip: "下一个五星有 75% 的概率为 UP 武器",
-    radiance: (count: number) => `明光 ${count} / 3`,
+    radiance: (count: number) => `捕获明光 ${count} / 3`,
     radianceTip: (count: number) =>
       `按记录推算：已连续歪 ${count} 次（5.0 起的记录）。连续歪 3 次后，下次小保底必定触发捕获明光`,
     fate: (points: number) => `定轨 ${points} / 1`,
@@ -124,15 +123,13 @@ export const wishes = {
     none4: "暂无四星",
     current: "已垫",
     currentTip: (count: number) => `当前已垫 ${count} 抽`,
-    tip: (name: string, pity: number, date: string) => `${name} · 第 ${pity} 抽 · ${date}`,
   },
   tags: {
     won: "小保底",
     guaranteed: "大保底",
     lost: "歪",
-    radiance: "明光",
+    radiance: "捕获明光",
   },
-  tagTip: (tag: string, note: string) => `${tag}：${note}`,
   tagNotes: {
     won: "小保底未歪",
     guaranteed: "歪了之后必出的 UP",
@@ -169,7 +166,7 @@ export const wishes = {
   },
   autoReadSwitch: "自动读取祈愿记录",
   calc: {
-    title: "现有资源能抽多少",
+    title: "祈愿预测",
     sub: (when: string) => `按 ${when} 的背包 · 三个活动卡池共用`,
     noBag: "暂无背包数据，资源按 0 计算",
     total: "活动祈愿共可抽",
@@ -179,13 +176,12 @@ export const wishes = {
     pulls: (count: number) => `${n(count)} 抽`,
     stardust: (count: number) => `本月可换 ${n(count)} 抽`,
     stardustGuess: "未读取到本月已兑换的次数，按 0 次计算",
-    genesisOn: (count: number) => `已算上 +${n(count)}`,
-    genesisOff: "算上",
+    counted: (count: number) => `已算上 +${n(count)}`,
+    count: "算上",
     genesisLabel: "把创世结晶算进去",
-    refund: "抽出来的星辉也换成纠缠之缘",
-    refundNote: (count: number, starglitter: string, maxed: number, total: number) =>
-      `约 +${n(count)} 抽 · 平均每抽返还 ${starglitter} 个星辉（四星角色 ${maxed} / ${total} 已满命）`,
-    refundOff: "不计算",
+    refund: "抽卡返还",
+    refundNote: (starglitter: string, maxed: number, total: number) =>
+      `抽出来的星辉也换成纠缠之缘：平均每抽返还 ${starglitter} 个（四星角色 ${maxed} / ${total} 已满命）`,
     refundLabel: "把抽卡返还的星辉算进去",
     extra: "再加几抽",
     extraHint: "例如到卡池结束前还能获得的",
@@ -194,7 +190,7 @@ export const wishes = {
     pityTitle: "保底状态",
     pityHint: "按记录自动带入，可以修改",
     pityReset: "恢复按记录",
-    fields: { pity: "已垫", guarantee: "保底", radiance: "明光", fate: "定轨" },
+    fields: { pity: "已垫", guarantee: "保底", radiance: "捕获明光", fate: "定轨" },
     guaranteed: "大保底",
     small: "小保底",
     modes: { simple: "简易", multi: "多目标" },
@@ -214,6 +210,9 @@ export const wishes = {
     addCharacter: "＋ 角色",
     addWeapon: "＋ 武器",
     pickCharacter: "添加角色",
+    addCustom: "自定义角色",
+    customName: "新角色",
+    customNameLabel: "角色名",
     pickWeapon: "添加武器",
     pickSearch: "搜索",
     close: "关闭",
@@ -248,8 +247,6 @@ export const wishes = {
     notPulled: "本期未抽",
     up5: (name: string) => `${name}（UP 五星）`,
     up4: (name: string) => `${name}（UP 四星）`,
-    gotTip: (name: string, pity: number, tag: string) =>
-      tag ? `${name} · 第 ${pity} 抽 · ${tag}` : `${name} · 第 ${pity} 抽`,
     more: (from: string, to: string) => `显示更早的版本（${from} … ${to}）`,
     empty: "所选范围内没有抽过的卡池",
     version: (version: string) => `${version} 版本`,

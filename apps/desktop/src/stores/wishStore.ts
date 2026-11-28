@@ -16,9 +16,8 @@ import { readStored, writeStored } from "@/lib/storage"
 const HIDE_EMPTY_KEY = "moongazer:wishes:hideEmpty"
 const HIDE_NOVICE_KEY = "moongazer:wishes:hideNovice"
 
-/** What the page says after a read, an import or an export, until it is closed. */
+/** What the page says after an import or an export, until it is closed. A read ends in a toast. */
 export type WishNotice =
-  | { kind: "read"; end: WishReadEnd }
   | { kind: "import"; results: WishImport[]; uid: number }
   | { kind: "export"; count: number; path: string }
   | { kind: "error"; message: string }
@@ -118,9 +117,6 @@ export const useWishStore = create<WishState>((set, get) => ({
   onRead(end) {
     set({ progress: null })
     const uid = get().uid
-    if (uid === end.uid) {
-      set({ notice: { kind: "read", end } })
-      void get().load(uid, true)
-    }
+    if (uid === end.uid) void get().load(uid, true)
   },
 }))

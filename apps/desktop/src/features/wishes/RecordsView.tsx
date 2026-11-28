@@ -13,9 +13,10 @@ import { formatDateTime, maskUid } from "@/lib/format"
 import { navigate } from "@/lib/route"
 import { useWishStore, type WishNotice } from "@/stores/wishStore"
 import { FullRecords } from "./FullRecords"
-import { LUCK_TONES, poolHidden, TAG_TONES } from "./items"
+import { ExportMenu, ImportButton } from "./ImportExport"
+import { fateOf, LUCK_TONES, poolHidden, TAG_TONES } from "./items"
+import { PoolDisplay } from "./PoolDisplay"
 import { PoolRow } from "./PoolRow"
-import { WishCalc } from "./WishCalc"
 
 const t = text.wishes
 const TAGS: Tag[] = ["won", "guaranteed", "lost", "radiance"]
@@ -29,21 +30,26 @@ type Props = {
   account: Account | undefined
 }
 
-/** The records: how auto reading stands, each pool's row, and the calculator. */
+/** The records: how auto reading stands with the view's buttons, and each pool's row. */
 export function RecordsView({ uid, name, records, pools, snapshot, account }: Props) {
   const hideEmpty = useWishStore(s => s.hideEmpty)
   const hideNovice = useWishStore(s => s.hideNovice)
   const [full, setFull] = useState<PoolKey | "all" | null>(null)
   const shown = pools.filter(pool => !poolHidden(pool, hideEmpty, hideNovice))
   const hidden = pools.filter(pool => poolHidden(pool, hideEmpty, hideNovice))
-  const weapon = pools.find(pool => pool.key === "weapon")
-  const path = account?.tasks?.wishPath
-  const fate = path
-    ? { points: path.points, at: snapshot?.takenAt }
-    : { points: weapon?.guaranteed ? 1 : 0 }
+  const fate = fateOf(pools, account, snapshot)
   return (
     <>
-      <AutoReadLine uid={uid} />
+      <div className="flex items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <AutoReadLine uid={uid} />
+        </div>
+        <div className="flex flex-none items-center gap-2">
+          <PoolDisplay pools={pools} />
+          <ImportButton uid={uid} />
+          <ExportMenu uid={uid} name={name} records={records} />
+        </div>
+      </div>
       <NoticeBar uid={uid} />
       <div className="flex flex-col gap-2.5">
         {shown.map(pool => (
@@ -67,7 +73,6 @@ export function RecordsView({ uid, name, records, pools, snapshot, account }: Pr
         )}
       </div>
       <Legend />
-      <WishCalc pools={pools} account={account} snapshot={snapshot} fate={fate.points} />
       <FullRecords
         pool={full}
         name={name}
@@ -141,7 +146,7 @@ function AutoReadLine({ uid }: { uid: number }) {
   )
 }
 
-function NoticeBar({ uid }: { uid: number }) {
+export function NoticeBar({ uid }: { uid: number }) {
   const notice = useWishStore(s => s.notice)
   if (!notice) return null
   const lines = noticeLines(notice, uid)
@@ -180,18 +185,6 @@ function NoticeBar({ uid }: { uid: number }) {
 
 function noticeLines(notice: WishNotice, uid: number): string[] {
   switch (notice.kind) {
-    case "read": {
-      const { end } = notice
-      if (end.error) {
-        const done = end.added.reduce((sum, [, count]) => sum + count, 0)
-        return [
-          t.notice.readErrors[end.error],
-          ...(done > 0 ? [t.notice.readDone(done, readParts(end.added))] : []),
-        ]
-      }
-      const added = end.added.reduce((sum, [, count]) => sum + count, 0)
-      return [t.notice.readDone(added, readParts(end.added))]
-    }
     case "import": {
       const lines: string[] = []
       for (const result of notice.results) {
@@ -212,18 +205,6 @@ function noticeLines(notice: WishNotice, uid: number): string[] {
     case "error":
       return [notice.message]
   }
-}
-
-/** New records by pool, each "<pool> <count>", in a list. */
-function readParts(added: [number, number][]) {
-  return t.list(
-    added
-      .filter(([, count]) => count > 0)
-      .map(([banner, count]) => {
-        const pool = poolOf(banner)
-        return t.notice.readPart(pool ? t.pools[pool] : String(banner), count)
-      }),
-  )
 }
 
 function Legend() {

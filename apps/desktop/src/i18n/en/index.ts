@@ -864,6 +864,8 @@ export const en: Text = {
     numbers: "Large numbers",
     numberStyles: { kmb: "K · M · B", wan: "万 · 亿 (Chinese)" },
     numbersEnglish: "Always K, M and B in English",
+    closeWindow: "When the window is closed",
+    closeActions: { tray: "Keep in tray", quit: "Quit Moongazer" },
     glass: "Glass effect",
     glassHint:
       "Cards, the side menu and panels are translucent with a blurred background. Turn off for better performance.",
@@ -1042,6 +1044,6 @@ export const en: Text = {
       `The snapshot auto sync saved at ${when} has fewer items than the previous one. Keep or delete it on Overview.`,
     stillRunning: "Moongazer is still running in the background",
     stillRunningBody:
-      'Closing the window does not quit Moongazer. To quit, right-click the tray icon and choose "Quit Moongazer".',
+      'Closing the window does not quit Moongazer. To quit, right-click the tray icon and choose "Quit Moongazer", or set "When the window is closed" to "Quit Moongazer" in Settings.',
   },
 }

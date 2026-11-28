@@ -132,6 +132,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             background::notify,
             background::set_language,
+            background::set_close_quits,
             snapshots::import_snapshot,
             snapshots::keep_snapshot,
             snapshots::delete_snapshot,

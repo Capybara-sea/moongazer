@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-//! Running in the background: closing the window hides it to the tray, the
-//! tray icon brings it back or quits, a second launch shows the running app,
+//! Running in the background: closing the window hides it to the tray (or
+//! quits, as set), the tray icon brings it back or quits, a second launch shows the running app,
 //! and system notifications open the page they are about.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, PoisonError};
 
 use serde::Serialize;
@@ -22,6 +23,8 @@ const SYNC: &str = "sync";
 const HIDDEN_EVENT: &str = "hidden-to-tray";
 /// What the page is told when a notification was clicked: the page to show.
 const OPEN_PAGE_EVENT: &str = "open-page";
+/// Closing the main window quits instead of hiding it; the page sets it.
+static CLOSE_QUITS: AtomicBool = AtomicBool::new(false);
 
 /// Shows, restores and focuses the main window.
 pub fn show_main(app: &AppHandle) {
@@ -31,6 +34,15 @@ pub fn show_main(app: &AppHandle) {
         let _ = window.show();
         let _ = window.set_focus();
     }
+}
+
+/// Quits the app, hiding the window at once: stopping auto sync on the way
+/// out can take seconds.
+fn quit_app(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.hide();
+    }
+    app.exit(0);
 }
 
 /// The app's name in the tray's tooltip, marked in a test build.
@@ -65,7 +77,7 @@ pub fn tray(app: &AppHandle) -> tauri::Result<()> {
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id().as_ref() {
             OPEN => show_main(app),
-            QUIT => app.exit(0),
+            QUIT => quit_app(app),
             _ => {}
         })
         .on_tray_icon_event(|tray, event| {
@@ -171,13 +183,23 @@ pub fn set_language(app: AppHandle, english: bool) {
     }
 }
 
+/// The page's setting for what closing the main window does.
+#[tauri::command]
+pub fn set_close_quits(quits: bool) {
+    CLOSE_QUITS.store(quits, Ordering::Relaxed);
+}
+
 /// Closing the main window hides it instead: the app keeps reminding from the
-/// tray until it is quit there.
+/// tray until it is quit there. Set to quit, it quits as the tray's Quit does.
 pub fn on_window_event(window: &Window, event: &WindowEvent) {
     if let WindowEvent::CloseRequested { api, .. } = event
         && window.label() == "main"
     {
         api.prevent_close();
+        if CLOSE_QUITS.load(Ordering::Relaxed) {
+            quit_app(window.app_handle());
+            return;
+        }
         if let Err(err) = window.hide() {
             tracing::warn!(%err, "could not hide the window");
         }

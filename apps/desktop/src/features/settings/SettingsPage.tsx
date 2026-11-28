@@ -34,6 +34,11 @@ const LANGS: { value: Lang; label: string }[] = [
   { value: "en", label: LANG_NAMES.en },
 ]
 
+const CLOSE_ACTIONS = [
+  { value: "tray", label: text.settings.closeActions.tray },
+  { value: "quit", label: text.settings.closeActions.quit },
+] as const
+
 const NUMBER_STYLES: { value: NumberStyle; label: string }[] = [
   { value: "wan", label: text.settings.numberStyles.wan },
   { value: "kmb", label: text.settings.numberStyles.kmb },
@@ -286,6 +291,7 @@ function AppearancePanel() {
   const motion = useAppearanceStore(s => s.motion)
   const maskUid = useAppearanceStore(s => s.maskUid)
   const numbers = useAppearanceStore(s => s.numbers)
+  const closeQuits = useAppearanceStore(s => s.closeQuits)
   const store = useAppearanceStore.getState
   return (
     <Section title={text.settings.ui}>
@@ -307,6 +313,12 @@ function AppearancePanel() {
         options={NUMBER_STYLES}
         onPick={picked => store().setNumbers(picked)}
         disabledHint={lang === "en" ? text.settings.numbersEnglish : undefined}
+      />
+      <Segments
+        label={text.settings.closeWindow}
+        value={closeQuits ? "quit" : "tray"}
+        options={CLOSE_ACTIONS}
+        onPick={picked => store().setCloseQuits(picked === "quit")}
       />
       <Row title={text.settings.glass} hint={text.settings.glassHint}>
         <Switch checked={glass} label={text.settings.glass} onChange={on => store().setGlass(on)} />

@@ -424,6 +424,11 @@ export async function setLanguage(english: boolean) {
   await call("set_language", { english })
 }
 
+/** Tells the Rust side whether closing the window quits the app or keeps it in the tray. */
+export async function setCloseQuits(quits: boolean) {
+  await call("set_close_quits", { quits })
+}
+
 /**
  * Shows a Windows notification; a click on it opens the app at `page`, on
  * `account` (a token) when given. Rust hands the page back as it got it, so

@@ -823,6 +823,8 @@ export const zh = {
     numbers: "大数字写法",
     numberStyles: { kmb: "K · M · B", wan: "万 · 亿" },
     numbersEnglish: "英文界面固定使用 K、M、B",
+    closeWindow: "关闭窗口时",
+    closeActions: { tray: "收起到托盘", quit: "退出望月" },
     glass: "玻璃效果",
     glassHint: "卡片、侧边栏和面板半透明，带背景模糊。关闭可优化性能。",
     motion: "动效",
@@ -987,6 +989,7 @@ export const zh = {
     syncReviewBody: (when: string) =>
       `自动同步于 ${when} 保存的快照数量少于上一份，请在总览中选择保留或删除。`,
     stillRunning: "望月仍在后台运行",
-    stillRunningBody: "关闭窗口不会退出望月。如需退出，请右键点击托盘图标并选择“退出望月”。",
+    stillRunningBody:
+      "关闭窗口不会退出望月。如需退出，请右键点击托盘图标并选择“退出望月”，也可在设置中改为关闭窗口时退出。",
   },
 } as const

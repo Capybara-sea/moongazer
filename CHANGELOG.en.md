@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A wishes page: records by banner with pity and past banners, and what your wishes are likely
   to bring. Records import from and export to UIGF v4; automatic reading (off by default) reads
   the game's wish history online when you open it in the game.
+- Settings can make closing the window quit Moongazer (by default it still goes to the tray).
 
 ### Fixed
 

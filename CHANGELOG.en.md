@@ -16,10 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   follows the system language). Game content such as characters, items, achievements and
   anecdotes uses the official English names, and the tray menu and update notes follow too.
 - The account list in the side panel can delete an account, with its snapshots, sync
-  timelines, planner and tasks; the one auto sync is reading cannot be deleted.
+  timelines, wish records, planner and tasks; the one auto sync is reading cannot be deleted.
 - A wishes page: records by banner with pity and past banners, and what your wishes are likely
-  to bring. Records import from and export to UIGF v4; automatic reading (off by default) reads
-  the game's wish history online when you open it in the game.
+  to bring. Records import from and export to UIGF v4. Automatic reading, off by default and
+  turned on in Settings, reads the game's wish history online when you open it in the game.
 - Settings can make closing the window quit Moongazer (by default it still goes to the tray).
 
 ### Fixed

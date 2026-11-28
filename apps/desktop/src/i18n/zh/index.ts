@@ -210,7 +210,7 @@ export const zh = {
     deleteSyncing: "正在同步此账号，停止同步后才能删除",
     deleteTitle: "删除此账号？",
     deleteBody: (name: string, uid: string, snapshots: number) =>
-      `将删除「${name}」（UID ${uid}）的全部 ${snapshots.toLocaleString("en-US")} 份快照、同步时间线，以及此账号的规划和待办设置。删除后无法恢复。`,
+      `将删除「${name}」（UID ${uid}）的全部 ${snapshots.toLocaleString("en-US")} 份快照、同步时间线、祈愿记录，以及此账号的规划和待办设置。删除后无法恢复。`,
     deleteFailed: "删除失败",
   },
   tiles: {

@@ -233,7 +233,7 @@ export const en: Text = {
     deleteSyncing: "This account is syncing. Stop sync to delete it.",
     deleteTitle: "Delete this account?",
     deleteBody: (name: string, uid: string, snapshots: number) =>
-      `All ${snapshots.toLocaleString("en-US")} ${plural(snapshots, "snapshot", "snapshots")} of "${name}" (UID ${uid}), its sync timeline, and its planner and to-do settings will be deleted. This cannot be undone.`,
+      `All ${snapshots.toLocaleString("en-US")} ${plural(snapshots, "snapshot", "snapshots")} of "${name}" (UID ${uid}), its sync timeline, its wish records, and its planner and to-do settings will be deleted. This cannot be undone.`,
     deleteFailed: "Failed to delete",
   },
   tiles: {

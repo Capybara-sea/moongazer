@@ -6,9 +6,9 @@ import { RotateCw } from "lucide-react"
 import { Panel } from "@/components/Panel"
 import { StatusDot, type Tone } from "@/components/StatusDot"
 import { Switch } from "@/components/Switch"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { type UpdateStatus, useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text"
 import { SUBPAGES, SubpageLink } from "./subpages"
 
 const TONE: Record<UpdateStatus, Tone> = {

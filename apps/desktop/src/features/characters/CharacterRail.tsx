@@ -5,10 +5,10 @@ import { useEffect, useRef } from "react"
 import { Tip } from "@/components/Tip"
 import type { Character } from "@/domain/good"
 import { characterData } from "@/domain/names"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { navigate } from "@/lib/route"
-import { text } from "@/text"
 import { CharacterAvatar } from "./CharacterAvatar"
 
 /**

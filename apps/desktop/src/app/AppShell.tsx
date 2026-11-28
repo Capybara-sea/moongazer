@@ -18,12 +18,12 @@ import {
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { MessageCenter } from "@/features/messages/MessageCenter"
 import { SyncShade } from "@/features/sync/SyncCard"
+import { text } from "@/i18n"
 import { setWindowTitle } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { navigate, type PageKey, usePage } from "@/lib/route"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text"
 import { PAGES } from "./route"
 import { SidePanel } from "./SidePanel"
 

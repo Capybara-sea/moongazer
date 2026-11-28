@@ -9,10 +9,10 @@ import { StatusDot } from "@/components/StatusDot"
 import { useTip } from "@/components/Tip"
 import { ImportButton } from "@/features/overview/ImportButton"
 import { useSyncSide } from "@/features/sync/SyncCard"
+import { text } from "@/i18n"
 import { useAccountStore } from "@/stores/accountStore"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text"
 import { HomeBoard } from "./HomeBoard"
 
 const t = text.home

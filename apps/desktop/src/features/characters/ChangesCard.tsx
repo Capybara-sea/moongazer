@@ -3,8 +3,8 @@
 
 import { LabeledText } from "@/components/Delta"
 import { Panel } from "@/components/Panel"
+import { text } from "@/i18n"
 import type { Labeled } from "@/lib/format"
-import { text } from "@/text"
 
 const t = text.characterDetail
 

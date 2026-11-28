@@ -10,8 +10,8 @@ import { Tip } from "@/components/Tip"
 import { artifactIcon, formatStat, mainStatValue, statName } from "@/domain/builds"
 import type { Artifact, Substat } from "@/domain/good"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import { bySlot, setCounts } from "./artifacts"
 
 const t = text.characterDetail

@@ -8,10 +8,10 @@ import { achievementView } from "@/domain/achievements"
 import { anecdoteView } from "@/domain/anecdotes"
 import { COMPANION_PRIMOGEMS, FURNISHING_SETS, furnishingView } from "@/domain/furnishing"
 import { SPINCRYSTALS, spincrystalView } from "@/domain/spincrystals"
+import { text } from "@/i18n"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { navigate } from "@/lib/route"
 import { useCurrentAccount } from "@/stores/accountStore"
-import { text } from "@/text"
 import { AccountNotices, PARTS } from "./parts"
 
 const t = text.collection

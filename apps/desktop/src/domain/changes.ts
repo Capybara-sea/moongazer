@@ -2,10 +2,10 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { isRecord } from "@/lib/backend/shared"
 import type { Batch, Changed } from "@/lib/backend/sync"
 import { formatNumber, formatTimeWithSeconds, type Labeled, movedTo, wayOf } from "@/lib/format"
-import { text } from "@/text"
 
 const c = text.sync.change
 const detail = text.characterDetail

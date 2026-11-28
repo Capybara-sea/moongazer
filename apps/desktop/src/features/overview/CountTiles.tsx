@@ -4,10 +4,10 @@
 import { ChevronRight } from "lucide-react"
 import { Delta } from "@/components/Delta"
 import { Tip } from "@/components/Tip"
+import { text } from "@/i18n"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
-import { text } from "@/text"
 import { countTiles, type Tile } from "./tileValues"
 
 /**

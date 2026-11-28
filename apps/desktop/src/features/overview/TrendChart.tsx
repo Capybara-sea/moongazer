@@ -5,11 +5,11 @@ import { type MouseEvent, useMemo, useState } from "react"
 import { Delta } from "@/components/Delta"
 import { LabeledSelect } from "@/components/LabeledSelect"
 import { Panel } from "@/components/Panel"
+import { text } from "@/i18n"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatAmount, formatAmounts, formatDelta, formatNumber, signedDelta } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
-import { text } from "@/text"
 import {
   type Bucket,
   bucketLabel,

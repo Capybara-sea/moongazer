@@ -22,10 +22,10 @@ import {
   visibleRows,
 } from "@/domain/anecdotes"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { openTravelersTales, openVideoSearch, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { useAnecdoteListStore } from "@/stores/anecdoteListStore"
-import { text } from "@/text"
 
 const t = text.anecdotePage
 const AREA_NAMES = new Map(ANECDOTE_AREAS.map(a => [a.id, a.name]))

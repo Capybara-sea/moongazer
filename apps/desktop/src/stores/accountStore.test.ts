@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { Account } from "@/domain/account"
 import { groupAccounts } from "@/domain/accounts"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { getSnapshotExport, type Snapshot } from "@/lib/backend"
-import { text } from "@/text"
 import {
   type AccountEntry,
   accountName,

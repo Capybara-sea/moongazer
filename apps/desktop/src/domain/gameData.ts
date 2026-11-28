@@ -3,7 +3,7 @@
 
 import builds from "@/generated/builds.json"
 import planner from "@/generated/planner.json"
-import { lang } from "@/text"
+import { lang } from "@/i18n"
 
 /**
  * The generated game data in the UI's language. Each file with text has an

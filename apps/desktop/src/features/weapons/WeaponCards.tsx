@@ -9,8 +9,8 @@ import { iconTone, RarityChip } from "@/components/RarityChip"
 import { Tip } from "@/components/Tip"
 import { WeaponTooltip } from "@/components/WeaponTooltip"
 import { levelCap } from "@/domain/builds"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import type { WeaponRow } from "./order"
 
 const t = text.weapons

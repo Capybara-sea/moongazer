@@ -25,10 +25,10 @@ import {
   type WeaponState,
   weaponArrivals,
 } from "@/domain/wishOdds"
+import { text } from "@/i18n"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatNumber } from "@/lib/format"
-import { text } from "@/text"
 import { CalcTargets, copiesFor, type Target } from "./CalcTargets"
 import { ChanceBar, StepChip } from "./calcParts"
 

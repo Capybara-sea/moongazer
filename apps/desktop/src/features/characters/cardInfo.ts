@@ -5,7 +5,7 @@ import type { Account } from "@/domain/account"
 import { type TalentKey, type TalentLevel, talentLevels, wielderKey } from "@/domain/builds"
 import type { Artifact, Weapon } from "@/domain/good"
 import { type CharacterData, lookup, weaponData } from "@/domain/names"
-import { lang, text } from "@/text"
+import { lang, text } from "@/i18n"
 
 const TALENTS: readonly TalentKey[] = ["auto", "skill", "burst"]
 

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 
 const t = text.wishes.calc
 

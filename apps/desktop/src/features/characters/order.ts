@@ -4,8 +4,8 @@
 import type { Element } from "@/domain/elements"
 import type { Character } from "@/domain/good"
 import { characterData } from "@/domain/names"
+import { lang } from "@/i18n"
 import type { CharacterSort } from "@/stores/characterListStore"
-import { lang } from "@/text"
 
 type Options = { element: Element | null; query: string; sort: CharacterSort }
 

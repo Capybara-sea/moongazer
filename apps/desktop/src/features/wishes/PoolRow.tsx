@@ -6,9 +6,9 @@ import { GameIcon } from "@/components/GameIcon"
 import { iconTone } from "@/components/RarityChip"
 import { Tip } from "@/components/Tip"
 import { HARD_PITY, luckOf, type PoolSummary, type Pull } from "@/domain/wishes"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatDate, formatDateTime, formatNumber } from "@/lib/format"
-import { text } from "@/text"
 import { itemView, LUCK_TONES, TAG_TONES } from "./items"
 
 const t = text.wishes

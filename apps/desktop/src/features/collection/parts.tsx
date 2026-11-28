@@ -5,10 +5,10 @@ import { Button, Popover } from "@heroui/react"
 import type { ReactNode } from "react"
 import { Notice } from "@/components/Notice"
 import { useEmptyBody } from "@/features/overview/emptyBody"
+import { text } from "@/i18n"
 import { navigate } from "@/lib/route"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text"
 
 /** The collection's parts, by their name in #/collection/<part>. */
 export const PARTS = {

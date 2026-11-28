@@ -3,8 +3,8 @@
 
 import { AlertDialog, Button } from "@heroui/react"
 import { useState } from "react"
+import { text } from "@/i18n"
 import { type PendingConfirmation, useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text"
 
 /**
  * Asks whether to save a file that looks wrong next to its account's snapshot

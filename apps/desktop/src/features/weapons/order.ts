@@ -4,8 +4,8 @@
 import type { WeaponType } from "@/domain/elements"
 import type { Weapon } from "@/domain/good"
 import { lookup, weaponData } from "@/domain/names"
+import { lang } from "@/i18n"
 import type { WeaponSort } from "@/stores/weaponListStore"
-import { lang } from "@/text"
 
 /** A weapon with what the name table says about it, as the table and cards show it. */
 export type WeaponRow = {

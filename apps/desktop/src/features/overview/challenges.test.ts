@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { StygianRecord, Theater } from "@/domain/account"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import {
   allStars,
   currentAbyssPeriod,

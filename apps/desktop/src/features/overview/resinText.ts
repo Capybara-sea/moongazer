@@ -12,7 +12,7 @@ import {
   WORLD_BOSS_GROUP,
 } from "@/domain/plan"
 import { CHARACTER_EXP, WEAPON_EXP } from "@/domain/planner"
-import { text } from "@/text"
+import { text } from "@/i18n"
 
 const p = text.planner
 const r = text.resinPlan

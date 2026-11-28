@@ -6,9 +6,9 @@ import { GameIcon } from "@/components/GameIcon"
 import { iconTone } from "@/components/RarityChip"
 import type { NeedRow, SetRow, UnitRow } from "@/domain/furnishing"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text"
 
 const t = text.furnishingPage
 

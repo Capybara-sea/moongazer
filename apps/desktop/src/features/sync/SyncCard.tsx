@@ -4,11 +4,11 @@
 import { ChevronRight } from "lucide-react"
 import { StatusDot, type Tone } from "@/components/StatusDot"
 import { changeLines, mergeChanges } from "@/domain/changes"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
 import { useNow } from "@/lib/useNow"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text"
 import { cardView } from "./states"
 
 const t = text.sync

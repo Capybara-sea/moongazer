@@ -12,9 +12,9 @@ import {
   type SetRow,
 } from "@/domain/furnishing"
 import { lookup } from "@/domain/names"
+import { lang, text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { useRealmListStore } from "@/stores/realmListStore"
-import { lang, text } from "@/text"
 import { SetDetail } from "./FurnishingDetail"
 
 const t = text.furnishingPage

@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import { accountStats } from "./accountRows"
 
 /** The GOOD lists, which these rows do not read. */

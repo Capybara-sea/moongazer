@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest"
 import type { Account, Tasks } from "@/domain/account"
 import { RESIN_CAP, realmFullNote } from "@/domain/daily"
 import data from "@/generated/overview.json"
+import { text } from "@/i18n"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text"
 import { DailyCard } from "./DailyCard"
 
 const t = text.daily

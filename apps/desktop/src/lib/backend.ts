@@ -8,6 +8,7 @@
 
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
 import { getCurrentWindow } from "@tauri-apps/api/window"
+import { lang } from "@/i18n"
 import {
   call,
   isNullableNumber,
@@ -17,7 +18,6 @@ import {
   isStrings,
   protocolError,
 } from "@/lib/backend/shared"
-import { lang } from "@/text"
 
 export { BackendError, toBackendError } from "@/lib/backend/shared"
 

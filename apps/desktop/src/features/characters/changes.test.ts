@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest"
 import type { Account } from "@/domain/account"
 import type { Artifact, Character, Weapon } from "@/domain/good"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { type Labeled, movedTo } from "@/lib/format"
-import { text } from "@/text"
 import { characterChanges } from "./changes"
 
 const t = text.characterDetail

@@ -2,9 +2,9 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { useEffect } from "react"
+import { text } from "@/i18n"
 import { onHiddenToTray, onOpenPage, showNotification } from "@/lib/backend"
 import { readStored, writeStored } from "@/lib/storage"
-import { text } from "@/text"
 import { openTarget } from "./target"
 
 const TOLD_KEY = "moongazer:messages:toldInTray"

@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import { MATERIAL_TABS, type MaterialTab, materialData } from "@/domain/names"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import {
   type MaterialRow,
   materialRows,

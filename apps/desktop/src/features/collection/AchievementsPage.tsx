@@ -20,12 +20,12 @@ import {
   filterCounts,
   visibleSeries,
 } from "@/domain/achievements"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { useBatches } from "@/lib/useBatches"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { useAchievementListStore } from "@/stores/achievementListStore"
-import { text } from "@/text"
 import { AccountNotices, BackLink } from "./parts"
 import { SeriesCard } from "./SeriesCard"
 

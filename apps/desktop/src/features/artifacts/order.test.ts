@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { Artifact } from "@/domain/good"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import {
   type ArtifactRow,
   artifactCounts,

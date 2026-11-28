@@ -4,8 +4,8 @@
 import { GameIcon } from "@/components/GameIcon"
 import { ELEMENT_ICONS } from "@/domain/elements"
 import { characterData } from "@/domain/names"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import { ELEMENT_TINT } from "./elementStyles"
 
 /** Box, corner and element badge sizes: list cards, the detail page's column, its header. */

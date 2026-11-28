@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import data from "@/generated/overview.json"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import {
   currentBosses,
   currentCommissions,

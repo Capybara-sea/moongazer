@@ -8,8 +8,8 @@ import { SetEffectTooltip } from "@/components/SetEffectTooltip"
 import { Tip } from "@/components/Tip"
 import { artifactIcon, formatStat, mainStatValue, statName } from "@/domain/builds"
 import type { Substat } from "@/domain/good"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import type { ArtifactRow } from "./order"
 
 const t = text.artifacts

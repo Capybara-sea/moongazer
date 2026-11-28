@@ -2,8 +2,8 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { AlertDialog, Button } from "@heroui/react"
+import { text } from "@/i18n"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text"
 
 const t = text.sync.askAutoStart
 

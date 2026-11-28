@@ -13,12 +13,12 @@ import { ShownCount } from "@/components/ShownCount"
 import { SLOTS } from "@/domain/good"
 import { lookup } from "@/domain/names"
 import { useEmptyBody } from "@/features/overview/emptyBody"
+import { lang, text } from "@/i18n"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { usePages } from "@/lib/usePages"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { useArtifactListStore } from "@/stores/artifactListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { lang, text } from "@/text"
 import { ArtifactCard } from "./ArtifactCard"
 import {
   type ArtifactRow,

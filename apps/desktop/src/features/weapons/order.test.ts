@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { Weapon } from "@/domain/good"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import { visibleWeapons, type WeaponRow, weaponCounts, weaponRows } from "./order"
 
 const weapon = (key: string, location = ""): Weapon => ({

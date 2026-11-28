@@ -4,10 +4,10 @@
 import { Button } from "@heroui/react"
 import { Upload } from "lucide-react"
 import { useRef } from "react"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text"
 
 /**
  * Imports the chosen Leyline files on the overview, where their results and

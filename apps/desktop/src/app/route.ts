@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { text } from "@/i18n"
 import type { PageKey } from "@/lib/route"
-import { text } from "@/text"
 
 /**
  * The side menu, in order. `group` starts a labelled group; `divider` puts a

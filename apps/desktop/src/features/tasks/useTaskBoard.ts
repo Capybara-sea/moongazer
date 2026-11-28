@@ -11,8 +11,8 @@ import {
   toggleCheck,
   toggleJudging,
 } from "@/domain/tasks"
+import { text } from "@/i18n"
 import { useTasksStore } from "@/stores/tasksStore"
-import { text } from "@/text"
 
 const t = text.tasks
 

@@ -10,7 +10,7 @@
  */
 
 import { overview as data } from "@/domain/gameData"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import { type Element, isElement } from "./elements"
 
 export type AbyssBlessing = { name: string; text: string }

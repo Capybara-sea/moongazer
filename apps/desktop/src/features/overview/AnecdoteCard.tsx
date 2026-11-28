@@ -10,10 +10,10 @@ import { Tip } from "@/components/Tip"
 import type { Account } from "@/domain/account"
 import { ANECDOTE_REWARD, type AnecdoteView, anecdoteView } from "@/domain/anecdotes"
 import { PARTS } from "@/features/collection/parts"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
 import { navigate } from "@/lib/route"
-import { text } from "@/text"
 
 /** Recorded anecdotes, the seal reward's progress and the last wish, side by side in one card. */
 export function AnecdoteCard({ account }: { account: Account }) {

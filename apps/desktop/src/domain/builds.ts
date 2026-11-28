@@ -8,7 +8,7 @@
  */
 
 import { builds as data, names } from "@/domain/gameData"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import type { Character, SlotKey, Talents } from "./good"
 
 export type TalentKey = keyof Talents

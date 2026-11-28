@@ -2,9 +2,9 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { describe, expect, it } from "vitest"
+import { text } from "@/i18n"
 import type { Snapshot, Summary } from "@/lib/backend"
 import { signedDelta } from "@/lib/format"
-import { text } from "@/text"
 import { describeChange, sourceLabel } from "./RecentSnapshots"
 
 const snapshot = (id: number, summary: Partial<Summary>): Snapshot => ({

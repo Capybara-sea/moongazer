@@ -6,8 +6,8 @@ import { GameIcon } from "@/components/GameIcon"
 import { iconTone } from "@/components/RarityChip"
 import { WeaponTooltip } from "@/components/WeaponTooltip"
 import { levelCap } from "@/domain/builds"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import type { WeaponRow } from "./order"
 
 const t = text.weapons

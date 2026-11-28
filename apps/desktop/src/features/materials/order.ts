@@ -3,7 +3,7 @@
 
 import type { Account } from "@/domain/account"
 import { MATERIAL_TABS, type MaterialData, type MaterialTab, materialData } from "@/domain/names"
-import { lang, text } from "@/text"
+import { lang, text } from "@/i18n"
 
 /** A material with what the name table says about it, as its card shows it. */
 export type MaterialRow = MaterialData & {

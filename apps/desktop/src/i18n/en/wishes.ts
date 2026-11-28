@@ -3,7 +3,7 @@
 
 /** The wish history page's text: records, past banners, banner history and the calculator. */
 
-import type { Text } from "@/text"
+import type { Text } from "@/i18n"
 
 const n = (value: number) => value.toLocaleString("en-US")
 const pct = (share: number) => `${(share * 100).toFixed(2)}%`

@@ -8,9 +8,9 @@ import { iconTone } from "@/components/RarityChip"
 import { Tip } from "@/components/Tip"
 import { serverMonthDay } from "@/domain/gameTime"
 import { type BannerPulls, bannerPulls, poolOf, type WishRecord } from "@/domain/wishes"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text"
 import { itemView, TAG_TONES } from "./items"
 
 const t = text.wishes.banners

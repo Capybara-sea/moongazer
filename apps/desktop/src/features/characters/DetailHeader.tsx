@@ -3,9 +3,9 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { ReactNode } from "react"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
-import { text } from "@/text"
 import type { Neighbors } from "./detail"
 
 /**

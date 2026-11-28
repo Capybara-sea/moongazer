@@ -6,10 +6,10 @@ import { TriangleAlert } from "lucide-react"
 import { useState } from "react"
 import { ConfirmDelete } from "@/components/ConfirmDelete"
 import { Panel } from "@/components/Panel"
+import { text } from "@/i18n"
 import { type Snapshot, toBackendError } from "@/lib/backend"
 import { formatDateTime } from "@/lib/format"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text"
 import { checkedAgainst, deleteTakes, reviewReasons } from "./review"
 
 /**

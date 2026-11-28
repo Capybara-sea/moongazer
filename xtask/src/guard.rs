@@ -56,7 +56,7 @@ const CJK_ALLOWLIST: &[&str] = &[
     "README.md",
     "README.en.md",
     changelog::FILE_ZH,
-    "apps/desktop/src/text/",
+    "apps/desktop/src/i18n/",
     "apps/desktop/src-tauri/src/text.rs",
     "apps/desktop/src-tauri/installer-hooks.nsh",
     "tools/datagen/src/manual.ts",
@@ -951,7 +951,7 @@ mod tests {
 
     #[test]
     fn ui_strings_may_be_chinese_but_code_may_not() {
-        assert!(listed(CJK_ALLOWLIST, "apps/desktop/src/text/zh/index.ts"));
+        assert!(listed(CJK_ALLOWLIST, "apps/desktop/src/i18n/zh/index.ts"));
         assert!(listed(CJK_ALLOWLIST, "CHANGELOG.md"));
         assert!(!listed(CJK_ALLOWLIST, "CHANGELOG.en.md"));
         assert!(!listed(CJK_ALLOWLIST, "apps/desktop/src/app/App.tsx"));

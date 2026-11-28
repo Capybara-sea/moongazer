@@ -23,10 +23,10 @@ import {
 import { moveSummaryGroup } from "@/domain/planEdits"
 import { tierOf } from "@/domain/planner"
 import { farmToday } from "@/domain/today"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { useDragOrder } from "@/lib/useDragOrder"
 import { usePlannerStore } from "@/stores/plannerStore"
-import { text } from "@/text"
 import {
   amountTip,
   cellLabel,

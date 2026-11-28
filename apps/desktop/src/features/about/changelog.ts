@@ -3,7 +3,7 @@
 
 import changelogEn from "@repo/CHANGELOG.en.md?raw"
 import changelogZh from "@repo/CHANGELOG.md?raw"
-import { lang } from "@/text"
+import { lang } from "@/i18n"
 
 export type ChangelogSection = { title: string; items: string[] }
 export type ChangelogVersion = { version: string; date: string; sections: ChangelogSection[] }

@@ -3,7 +3,7 @@
 
 /** The collection pages' text: the overview of them, achievements and anecdotes. */
 
-import type { Text } from "@/text"
+import type { Text } from "@/i18n"
 
 const n = (value: number) => value.toLocaleString("en-US")
 /** "1 day", "3 days"; `many` where adding "s" is wrong. */

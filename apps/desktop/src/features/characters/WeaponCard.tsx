@@ -10,8 +10,8 @@ import { WeaponTooltip } from "@/components/WeaponTooltip"
 import { levelCap } from "@/domain/builds"
 import type { Weapon } from "@/domain/good"
 import { weaponData } from "@/domain/names"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 
 /** The equipped weapon: icon, name, rarity, level, ascension, refinement and lock. */
 export function WeaponCard({ weapon }: { weapon?: Weapon }) {

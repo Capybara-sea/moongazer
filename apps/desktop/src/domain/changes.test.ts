@@ -3,9 +3,9 @@
 
 import { describe, expect, it } from "vitest"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import type { Batch, Changed } from "@/lib/backend/sync"
 import type { Labeled, Way } from "@/lib/format"
-import { text } from "@/text"
 import { changeLines, changeRows, mergeChanges } from "./changes"
 
 const c = text.sync.change

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { text } from "@/i18n"
 import { isHead, type Snapshot } from "@/lib/backend"
-import { text } from "@/text"
 
 /**
  * The changes a delete takes with the snapshot, as storage deletes them: a

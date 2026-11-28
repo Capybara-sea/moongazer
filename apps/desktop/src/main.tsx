@@ -4,11 +4,11 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { App } from "@/app/App"
+import { lang, text } from "@/i18n"
 import { setLanguage, setWindowTitle } from "@/lib/backend"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { useUpdateStore } from "@/stores/updateStore"
-import { lang, text } from "@/text"
 import "./index.css"
 
 const root = document.getElementById("root")

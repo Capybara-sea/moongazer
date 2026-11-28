@@ -8,6 +8,7 @@ import { ProfileAvatar } from "@/components/ProfileAvatar"
 import type { Tone } from "@/components/StatusDot"
 import { Tip, useTip } from "@/components/Tip"
 import { type AccountGroup, liveUid, timeLabel } from "@/domain/accounts"
+import { text } from "@/i18n"
 import { isHead, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime, maskUid } from "@/lib/format"
@@ -15,7 +16,6 @@ import { accountName, useAccountStore } from "@/stores/accountStore"
 import { useAppearanceStore } from "@/stores/appearanceStore"
 import { syncOn, useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text"
 
 const t = text.accounts
 

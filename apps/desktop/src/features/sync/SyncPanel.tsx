@@ -8,6 +8,7 @@ import { ProfileAvatar } from "@/components/ProfileAvatar"
 import { StatusDot, TONE_SOFT } from "@/components/StatusDot"
 import { UidLine } from "@/components/UidLine"
 import { changeRows } from "@/domain/changes"
+import { text } from "@/i18n"
 import type { CaptureStatus } from "@/lib/backend/sync"
 import { cn } from "@/lib/cn"
 import { formatTime } from "@/lib/format"
@@ -15,7 +16,6 @@ import { navigate } from "@/lib/route"
 import { useAccountStore } from "@/stores/accountStore"
 import { useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text"
 import {
   type Action,
   actionsOf,

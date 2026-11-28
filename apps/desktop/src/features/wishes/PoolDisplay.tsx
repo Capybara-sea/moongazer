@@ -5,8 +5,8 @@ import { Button, Popover } from "@heroui/react"
 import { SlidersHorizontal } from "lucide-react"
 import { Switch } from "@/components/Switch"
 import type { PoolSummary } from "@/domain/wishes"
+import { text } from "@/i18n"
 import { useWishStore } from "@/stores/wishStore"
-import { text } from "@/text"
 
 const t = text.wishes
 

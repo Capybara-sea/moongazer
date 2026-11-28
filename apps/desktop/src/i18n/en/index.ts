@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import type { Text } from "@/text"
+import type { Text } from "@/i18n"
 import {
   achievementPage,
   anecdotePage,

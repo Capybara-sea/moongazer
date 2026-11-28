@@ -4,7 +4,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import type { AnecdoteRow } from "@/domain/anecdotes"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import { AnecdoteItem } from "./AnecdoteBody"
 
 const t = text.anecdotePage

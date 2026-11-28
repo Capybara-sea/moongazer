@@ -3,8 +3,8 @@
 
 import { useLayoutEffect, useRef } from "react"
 import { Panel } from "@/components/Panel"
+import { text } from "@/i18n"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text"
 import { APP_CHANGELOG, type ChangelogSection } from "./changelog"
 import { SubpageNav } from "./subpages"
 

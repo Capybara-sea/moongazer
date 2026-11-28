@@ -2,8 +2,8 @@
 // Copyright (c) 2026 Capybara_sea
 
 import type { Account } from "@/domain/account"
+import { text } from "@/i18n"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text"
 
 const shown = (n: number | undefined) => (n === undefined ? text.number.missing : formatNumber(n))
 

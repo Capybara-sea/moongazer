@@ -18,9 +18,9 @@ import {
   pullsByPool,
   type WishRecord,
 } from "@/domain/wishes"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatTimeWithSeconds } from "@/lib/format"
-import { text } from "@/text"
 import { itemView, LUCK_BARS, TAG_TONES } from "./items"
 
 const t = text.wishes

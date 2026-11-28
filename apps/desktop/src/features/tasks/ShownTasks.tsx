@@ -9,8 +9,8 @@ import { Tip } from "@/components/Tip"
 import { ACTIVITY_GROUPS } from "@/domain/activities"
 import { STANDING_TASKS } from "@/domain/standingTasks"
 import type { CustomTask } from "@/domain/tasks"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import { type Prefs, withHidden } from "./taskFilter"
 
 const t = text.tasks

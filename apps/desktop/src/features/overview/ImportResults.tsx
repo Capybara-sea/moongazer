@@ -5,11 +5,11 @@ import { CloseButton } from "@heroui/react"
 import { Panel } from "@/components/Panel"
 import { Tip } from "@/components/Tip"
 import { NAME_KINDS } from "@/domain/names"
+import { text } from "@/i18n"
 import type { BackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime } from "@/lib/format"
 import { type FileResult, useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text"
 
 function failure(error: BackendError) {
   const { errors } = text.importResult

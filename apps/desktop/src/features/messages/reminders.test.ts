@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { Account, Tasks } from "@/domain/account"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import { CATCH_UP, dueReminders, nextDue, reminders } from "./reminders"
 
 /** A moment given in China time (UTC+8). */

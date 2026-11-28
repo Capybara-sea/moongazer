@@ -5,8 +5,8 @@ import type { Account } from "@/domain/account"
 import { type TalentKey, wielderKey } from "@/domain/builds"
 import { type Artifact, SLOTS, type SlotKey, type Substat, type Weapon } from "@/domain/good"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { type Labeled, movedTo } from "@/lib/format"
-import { text } from "@/text"
 
 const t = text.characterDetail
 const TALENTS: readonly TalentKey[] = ["auto", "skill", "burst"]

@@ -22,7 +22,7 @@ import {
   TALENTS,
   weaponCaps,
 } from "@/domain/planner"
-import { lang, text } from "@/text"
+import { lang, text } from "@/i18n"
 
 const t = text.planner
 

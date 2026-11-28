@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { Artifact, Character, CharacterInfo, Weapon } from "@/domain/good"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import { type CardInfo, cardInfos, traits } from "./cardInfo"
 
 const character = (key: string): Character => ({

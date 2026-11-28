@@ -3,8 +3,8 @@
 
 import { Panel } from "@/components/Panel"
 import { Switch } from "@/components/Switch"
+import { text } from "@/i18n"
 import { useWishStore } from "@/stores/wishStore"
-import { text } from "@/text"
 import { ImportButton } from "./ImportExport"
 
 const t = text.wishes

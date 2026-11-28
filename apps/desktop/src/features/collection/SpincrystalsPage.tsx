@@ -13,11 +13,11 @@ import {
   type SpincrystalView,
   spincrystalView,
 } from "@/domain/spincrystals"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { type SpincrystalFilter, useRealmListStore } from "@/stores/realmListStore"
-import { text } from "@/text"
 import { AccountNotices, BackLink } from "./parts"
 
 const t = text.spincrystalPage

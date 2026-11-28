@@ -4,8 +4,8 @@
 import { CheckboxField } from "@/components/CheckboxField"
 import { Panel } from "@/components/Panel"
 import { claimNeed, type FurnishingView } from "@/domain/furnishing"
+import { text } from "@/i18n"
 import { useRealmListStore } from "@/stores/realmListStore"
-import { text } from "@/text"
 import { UnitTable } from "./FurnishingDetail"
 
 const t = text.furnishingPage

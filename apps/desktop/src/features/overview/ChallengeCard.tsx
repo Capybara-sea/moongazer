@@ -24,10 +24,10 @@ import {
   theaterEnd,
   theaterLevelName,
 } from "@/domain/overviewData"
+import { lang, text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatMonthDay, formatTime } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
-import { lang, text } from "@/text"
 import {
   type ActState,
   allStars,

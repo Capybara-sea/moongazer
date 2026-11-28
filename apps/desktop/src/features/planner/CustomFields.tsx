@@ -10,8 +10,8 @@ import { CUSTOM_WEAPON_RARITIES, WEAPON_SLOTS, weaponFamilyOptions } from "@/dom
 import { isWeaponType, WEAPON_TYPES } from "@/domain/elements"
 import { materialData } from "@/domain/names"
 import type { CustomGoal, CustomWeaponGoal, Goal } from "@/domain/plan"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import { Choice } from "./Choice"
 import type { Update } from "./GoalEditor"
 

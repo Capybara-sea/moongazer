@@ -14,7 +14,7 @@ import {
 } from "@/domain/plan"
 import { DEFAULTS } from "@/domain/planDefaults"
 import { defaultOrder, plannerBag } from "@/domain/planner"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import {
   characterOptions,
   customGoal,

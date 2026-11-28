@@ -3,8 +3,8 @@
 
 import type { ReactNode } from "react"
 import { lookup, setEffects } from "@/domain/names"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import { HoverPreview } from "./HoverPreview"
 
 type Props = {

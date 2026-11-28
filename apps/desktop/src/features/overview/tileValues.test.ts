@@ -2,9 +2,9 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { describe, expect, it } from "vitest"
+import { text } from "@/i18n"
 import type { Snapshot, Summary } from "@/lib/backend"
 import type { Signed, Way } from "@/lib/format"
-import { text } from "@/text"
 import { countTiles } from "./tileValues"
 
 const snapshot = (id: number, summary: Partial<Summary>): Snapshot => ({

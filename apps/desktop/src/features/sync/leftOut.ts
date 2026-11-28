@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { text } from "@/text"
+import { text } from "@/i18n"
 
 type Kind = keyof typeof text.sync.leftOut
 

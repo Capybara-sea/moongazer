@@ -5,9 +5,9 @@ import type { Account } from "@/domain/account"
 import { currentWelkin, projectResin, RESIN_CAP } from "@/domain/daily"
 import { lastDailyReset } from "@/domain/gameTime"
 import { theaterEnd } from "@/domain/overviewData"
+import { text } from "@/i18n"
 import { formatMonthDay, formatNumber, formatTime } from "@/lib/format"
 import type { NewMessage } from "@/stores/messageStore"
-import { text } from "@/text"
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR

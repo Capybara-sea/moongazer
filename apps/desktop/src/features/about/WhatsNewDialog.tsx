@@ -3,10 +3,10 @@
 
 import { AlertDialog, Button } from "@heroui/react"
 import { useEffect, useState } from "react"
+import { text } from "@/i18n"
 import { navigate } from "@/lib/route"
 import { anyStored, readStored, writeStored } from "@/lib/storage"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text"
 import { ChangelogSections } from "./ChangelogPage"
 import { APP_CHANGELOG, type ChangelogVersion, versionsSince } from "./changelog"
 import { SUBPAGES } from "./subpages"

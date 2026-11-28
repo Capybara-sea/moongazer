@@ -20,10 +20,10 @@ import {
   plannerBag,
   WEAPON_EXP,
 } from "@/domain/planner"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatAmount } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
-import { text } from "@/text"
 
 const t = text.planner
 /** How many goals a material's tip names before it only counts them. */

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import { text } from "@/i18n"
 import type { Snapshot } from "@/lib/backend"
 import {
   formatAmount,
@@ -11,7 +12,6 @@ import {
   signedDelta,
 } from "@/lib/format"
 import type { PageKey } from "@/lib/route"
-import { text } from "@/text"
 
 /** The changes since the snapshot before, then a note on them; or a note alone. */
 type Change = { deltas: Signed[]; note: string }

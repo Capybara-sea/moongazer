@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 //! The few user-facing strings the Rust side shows itself, before or without
-//! the webview. Like apps/desktop/src/text/, this file may contain Chinese.
+//! the webview. Like apps/desktop/src/i18n/, this file may contain Chinese.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 

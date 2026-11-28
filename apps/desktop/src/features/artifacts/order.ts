@@ -3,7 +3,7 @@
 
 import { type Artifact, SLOTS, type SlotKey } from "@/domain/good"
 import { lookup } from "@/domain/names"
-import { lang } from "@/text"
+import { lang } from "@/i18n"
 
 /** An artifact with its set's and wielder's names, as a card shows it. */
 export type ArtifactRow = {

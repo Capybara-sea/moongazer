@@ -8,8 +8,8 @@ import { iconTone } from "@/components/RarityChip"
 import { Segmented } from "@/components/Segmented"
 import type { Account } from "@/domain/account"
 import { featuredHistory, itemOf, latestVersion, VERSIONS } from "@/domain/wishes"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import { itemView } from "./items"
 
 const t = text.wishes.history

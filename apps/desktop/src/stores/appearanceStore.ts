@@ -2,10 +2,10 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { create } from "zustand"
+import { LANG_KEY, type Lang, lang } from "@/i18n"
 import { type NumberStyle, setNumberStyle } from "@/lib/format"
 import { revealFrom } from "@/lib/motion"
 import { readStored, writeStored } from "@/lib/storage"
-import { LANG_KEY, type Lang, lang } from "@/text"
 
 /**
  * Theme, glass and motion, applied to <html>. public/theme.js applies the

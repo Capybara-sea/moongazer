@@ -16,11 +16,11 @@ import {
   talentCap,
   talentPhase,
 } from "@/domain/planner"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { moveItem } from "@/lib/dragGeometry"
 import { useDragOrder } from "@/lib/useDragOrder"
 import { usePlannerStore } from "@/stores/plannerStore"
-import { text } from "@/text"
 import { Choice } from "./Choice"
 import { CustomFields } from "./CustomFields"
 import { rankedOrder, stageLabel } from "./GoalCard"

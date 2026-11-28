@@ -15,6 +15,7 @@ import type { Account } from "@/domain/account"
 import { ELEMENT_ICONS, ELEMENTS } from "@/domain/elements"
 import { characterData } from "@/domain/names"
 import { useEmptyBody } from "@/features/overview/emptyBody"
+import { text } from "@/i18n"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
 import {
@@ -23,7 +24,6 @@ import {
   useCharacterListStore,
 } from "@/stores/characterListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text"
 import { CharacterCard } from "./CharacterCard"
 import { CharacterTable } from "./CharacterTable"
 import { cardInfos } from "./cardInfo"

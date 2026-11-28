@@ -14,9 +14,9 @@ import {
   saveCustomTask,
 } from "@/domain/tasks"
 import { Choice } from "@/features/planner/Choice"
+import { text } from "@/i18n"
 import { formatTime } from "@/lib/format"
 import { useTasksStore } from "@/stores/tasksStore"
-import { text } from "@/text"
 import { dayInput, parseDayInput } from "./taskText"
 
 const t = text.tasks.dialog

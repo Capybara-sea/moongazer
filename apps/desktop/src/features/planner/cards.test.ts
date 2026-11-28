@@ -15,8 +15,8 @@ import {
   plannerBag,
   WEAPON_EXP,
 } from "@/domain/planner"
+import { text } from "@/i18n"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text"
 import { cardStatus } from "./GoalCard"
 import {
   amountTip,

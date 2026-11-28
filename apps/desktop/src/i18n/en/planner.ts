@@ -3,7 +3,7 @@
 
 /** The planner page's text. */
 
-import type { Text } from "@/text"
+import type { Text } from "@/i18n"
 
 const n = (value: number) => value.toLocaleString("en-US")
 /** "1 ascension", "3 ascensions". */

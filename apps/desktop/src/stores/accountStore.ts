@@ -6,9 +6,9 @@ import { create } from "zustand"
 import { type Account, parseAccount } from "@/domain/account"
 import { type AccountGroup, groupAccounts, latestKept, newestAccount } from "@/domain/accounts"
 import { setTraveler } from "@/domain/names"
+import { text } from "@/i18n"
 import { getSnapshotExport, type Snapshot, toBackendError } from "@/lib/backend"
 import { readStored, writeStored } from "@/lib/storage"
-import { text } from "@/text"
 import { useSnapshotStore } from "./snapshotStore"
 
 export type AccountEntry =

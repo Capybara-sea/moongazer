@@ -6,6 +6,7 @@ import { ChevronDown, ExternalLink, Upload } from "lucide-react"
 import { useMemo, useRef, useState } from "react"
 import { CheckboxField } from "@/components/CheckboxField"
 import { itemOf, type WishRecord } from "@/domain/wishes"
+import { text } from "@/i18n"
 import { toBackendError } from "@/lib/backend"
 import {
   exportWishFile,
@@ -18,7 +19,6 @@ import { cn } from "@/lib/cn"
 import { formatDate, maskUid } from "@/lib/format"
 import { useAccountStore } from "@/stores/accountStore"
 import { useWishStore } from "@/stores/wishStore"
-import { text } from "@/text"
 import { itemView } from "./items"
 
 const t = text.wishes

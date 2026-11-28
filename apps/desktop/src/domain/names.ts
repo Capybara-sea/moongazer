@@ -7,7 +7,7 @@
  */
 
 import { names } from "@/domain/gameData"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import { type Element, isElement, isWeaponType, type WeaponType } from "./elements"
 
 export const NAME_KINDS = ["characters", "weapons", "artifactSets", "materials"] as const

@@ -2,8 +2,8 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { LoaderCircle } from "lucide-react"
+import { text } from "@/i18n"
 import { useWishStore } from "@/stores/wishStore"
-import { text } from "@/text"
 
 /** The side panel's line while the wish history is read; nothing otherwise. */
 export function WishReading() {

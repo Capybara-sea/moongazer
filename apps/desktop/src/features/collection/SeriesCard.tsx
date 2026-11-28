@@ -7,10 +7,10 @@ import { GameIcon } from "@/components/GameIcon"
 import { Tip, useTip } from "@/components/Tip"
 import type { AchievementRow, AchievementSeries } from "@/domain/achievements"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { openVideoSearch, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatNumber } from "@/lib/format"
-import { text } from "@/text"
 
 const t = text.achievementPage
 const PRIMOGEM = lookup("materials", "Primogem")

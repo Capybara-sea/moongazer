@@ -14,10 +14,10 @@ import {
 import { SyncLoadFailed, SyncSummary, useSyncSide } from "@/features/sync/SyncCard"
 import { SyncPanel } from "@/features/sync/SyncPanel"
 import { WishReading } from "@/features/wishes/WishReading"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { useAccountStore } from "@/stores/accountStore"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text"
 
 const BLOCK =
   "glass-inset flex h-auto w-full min-w-0 flex-col items-stretch justify-start gap-1.5 whitespace-normal rounded-[10px] border px-3 py-2.5 text-left font-normal text-foreground shadow-none transition-colors duration-200 motion-reduce:transition-none"

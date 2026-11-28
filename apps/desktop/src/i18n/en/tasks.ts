@@ -3,7 +3,7 @@
 
 /** The overview's to-do card and resin plan, and the planner's upgrade panel. */
 
-import type { Text } from "@/text"
+import type { Text } from "@/i18n"
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 /** "1 type", "3 types". */

@@ -12,12 +12,12 @@ import { describeChange, sourceLabel } from "@/features/overview/RecentSnapshots
 import { historyItems } from "@/features/overview/sessions"
 import { isShown, onTodo, tabCounts, useTodoPrefs } from "@/features/tasks/taskFilter"
 import { useTaskBoard } from "@/features/tasks/useTaskBoard"
+import { text } from "@/i18n"
 import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatWhen } from "@/lib/format"
 import { navigate } from "@/lib/route"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text"
 
 const t = text.home
 

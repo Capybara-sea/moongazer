@@ -3,9 +3,9 @@
 
 import { AlertDialog, Button } from "@heroui/react"
 import { useState } from "react"
+import { text } from "@/i18n"
 import { useCaptureStore } from "@/stores/captureStore"
 import { type RestartRequest, syncConnected, useRestartStore } from "@/stores/restartStore"
-import { text } from "@/text"
 
 /** Asks before a restart, and warns when it would cut auto sync off from the game. */
 export function RestartDialog() {

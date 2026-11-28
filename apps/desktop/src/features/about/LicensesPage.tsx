@@ -5,8 +5,8 @@ import { ChevronRight } from "lucide-react"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { Panel } from "@/components/Panel"
 import data from "@/generated/notices.json"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
-import { text } from "@/text"
 import {
   type Frontend,
   type LicenseEntry,

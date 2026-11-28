@@ -5,9 +5,9 @@ import { Check, RefreshCw, RefreshCwOff } from "lucide-react"
 import { useId } from "react"
 import { Tip } from "@/components/Tip"
 import type { TaskRow } from "@/domain/tasks"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatDateTime } from "@/lib/format"
-import { text } from "@/text"
 import { formatCountdown, rowCountdown, rowDetail, rowName } from "./taskText"
 
 const t = text.tasks

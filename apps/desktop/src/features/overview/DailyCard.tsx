@@ -24,10 +24,10 @@ import {
 } from "@/domain/daily"
 import { nextDailyReset, serverMonthDay } from "@/domain/gameTime"
 import { lookup } from "@/domain/names"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
-import { text } from "@/text"
 
 const t = text.daily
 

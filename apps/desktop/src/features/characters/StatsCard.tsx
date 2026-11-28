@@ -6,7 +6,7 @@ import { statName } from "@/domain/builds"
 import type { Artifact, Character, Weapon } from "@/domain/good"
 import { characterData } from "@/domain/names"
 import { characterStats } from "@/domain/stats"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import { statRows } from "./detail"
 
 const t = text.characterDetail

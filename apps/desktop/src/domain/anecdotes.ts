@@ -8,7 +8,7 @@
  */
 
 import { collection as data } from "@/domain/gameData"
-import { text } from "@/text"
+import { text } from "@/i18n"
 import type { Account, AnecdoteEntry } from "./account"
 import { lookup } from "./names"
 

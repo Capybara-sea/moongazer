@@ -7,6 +7,7 @@ import { type ReactNode, useEffect, useState } from "react"
 import { Panel } from "@/components/Panel"
 import { Segmented } from "@/components/Segmented"
 import { Switch } from "@/components/Switch"
+import { LANG_NAMES, type Lang, lang, text } from "@/i18n"
 import {
   type DataDir,
   getDataDir,
@@ -21,7 +22,6 @@ import { useCaptureStore } from "@/stores/captureStore"
 import { useMessageStore } from "@/stores/messageStore"
 import { useRestartStore } from "@/stores/restartStore"
 import { useWishStore } from "@/stores/wishStore"
-import { LANG_NAMES, type Lang, lang, text } from "@/text"
 
 const THEMES: { value: ThemeMode; label: string }[] = [
   { value: "system", label: text.theme.system },

@@ -2,9 +2,9 @@
 // Copyright (c) 2026 Capybara_sea
 
 import type { Tone } from "@/components/StatusDot"
+import { text } from "@/i18n"
 import type { CapturePhase, CaptureStatus } from "@/lib/backend/sync"
 import { formatDuration, formatTime, formatWhen } from "@/lib/format"
-import { text } from "@/text"
 import { leftOutText } from "./leftOut"
 
 const t = text.sync

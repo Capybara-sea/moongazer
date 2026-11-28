@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { create } from "zustand"
+import { text } from "@/i18n"
 import {
   type AppInfo,
   checkUpdate,
@@ -15,7 +16,6 @@ import {
 } from "@/lib/backend"
 import { readStored, writeStored } from "@/lib/storage"
 import { useRestartStore } from "@/stores/restartStore"
-import { text } from "@/text"
 
 /**
  * available: a portable build in a read-only folder found a new version, to

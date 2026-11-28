@@ -4,10 +4,10 @@
 import { ListBox, Select } from "@heroui/react"
 import { ChevronDown, History } from "lucide-react"
 import { liveUid, timeLabel } from "@/domain/accounts"
+import { text } from "@/i18n"
 import type { Snapshot } from "@/lib/backend"
 import { useAccountStore, useCurrentSnapshot } from "@/stores/accountStore"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text"
 import { sourceLabel } from "./RecentSnapshots"
 
 /**

@@ -9,10 +9,10 @@ import { Tip } from "@/components/Tip"
 import { characterData, lookup } from "@/domain/names"
 import { type Card, goalName, type Plan } from "@/domain/plan"
 import { setGoalOff } from "@/domain/planEdits"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import type { DragHandleProps, DragItemProps } from "@/lib/useDragOrder"
 import { usePlannerStore } from "@/stores/plannerStore"
-import { text } from "@/text"
 
 const t = text.planner
 

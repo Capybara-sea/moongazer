@@ -20,11 +20,11 @@ import {
   hasAnecdoteIn,
   PER_DAY,
 } from "@/domain/anecdotes"
+import { text } from "@/i18n"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { useAnecdoteListStore } from "@/stores/anecdoteListStore"
-import { text } from "@/text"
 import { AnecdoteBody } from "./AnecdoteBody"
 import { AccountNotices, BackLink, InfoPopover } from "./parts"
 

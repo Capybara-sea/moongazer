@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-28
+
 ### Added
 
 - English interface: switch between Simplified Chinese and English in Settings (the first run
@@ -222,7 +224,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - About page with help and feedback, acknowledgments and third-party
   licenses.
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.5...HEAD
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Capybara-sea/moongazer/compare/v0.3.5...v0.4.0
 [0.3.5]: https://github.com/Capybara-sea/moongazer/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/Capybara-sea/moongazer/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/Capybara-sea/moongazer/compare/v0.3.2...v0.3.3

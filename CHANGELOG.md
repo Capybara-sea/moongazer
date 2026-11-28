@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-28
+
 ### 新增
 
 - 英文界面：设置中可切换简体中文和 English（首次打开按系统语言）。角色、物品、成就、旅闻等游戏内容同样使用官方英文名，托盘菜单和更新说明也随之切换。
@@ -165,7 +167,8 @@
 - 设置页、明暗主题、界面动效；游戏图标在第一次显示时下载。
 - 关于页：帮助与反馈、致谢和第三方许可。
 
-[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.3.5...HEAD
+[unreleased]: https://github.com/Capybara-sea/moongazer/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Capybara-sea/moongazer/compare/v0.3.5...v0.4.0
 [0.3.5]: https://github.com/Capybara-sea/moongazer/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/Capybara-sea/moongazer/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/Capybara-sea/moongazer/compare/v0.3.2...v0.3.3

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import type { Exploration } from "@/domain/account"
 import { CITIES, type City, cityExploration } from "@/domain/overviewData"
 import data from "@/generated/overview.json"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { formatExploration, offeringsLine, regionTiles } from "./regions"
 
 const exploration = (parts: Partial<Exploration>): Exploration => ({

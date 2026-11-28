@@ -39,6 +39,7 @@ fn main() {
     if let Some(code) = capture::helper::run_if_asked() {
         std::process::exit(code);
     }
+    text::init();
 
     // Any panic ends the app with a dialog. Most startup failures (the window,
     // the webview, the log directory) are panics inside Tauri, and a panic in
@@ -133,6 +134,7 @@ fn main() {
         .on_window_event(background::on_window_event)
         .invoke_handler(tauri::generate_handler![
             background::notify,
+            background::set_language,
             snapshots::import_snapshot,
             snapshots::keep_snapshot,
             snapshots::delete_snapshot,
@@ -199,6 +201,7 @@ fn on_exit(app: &tauri::AppHandle) {
 /// Shows the error and exits. The release build has no console, so the
 /// dialog is the only trace the user sees.
 fn fatal(detail: &str) -> ! {
-    win::error_box(text::APP_NAME, &format!("{}\n{detail}", text::FATAL_ERROR));
+    let text = text::text();
+    win::error_box(text.app_name, &format!("{}\n{detail}", text.fatal_error));
     std::process::exit(1)
 }

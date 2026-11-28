@@ -29,8 +29,9 @@ pub fn check() -> bool {
     if tauri::webview_version().is_ok() {
         return true;
     }
-    if win::ask(text::APP_NAME, text::WEBVIEW2_ASK) && install_and_restart().is_err() {
-        win::error_box(text::APP_NAME, text::WEBVIEW2_MANUAL);
+    let text = text::text();
+    if win::ask(text.app_name, text.webview2_ask) && install_and_restart().is_err() {
+        win::error_box(text.app_name, text.webview2_manual);
     }
     false
 }

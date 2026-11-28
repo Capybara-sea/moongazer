@@ -23,7 +23,7 @@ import { cn } from "@/lib/cn"
 import { formatNumber } from "@/lib/format"
 import { navigate } from "@/lib/route"
 import { usePlannerStore } from "@/stores/plannerStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { useBurstMode } from "./burstMode"
 import { blossomText, freeText, shortBySource, tomorrowLine } from "./resinText"
 
@@ -63,12 +63,11 @@ export function ResinPlanCard({ account, takenAt, now }: Props) {
     <Panel aria-label={r.title} className="min-w-0 flex-[1_1_380px] gap-0 px-[18px] pt-3.5 pb-2">
       <CardHeader title={r.title}>
         <span className="tabular text-[12px] text-muted">
-          {resin
-            ? r.original(resin.value, RESIN_CAP)
-            : `${text.daily.resin} ${text.snapshot.notRead}`}
+          {resin ? r.original(resin.value, RESIN_CAP) : r.originalNotRead}
         </span>
       </CardHeader>
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3.5">
+      {/* Long English names wrap rather than squeeze the middle. */}
+      <div className="grid grid-cols-[fit-content(120px)_minmax(0,1fr)_auto] gap-x-3.5">
         {items.length > 0 && (
           <Row label={r.items}>
             <span className="tabular text-[13px]">
@@ -251,7 +250,7 @@ type RowProps = {
 function Row({ label, value, note, tip, children }: RowProps) {
   return (
     <div className="col-span-full grid min-h-[46px] grid-cols-subgrid items-center border-(--separator) border-t py-1.5 text-[13px]">
-      <Tip content={tip} className="whitespace-nowrap text-muted">
+      <Tip content={tip} className="text-muted">
         {label}
       </Tip>
       <span className="flex min-w-0 items-center">{children}</span>

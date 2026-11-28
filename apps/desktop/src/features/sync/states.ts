@@ -4,7 +4,7 @@
 import type { Tone } from "@/components/StatusDot"
 import type { CapturePhase, CaptureStatus } from "@/lib/backend/sync"
 import { formatDuration, formatTime, formatWhen } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { leftOutText } from "./leftOut"
 
 const t = text.sync

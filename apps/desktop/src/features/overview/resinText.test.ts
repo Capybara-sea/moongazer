@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import { materialData } from "@/domain/names"
 import type { MaterialTotal } from "@/domain/plan"
 import { CHARACTER_EXP, WEAPON_EXP } from "@/domain/planner"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { blossomText, freeText, shortBySource, tomorrowLine } from "./resinText"
 
 const r = text.resinPlan

@@ -4,11 +4,11 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { App } from "@/app/App"
-import { setWindowTitle } from "@/lib/backend"
+import { setLanguage, setWindowTitle } from "@/lib/backend"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text/zh"
+import { lang, text } from "@/text"
 import "./index.css"
 
 const root = document.getElementById("root")
@@ -28,9 +28,13 @@ document.addEventListener("contextmenu", event => {
   if (!field) event.preventDefault()
 })
 
-// tauri.conf.json keeps ASCII names; the window shows the Chinese name.
+document.documentElement.lang = lang === "en" ? "en" : "zh-CN"
+// tauri.conf.json keeps ASCII names; the window shows the name in the UI's language.
 document.title = text.appName
 void setWindowTitle(text.appName)
+setLanguage(lang === "en").catch(() => {
+  // Outside the app window there is no Rust side to tell.
+})
 void useUpdateStore.getState().load()
 void useSnapshotStore.getState().load()
 void useCaptureStore.getState().load()

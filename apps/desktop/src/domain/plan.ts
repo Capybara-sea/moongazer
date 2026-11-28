@@ -461,7 +461,7 @@ export function summaryGroup(key: string) {
   if (WEEKLY_BOSS.has(known)) return WEEKLY_BOSS_GROUP
   const data = materialData(known)
   if (data.tab === "specialty") return SPECIALTY_GROUP
-  return data.type ?? ""
+  return data.typeId ?? ""
 }
 
 /**

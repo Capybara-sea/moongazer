@@ -12,7 +12,7 @@ import { useSyncSide } from "@/features/sync/SyncCard"
 import { useAccountStore } from "@/stores/accountStore"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { HomeBoard } from "./HomeBoard"
 
 const t = text.home

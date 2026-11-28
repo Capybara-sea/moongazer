@@ -7,9 +7,18 @@
 #[cfg(feature = "capture")]
 pub mod capture;
 
+use windows_sys::Win32::Globalization::GetUserDefaultUILanguage;
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     IDYES, MB_ICONERROR, MB_ICONWARNING, MB_OK, MB_YESNO, MESSAGEBOX_STYLE, MessageBoxW,
 };
+
+/// Whether Windows shows its own UI in Chinese.
+pub fn system_is_chinese() -> bool {
+    const LANG_CHINESE: u16 = 0x04;
+    // SAFETY: takes no arguments and only reads the user's setting.
+    let language = unsafe { GetUserDefaultUILanguage() };
+    language & 0x3ff == LANG_CHINESE
+}
 
 pub fn error_box(title: &str, message: &str) {
     message_box(title, message, MB_OK | MB_ICONERROR);

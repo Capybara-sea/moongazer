@@ -11,7 +11,7 @@ import { isWeaponType, WEAPON_TYPES } from "@/domain/elements"
 import { materialData } from "@/domain/names"
 import type { CustomGoal, CustomWeaponGoal, Goal } from "@/domain/plan"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { Choice } from "./Choice"
 import type { Update } from "./GoalEditor"
 

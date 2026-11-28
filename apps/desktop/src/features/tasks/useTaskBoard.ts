@@ -12,7 +12,7 @@ import {
   toggleJudging,
 } from "@/domain/tasks"
 import { useTasksStore } from "@/stores/tasksStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.tasks
 

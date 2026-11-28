@@ -951,7 +951,7 @@ mod tests {
 
     #[test]
     fn ui_strings_may_be_chinese_but_code_may_not() {
-        assert!(listed(CJK_ALLOWLIST, "apps/desktop/src/text/zh.ts"));
+        assert!(listed(CJK_ALLOWLIST, "apps/desktop/src/text/zh/index.ts"));
         assert!(listed(CJK_ALLOWLIST, "CHANGELOG.md"));
         assert!(!listed(CJK_ALLOWLIST, "CHANGELOG.en.md"));
         assert!(!listed(CJK_ALLOWLIST, "apps/desktop/src/app/App.tsx"));

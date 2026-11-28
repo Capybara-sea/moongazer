@@ -6,7 +6,7 @@
  * xtask gen-data` builds, and what an account has finished of them.
  */
 
-import data from "@/generated/collection.json"
+import { collection as data } from "@/domain/gameData"
 import type { Achievements } from "./account"
 
 export type AchievementInfo = {

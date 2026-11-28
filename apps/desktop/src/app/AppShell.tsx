@@ -22,7 +22,7 @@ import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { navigate, type PageKey, usePage } from "@/lib/route"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { PAGES } from "./route"
 import { SidePanel } from "./SidePanel"
 

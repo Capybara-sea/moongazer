@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { describe, expect, it } from "vitest"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { leftOutText } from "./leftOut"
 
 const l = text.sync.leftOut

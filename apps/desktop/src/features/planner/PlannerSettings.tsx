@@ -11,7 +11,7 @@ import { FOCUSES, type Plan } from "@/domain/plan"
 import type { Defaults } from "@/domain/planDefaults"
 import { characterCaps, type Stage, stages, weaponCaps } from "@/domain/planner"
 import { usePlannerStore } from "@/stores/plannerStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { stageLabel } from "./GoalCard"
 import { RankBadge } from "./RankBadge"
 

@@ -17,7 +17,7 @@ import {
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { type FurnishingListView, useRealmListStore } from "@/stores/realmListStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { NeedList } from "./FurnishingNeed"
 import { CharacterList, SetList } from "./FurnishingSets"
 import { AccountNotices, BackLink } from "./parts"

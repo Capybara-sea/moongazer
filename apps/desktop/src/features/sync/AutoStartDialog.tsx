@@ -3,7 +3,7 @@
 
 import { AlertDialog, Button } from "@heroui/react"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.sync.askAutoStart
 

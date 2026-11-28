@@ -7,7 +7,7 @@ import { liveUid, timeLabel } from "@/domain/accounts"
 import type { Snapshot } from "@/lib/backend"
 import { useAccountStore, useCurrentSnapshot } from "@/stores/accountStore"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { sourceLabel } from "./RecentSnapshots"
 
 /**

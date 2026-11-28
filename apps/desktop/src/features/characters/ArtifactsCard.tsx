@@ -11,7 +11,7 @@ import { artifactIcon, formatStat, mainStatValue, statName } from "@/domain/buil
 import type { Artifact, Substat } from "@/domain/good"
 import { lookup } from "@/domain/names"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { bySlot, setCounts } from "./artifacts"
 
 const t = text.characterDetail

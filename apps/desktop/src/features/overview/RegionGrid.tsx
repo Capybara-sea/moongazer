@@ -6,7 +6,7 @@ import { CardHeader } from "@/components/CardHeader"
 import { Panel } from "@/components/Panel"
 import { Tip } from "@/components/Tip"
 import type { Account } from "@/domain/account"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { formatExploration, regionTiles } from "./regions"
 
 /** Exploration, statue, reputation and offerings per city, one small box each in one card. */

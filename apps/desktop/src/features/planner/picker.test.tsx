@@ -14,7 +14,7 @@ import {
 } from "@/domain/plan"
 import { DEFAULTS } from "@/domain/planDefaults"
 import { defaultOrder, plannerBag } from "@/domain/planner"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   characterOptions,
   customGoal,
@@ -91,6 +91,14 @@ describe("new goals", () => {
 
 describe("the picker", () => {
   const characters = characterOptions(EMPTY, EMPTY_PLAN)
+
+  it("finds names whatever their case", () => {
+    const filters = { element: null, rarity: null, weapon: null }
+    const name = characterData("HuTao").name
+    const found = (query: string) => shownOptions(characters, query, filters).map(o => o.name)
+    expect(found(name.toUpperCase())).toContain(name)
+    expect(found(name.toLowerCase())).toContain(name)
+  })
 
   it("filters by element, rarity and weapon type, the custom tile first", () => {
     const filters = { element: "pyro" as const, rarity: 5, weapon: null }

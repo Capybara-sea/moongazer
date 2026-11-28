@@ -7,6 +7,7 @@ import { CONVERT_KINDS, type ConvertKind } from "@/domain/convert"
 import { familyOptions, SLOTS } from "@/domain/customCharacter"
 import { CUSTOM_WEAPON_RARITIES, WEAPON_SLOTS, weaponFamilyOptions } from "@/domain/customWeapon"
 import { isWeaponType } from "@/domain/elements"
+import { names } from "@/domain/gameData"
 import {
   EMPTY_PLAN,
   FOCUSES,
@@ -29,7 +30,6 @@ import {
   type Talent,
   weaponCaps,
 } from "@/domain/planner"
-import names from "@/generated/names.json"
 import { isOneOf, isRecord } from "@/lib/backend/shared"
 
 const isLevel = (value: unknown, max: number): value is number =>
@@ -160,7 +160,7 @@ const GROUPS = new Set([
   SPECIALTY_GROUP,
   WEEKLY_BOSS_GROUP,
   WORLD_BOSS_GROUP,
-  ...names.materialTypes.filter(t => t.tab !== "specialty").map(t => t.name),
+  ...names.materialTypes.filter(t => t.tab !== "specialty").map(t => t.id),
 ])
 
 /** The summary's order without groups the data no longer has, or repeats; none when empty. */

@@ -5,6 +5,7 @@ import type { Element } from "@/domain/elements"
 import type { Character } from "@/domain/good"
 import { characterData } from "@/domain/names"
 import type { CharacterSort } from "@/stores/characterListStore"
+import { lang } from "@/text"
 
 type Options = { element: Element | null; query: string; sort: CharacterSort }
 
@@ -28,6 +29,6 @@ export function visibleCharacters(characters: readonly Character[], options: Opt
         b.character.constellation - a.character.constellation || rarity(b) - rarity(a),
     }
   return rows
-    .sort((a, b) => by[options.sort](a, b) || a.data.name.localeCompare(b.data.name, "zh"))
+    .sort((a, b) => by[options.sort](a, b) || a.data.name.localeCompare(b.data.name, lang))
     .map(row => row.character)
 }

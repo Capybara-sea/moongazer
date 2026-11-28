@@ -8,7 +8,7 @@ import type { NeedRow, SetRow, UnitRow } from "@/domain/furnishing"
 import { lookup } from "@/domain/names"
 import { cn } from "@/lib/cn"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.furnishingPage
 

@@ -5,7 +5,7 @@
 
 import type { AbyssPeriod, StygianRecord, Theater } from "@/domain/account"
 import type { StygianSeason } from "@/domain/overviewData"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR

@@ -4,7 +4,7 @@
 import { AlertDialog, Button } from "@heroui/react"
 import { useState } from "react"
 import { type PendingConfirmation, useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /**
  * Asks whether to save a file that looks wrong next to its account's snapshot
@@ -38,10 +38,10 @@ export function ConfirmImport() {
             {shown && (
               <AlertDialog.Body className="flex flex-col gap-2 text-[13px]">
                 {isNew ? (
-                  <p className="break-all">{text.confirm.newBody(shown.file)}</p>
+                  <p className="wrap-anywhere">{text.confirm.newBody(shown.file)}</p>
                 ) : (
                   <>
-                    <p className="break-all">{text.confirm.body(shown.file)}</p>
+                    <p className="wrap-anywhere">{text.confirm.body(shown.file)}</p>
                     <ul className="list-disc pl-5">
                       {shown.warnings.map(warning =>
                         warning.kind === "fewer" ? (

@@ -6,8 +6,8 @@
  * builds before every frontend build.
  */
 
-import names from "@/generated/names.json"
-import { text } from "@/text/zh"
+import { names } from "@/domain/gameData"
+import { text } from "@/text"
 import { type Element, isElement, isWeaponType, type WeaponType } from "./elements"
 
 export const NAME_KINDS = ["characters", "weapons", "artifactSets", "materials"] as const
@@ -197,6 +197,8 @@ export type MaterialData = {
   rarity?: number
   /** The game's own category, such as weapon ascension material; some items have none. */
   type?: string
+  /** The type's name in Chinese whatever the UI's language, to keep in saved data. */
+  typeId?: string
   /** The type's place on the materials page, tab after tab; none without a type. */
   typeOrder?: number
   /** Other for materials without a type. */
@@ -205,7 +207,13 @@ export type MaterialData = {
 
 const materials: Record<string, { rarity: number; type?: number }> = names.materials
 /** In the materials page's order, each with its tab. */
-const materialTypes: readonly { name: string; tab: string }[] = names.materialTypes
+const materialTypes: readonly { id: string; name: string; tab: string }[] = names.materialTypes
+const typeNames = new Map(materialTypes.map(type => [type.id, type.name]))
+
+/** A material type's name in the UI's language, by its id; the id when the data has no such type. */
+export function materialTypeName(id: string) {
+  return typeNames.get(id) ?? id
+}
 
 /** A material's name, icon, rarity, type and tab. */
 export function materialData(key: string): MaterialData {
@@ -215,6 +223,7 @@ export function materialData(key: string): MaterialData {
     ...lookup("materials", key),
     rarity: entry?.rarity,
     type: type?.name,
+    typeId: type?.id,
     typeOrder: type ? entry?.type : undefined,
     tab: isMaterialTab(type?.tab) ? type.tab : "other",
   }

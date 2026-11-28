@@ -65,8 +65,8 @@ pub fn resolve<R: tauri::Runtime>(context: &mut tauri::Context<R>) -> Option<Dat
         match move_data(&dir, &target).and_then(|()| point_to(&pointer, &target, &default)) {
             Ok(()) => dir = target,
             Err(err) => crate::win::error_box(
-                crate::text::APP_NAME,
-                &format!("{}\n{err:#}", crate::text::MOVE_DATA_FAILED),
+                crate::text::text().app_name,
+                &format!("{}\n{err:#}", crate::text::text().move_data_failed),
             ),
         }
     }
@@ -238,7 +238,10 @@ pub async fn plan_data_dir(
     let dir = if default {
         location.default.clone()
     } else {
-        let mut dialog = app.dialog().file().set_title(crate::text::PICK_DATA_DIR);
+        let mut dialog = app
+            .dialog()
+            .file()
+            .set_title(crate::text::text().pick_data_dir);
         if let Some(window) = app.get_webview_window("main") {
             dialog = dialog.set_parent(&window);
         }

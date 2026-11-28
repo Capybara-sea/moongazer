@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { type ReactNode, useState } from "react"
 import { cn } from "@/lib/cn"
 import { maskUid } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { useTip } from "./Tip"
 
 type Props = {

@@ -3,7 +3,7 @@
 
 import { formatMonthDay, formatTime, formatWhen, startOfDay } from "@/lib/format"
 import type { Message } from "@/stores/messageStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const DAY = 86_400_000
 

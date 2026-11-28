@@ -15,7 +15,7 @@ import { useBatches } from "@/lib/useBatches"
 import { useCurrentAccount, usePreviousAccount } from "@/stores/accountStore"
 import { useMaterialListStore } from "@/stores/materialListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { MaterialCard } from "./MaterialCard"
 import {
   type MaterialGroup,

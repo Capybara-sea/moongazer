@@ -41,18 +41,25 @@ export type Weapon = {
 }
 /** `need` is the piece count each effect takes. */
 export type ArtifactSet = { name: string; icon: string; effects: { need: number; text: string }[] }
-/** A material as the game gives it, with the game's name for its type in both languages. */
+/**
+ * A material as the game gives it, with the game's name for its type in the language written out,
+ * in Chinese and in English.
+ */
 export type GameMaterial = {
   name: string
   rarity: number
   icon: string
   typeName: string
+  zhType: string
   enType: string
 }
 /** `type` is an index into `materialTypes`; materials the game gives no type have none. */
 export type Material = { name: string; rarity: number; icon: string; type?: number }
-/** `tab` is the materials page's tab for the type, a key of `materialTabs`. */
-export type MaterialType = { name: string; tab: string }
+/**
+ * `tab` is the materials page's tab for the type, a key of `materialTabs`; `id` is its Chinese
+ * name in every language, which saved plans keep.
+ */
+export type MaterialType = { id: string; name: string; tab: string }
 export type Tables = {
   characters: Record<string, Character>
   weapons: Record<string, Weapon>
@@ -65,10 +72,10 @@ export type Tables = {
 
 export type Raw = Record<string, unknown>
 /**
- * A game item with its English name, which gives the GOOD key. `quest` rows lose a shared key:
- * players keep the material, not the quest item.
+ * A game item with its English name, which gives the GOOD key, and its Chinese name, without which
+ * it is left out. `quest` rows lose a shared key: players keep the material, not the quest item.
  */
-export type Row<T> = { id: number; en: string; entry: T; quest?: boolean }
+export type Row<T> = { id: number; en: string; zh: string; entry: T; quest?: boolean }
 /** The items of each kind, as AnimeGameData gives them. */
 export type GameRows = {
   characters: Row<Character>[]
@@ -125,24 +132,24 @@ function place(enType: string): Place {
 
 /**
  * Swaps each material's type name for an index into one list, which keeps names.json small. The
- * list is in the materials page's order, ties by name. A Chinese type name may stand for more
- * than one English one; it goes where the first of them on the page does.
+ * list is in the materials page's order, ties by Chinese name. A Chinese type name may stand for
+ * more than one English one; it goes where the first of them on the page does, by that one's name.
  */
 function indexTypes(table: Record<string, GameMaterial>) {
-  const places = new Map<string, Place>()
-  for (const { typeName, enType } of Object.values(table)) {
-    if (typeName === "") continue
+  const places = new Map<string, Place & { name: string }>()
+  for (const { typeName, zhType, enType } of Object.values(table)) {
+    if (zhType === "") continue
     const found = place(enType)
-    const kept = places.get(typeName)
-    if (kept === undefined || found.rank < kept.rank) places.set(typeName, found)
+    const kept = places.get(zhType)
+    if (kept === undefined || found.rank < kept.rank)
+      places.set(zhType, { ...found, name: typeName })
   }
-  const materialTypes = [...places]
-    .sort(([a, pa], [b, pb]) => pa.rank - pb.rank || collator.compare(a, b))
-    .map(([name, { tab }]) => ({ name, tab }))
-  const index = new Map(materialTypes.map(({ name }, i) => [name, i]))
+  const order = [...places].sort(([a, pa], [b, pb]) => pa.rank - pb.rank || collator.compare(a, b))
+  const materialTypes = order.map(([id, { name, tab }]) => ({ id, name, tab }))
+  const index = new Map(order.map(([zhType], i) => [zhType, i]))
   const materials: Record<string, Material> = {}
-  for (const [key, { name, rarity, icon, typeName }] of Object.entries(table)) {
-    materials[key] = { name, rarity, icon, type: index.get(typeName) }
+  for (const [key, { name, rarity, icon, zhType }] of Object.entries(table)) {
+    materials[key] = { name, rarity, icon, type: index.get(zhType) }
   }
   return { materials, materialTypes }
 }
@@ -155,8 +162,13 @@ const HIGHLIGHT = /<color=#[0-9A-Fa-f]+>(.*?)<\/color>/
  */
 const MARKUP = /<[^>]*>|\{\/?LINK[^}]*\}|\{TIMEZONE\}|^#/g
 
+/** Wording per input device, as {LAYOUT_PC#Press}; only the English text has it. */
+const LAYOUT = /\{LAYOUT_(\w+)#([^}]*)\}/g
+
 export function plain(text: string): string {
-  return text.replace(MARKUP, "")
+  return text
+    .replace(LAYOUT, (_, device: string, words: string) => (device === "PC" ? words : ""))
+    .replace(MARKUP, "")
 }
 
 export function passive(affix: Raw): Passive {
@@ -180,23 +192,25 @@ export function passive(affix: Raw): Passive {
 
 /** Keys rows by GOOD key. Rows without a name in either language are dropped; on a shared key a
  * row that is not a quest item wins, then the lowest id. */
-function toTable<T extends { name: string }>(kind: string, rows: Row<T>[]) {
+function toTable<T>(kind: string, rows: Row<T>[]) {
   const table: Record<string, T> = {}
   const ids = new Map<string, number>()
+  const names = new Map<string, string>()
   let shared = 0
   let renamed = 0
   const byPreference = (a: Row<T>, b: Row<T>) =>
     Number(a.quest ?? false) - Number(b.quest ?? false) || a.id - b.id
   for (const row of rows.toSorted(byPreference)) {
     const key = goodKey(row.en)
-    if (key === "" || row.entry.name === "") continue
-    const kept = table[key]
+    if (key === "" || row.zh === "") continue
+    const kept = names.get(key)
     if (kept === undefined) {
       table[key] = row.entry
       ids.set(key, row.id)
+      names.set(key, row.zh)
     } else {
       shared++
-      if (kept.name !== row.entry.name) renamed++
+      if (kept !== row.zh) renamed++
     }
   }
   if (shared > 0) {

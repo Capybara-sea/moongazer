@@ -14,7 +14,7 @@ import {
 import { lookup } from "@/domain/names"
 import { cn } from "@/lib/cn"
 import { useRealmListStore } from "@/stores/realmListStore"
-import { text } from "@/text/zh"
+import { lang, text } from "@/text"
 import { SetDetail } from "./FurnishingDetail"
 
 const t = text.furnishingPage
@@ -24,15 +24,20 @@ function claimable(row: SetRow) {
   return row.companions.filter(c => c.status === "claimable")
 }
 
+/** Whether a name holds the search, `query` in lower case. */
+const has = (name: string, query: string) => name.toLowerCase().includes(query)
+
 /** The sets with a reward left to claim, as the search leaves them. */
 function useShownRows(rows: SetRow[]) {
-  const query = useRealmListStore(s => s.query).trim()
+  const query = useRealmListStore(s => s.query)
+    .trim()
+    .toLowerCase()
   return rows.filter(
     row =>
       row.claimable > 0 &&
       (!query ||
-        row.info.name.includes(query) ||
-        claimable(row).some(c => lookup("characters", c.character).name.includes(query))),
+        has(row.info.name, query) ||
+        claimable(row).some(c => has(lookup("characters", c.character).name, query))),
   )
 }
 
@@ -70,7 +75,12 @@ export function SetList({ view }: { view: FurnishingView }) {
                   <Companion key={c.event} character={c.character} />
                 ))}
               </span>
-              <span className="w-[72px] text-right font-semibold text-(--gold-fg) text-[13px] tabular">
+              <span
+                className={cn(
+                  "whitespace-nowrap text-right font-semibold text-(--gold-fg) text-[13px] tabular",
+                  lang === "en" ? "w-[104px]" : "w-[72px]",
+                )}
+              >
                 {t.claimable(row.claimable * COMPANION_PRIMOGEMS)}
               </span>
               <ChevronDown
@@ -137,12 +147,14 @@ function Companion({ character }: { character: string }) {
 
 /** Each owned character with rewards left to claim, and the sets they are for; most first. */
 export function CharacterList({ view }: { view: FurnishingView }) {
-  const query = useRealmListStore(s => s.query).trim()
+  const query = useRealmListStore(s => s.query)
+    .trim()
+    .toLowerCase()
   const people = byCharacter(view.rows).filter(
     p =>
       !query ||
-      lookup("characters", p.character).name.includes(query) ||
-      p.sets.some(set => set.info.name.includes(query)),
+      has(lookup("characters", p.character).name, query) ||
+      p.sets.some(set => has(set.info.name, query)),
   )
   if (people.length === 0) {
     return (

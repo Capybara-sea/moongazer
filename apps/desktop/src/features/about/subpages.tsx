@@ -3,7 +3,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { navigate } from "@/lib/route"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /** About's pages inside it, at #/about/<name>. */
 export const SUBPAGES = { licenses: "licenses", changelog: "changelog" } as const

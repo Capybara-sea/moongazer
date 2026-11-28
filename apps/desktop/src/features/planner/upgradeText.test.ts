@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { describe, expect, it } from "vitest"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { targetText } from "./upgradeText"
 
 const p = text.planner

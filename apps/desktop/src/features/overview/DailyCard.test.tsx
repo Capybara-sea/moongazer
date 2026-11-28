@@ -7,7 +7,7 @@ import type { Account, Tasks } from "@/domain/account"
 import { RESIN_CAP, realmFullNote } from "@/domain/daily"
 import data from "@/generated/overview.json"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { DailyCard } from "./DailyCard"
 
 const t = text.daily

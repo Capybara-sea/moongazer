@@ -11,7 +11,7 @@ import { SPINCRYSTALS, spincrystalView } from "@/domain/spincrystals"
 import { formatDateTime, formatNumber } from "@/lib/format"
 import { navigate } from "@/lib/route"
 import { useCurrentAccount } from "@/stores/accountStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { AccountNotices, PARTS } from "./parts"
 
 const t = text.collection

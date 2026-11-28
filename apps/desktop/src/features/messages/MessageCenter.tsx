@@ -16,7 +16,7 @@ import { useNow } from "@/lib/useNow"
 import { useAccountName } from "@/stores/accountStore"
 import { type Message, type MessageKind, useMessageStore } from "@/stores/messageStore"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { messageGroups, messageTime } from "./groups"
 import { openTarget } from "./target"
 

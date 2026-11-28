@@ -10,7 +10,7 @@ import type { Account, Player } from "@/domain/account"
 import { nameCardPicture } from "@/domain/overviewData"
 import { cn } from "@/lib/cn"
 import { useAppearanceStore } from "@/stores/appearanceStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { accountStats } from "./accountRows"
 
 const CARD = "flex-row flex-wrap items-stretch gap-4 rounded-[18px] p-4"

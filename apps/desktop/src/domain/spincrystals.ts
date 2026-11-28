@@ -6,7 +6,7 @@
  * builds, and which of them an account has placed in the realm or holds in its bag.
  */
 
-import data from "@/generated/collection.json"
+import { collection as data } from "@/domain/gameData"
 import type { Account } from "./account"
 
 export type SpincrystalInfo = {

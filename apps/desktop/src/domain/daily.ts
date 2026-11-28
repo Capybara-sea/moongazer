@@ -10,7 +10,7 @@
 import type { Tasks } from "@/domain/account"
 import { dailyResetsBetween, lastDailyReset, lastWeeklyReset } from "@/domain/gameTime"
 import { realmRate } from "@/domain/overviewData"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE

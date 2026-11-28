@@ -6,7 +6,7 @@ import type { Account } from "@/domain/account"
 import { groupAccounts } from "@/domain/accounts"
 import { lookup } from "@/domain/names"
 import { getSnapshotExport, type Snapshot } from "@/lib/backend"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   type AccountEntry,
   accountName,

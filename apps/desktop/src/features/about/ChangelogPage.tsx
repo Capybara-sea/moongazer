@@ -4,7 +4,7 @@
 import { useLayoutEffect, useRef } from "react"
 import { Panel } from "@/components/Panel"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { APP_CHANGELOG, type ChangelogSection } from "./changelog"
 import { SubpageNav } from "./subpages"
 

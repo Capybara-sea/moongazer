@@ -6,7 +6,7 @@ import { type TalentKey, wielderKey } from "@/domain/builds"
 import { type Artifact, SLOTS, type SlotKey, type Substat, type Weapon } from "@/domain/good"
 import { lookup } from "@/domain/names"
 import { type Labeled, movedTo } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.characterDetail
 const TALENTS: readonly TalentKey[] = ["auto", "skill", "burst"]
@@ -49,7 +49,7 @@ export function characterChanges(current: Account, previous: Account, key: strin
     const name = lookup("weapons", weaponNow.key).name
     lines.push(plain(weaponBefore ? t.weaponSwapped(name) : t.equipped(name)))
   } else if (weaponBefore) {
-    lines.push(plain(t.unequipped(t.weapon)))
+    lines.push(plain(t.weaponRemoved))
   }
 
   for (const slot of SLOTS) {

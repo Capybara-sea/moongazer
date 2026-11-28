@@ -20,12 +20,17 @@ import { type ThemeMode, useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useMessageStore } from "@/stores/messageStore"
 import { useRestartStore } from "@/stores/restartStore"
-import { text } from "@/text/zh"
+import { LANG_NAMES, type Lang, lang, text } from "@/text"
 
 const THEMES: { value: ThemeMode; label: string }[] = [
   { value: "system", label: text.theme.system },
   { value: "light", label: text.theme.light },
   { value: "dark", label: text.theme.dark },
+]
+
+const LANGS: { value: Lang; label: string }[] = [
+  { value: "zh", label: LANG_NAMES.zh },
+  { value: "en", label: LANG_NAMES.en },
 ]
 
 const NUMBER_STYLES: { value: NumberStyle; label: string }[] = [
@@ -39,14 +44,31 @@ type SegmentsProps<T extends string> = {
   options: readonly { value: T; label: string }[]
   /** `from` is the picked button's bounding box. */
   onPick: (value: T, from: DOMRect) => void
+  /** Under the label; the options are disabled when given. */
+  disabledHint?: string
 }
 
 /** A row picking one of a few options. */
-function Segments<T extends string>({ label, value, options, onPick }: SegmentsProps<T>) {
+function Segments<T extends string>({
+  label,
+  value,
+  options,
+  onPick,
+  disabledHint,
+}: SegmentsProps<T>) {
   return (
     <div className="flex items-center justify-between gap-6 border-(--separator) border-t py-3.5">
-      <span className="font-medium text-sm">{label}</span>
-      <Segmented label={label} value={value} options={options} onPick={onPick} />
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="font-medium text-sm">{label}</span>
+        {disabledHint && <span className="text-[12px] text-muted">{disabledHint}</span>}
+      </div>
+      <Segmented
+        label={label}
+        value={value}
+        options={options}
+        onPick={onPick}
+        disabled={disabledHint !== undefined}
+      />
     </div>
   )
 }
@@ -232,6 +254,12 @@ function AppearancePanel() {
   return (
     <Section title={text.settings.ui}>
       <Segments
+        label={text.settings.language}
+        value={lang}
+        options={LANGS}
+        onPick={picked => store().setLanguage(picked)}
+      />
+      <Segments
         label={text.settings.theme}
         value={theme}
         options={THEMES}
@@ -242,6 +270,7 @@ function AppearancePanel() {
         value={numbers}
         options={NUMBER_STYLES}
         onPick={picked => store().setNumbers(picked)}
+        disabledHint={lang === "en" ? text.settings.numbersEnglish : undefined}
       />
       <Row title={text.settings.glass} hint={text.settings.glassHint}>
         <Switch checked={glass} label={text.settings.glass} onChange={on => store().setGlass(on)} />

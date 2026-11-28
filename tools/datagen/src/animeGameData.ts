@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+import type { Game } from "./agdItems.ts"
 import { download } from "./download.ts"
-import { list, num, record } from "./tables.ts"
+import { num, record } from "./tables.ts"
 
 type Pin = { repo: string; commit: string }
 /**
@@ -13,8 +14,6 @@ export type Profile = { title: string; vision: string; constellation: string }
 /** Game text by text hash. The dump leaves out empty texts, so a hash it lacks reads as empty. */
 export type Text = (hash: unknown) => string
 
-/** The language of the game text written out. GOOD keys come from the English text. */
-export const LANGUAGE = "CHS"
 /** AnimeGameData's avatar ids of the twins. */
 export const TWINS = [10000005, 10000007]
 export const MANEKINS: Record<string, number> = { Manekin: 10000117, Manekina: 10000118 }
@@ -45,21 +44,15 @@ export async function textMap({ repo, commit }: Pin, language: string): Promise<
 }
 
 /** Every character's profile by avatar id; `visions` are Vision names that win over the game's. */
-export async function buildProfiles(
-  { repo, commit }: Pin,
-  text: Text,
-  visions: Map<number, string>,
-) {
-  const load = async (name: string) =>
-    list(JSON.parse(await download(repo, commit, `ExcelBinOutput/${name}`)), name)
+export async function buildProfiles(g: Game, visions: Map<number, string>) {
   const [fetters, labels] = await Promise.all([
-    load("FetterInfoExcelConfigData.json"),
-    load("ManualTextMapConfigData.json"),
+    g.table("FetterInfoExcelConfigData.json"),
+    g.table("ManualTextMapConfigData.json"),
   ])
   const label = (id: string) => {
     const row = labels.find(row => row.textMapId === id)
     if (!row) throw new Error(`no UI text ${id}`)
-    return text(row.textMapContentTextMapHash)
+    return g.text(row.textMapContentTextMapHash)
   }
   const vision = label("UI_STC_FETTER_VISION_BEFORE")
   const gnosis = label("UI_STC_FETTER_VISION_AFTER")
@@ -69,28 +62,28 @@ export async function buildProfiles(
     // The locked name is what the profile shows until a story reveals more, as the star wedge of
     // some Snezhnayans. Without either name the game's label applies, the one for after a reveal
     // when the character has a Vision text for after one, as the Archons do.
-    const fallback = text(row.avatarVisionAfterTextMapHash) === "" ? vision : gnosis
+    const fallback = g.chs(row.avatarVisionAfterTextMapHash) === "" ? vision : gnosis
+    const named = [LOCKED, UNLOCKED].find(field => g.chs(row[field]) !== "")
     const id = num(row, "avatarId")
     profiles.set(id, {
-      title: text(row.avatarTitleTextMapHash),
-      vision: visions.get(id) || text(row[LOCKED]) || text(row[UNLOCKED]) || fallback,
-      constellation: text(row.avatarConstellationBeforTextMapHash),
+      title: g.text(row.avatarTitleTextMapHash),
+      vision: visions.get(id) || (named ? g.text(row[named]) : fallback),
+      constellation: g.text(row.avatarConstellationBeforTextMapHash),
     })
   }
   return profiles
 }
 
-/** The profile of a Traveler or a Manekin. Exports do not say which twin the Traveler is, so the
- * twins' must agree. */
+/** The profile of a Traveler or a Manekin. Exports do not say which twin the Traveler is, so where
+ * the twins' differ, as their constellations do in English, both are given. */
 export function manualProfile(key: string, profiles: Map<number, Profile>): Profile {
   const manekin = MANEKINS[key]
   const ids = key.startsWith("Traveler") ? TWINS : manekin === undefined ? [] : [manekin]
-  const [profile, ...others] = ids.map(id => profiles.get(id))
-  if (!profile) throw new Error(`no profile for ${key}`)
-  for (const other of others) {
-    if (JSON.stringify(other) !== JSON.stringify(profile)) {
-      throw new Error(`the twins' profiles differ: ${JSON.stringify([profile, other])}`)
-    }
+  const found = ids.map(id => profiles.get(id))
+  if (found.length === 0 || found.some(profile => !profile)) {
+    throw new Error(`no profile for ${key}`)
   }
-  return profile
+  const field = (name: keyof Profile) =>
+    [...new Set(found.map(profile => profile?.[name]))].join(" / ")
+  return { title: field("title"), vision: field("vision"), constellation: field("constellation") }
 }

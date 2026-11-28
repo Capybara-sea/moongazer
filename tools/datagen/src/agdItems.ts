@@ -3,7 +3,7 @@
 
 import { MANEKINS, manualProfile, type Profile, type Text, TWINS } from "./animeGameData.ts"
 import { download } from "./download.ts"
-import { unusedItem } from "./manual.ts"
+import { translations, unusedItem } from "./manual.ts"
 import {
   type ArtifactSet,
   type Character,
@@ -24,12 +24,20 @@ import {
 type Pin = { repo: string; commit: string }
 
 /**
- * AnimeGameData's tables by file name, its text in the language written out and its English
- * text, which gives GOOD keys.
+ * AnimeGameData's tables by file name; its text in the language written out; its Chinese text,
+ * which decides what is written, so that every language has the same entries; its English text,
+ * which gives GOOD keys; and manual.ts's Chinese text in the language written out.
  */
-export type Game = { table: (name: string) => Promise<Raw[]>; text: Text; english: Text }
+export type Game = {
+  table: (name: string) => Promise<Raw[]>
+  text: Text
+  chs: Text
+  english: Text
+  manual: (chinese: string) => string
+}
 
-export function game({ repo, commit }: Pin, text: Text, english: Text): Game {
+/** The game in Chinese. */
+export function game({ repo, commit }: Pin, chs: Text, english: Text): Game {
   const cache = new Map<string, Promise<Raw[]>>()
   const table = (name: string) => {
     let rows = cache.get(name)
@@ -41,7 +49,17 @@ export function game({ repo, commit }: Pin, text: Text, english: Text): Game {
     }
     return rows
   }
-  return { table, text, english }
+  return { table, text: chs, chs, english, manual: chinese => chinese }
+}
+
+/** `g` in English, sharing its tables. */
+export function inEnglish(g: Game): Game {
+  const manual = (chinese: string) => {
+    const text = translations[chinese]
+    if (!text) throw new Error(`no English for "${chinese}" in manual.ts`)
+    return text
+  }
+  return { ...g, text: g.english, manual }
 }
 
 /** The ids the game's archive lists in `field` of `name`: the items released so far. */
@@ -90,7 +108,8 @@ export async function sets(g: Game): Promise<Row<ArtifactSet>[]> {
         text: plain(g.text(level.descTextMapHash)),
       })),
     }
-    return [{ id: num(row, "setId"), en: g.english(first.nameTextMapHash), entry }]
+    const hash = first.nameTextMapHash
+    return [{ id: num(row, "setId"), en: g.english(hash), zh: g.chs(hash), entry }]
   })
 }
 
@@ -121,7 +140,8 @@ export async function weapons(g: Game): Promise<Row<Weapon>[]> {
           })
         : undefined,
     }
-    return [{ id: num(row, "id"), en: g.english(row.nameTextMapHash), entry }]
+    const hash = row.nameTextMapHash
+    return [{ id: num(row, "id"), en: g.english(hash), zh: g.chs(hash), entry }]
   })
 }
 
@@ -237,7 +257,8 @@ export async function characters(
       passives,
       profile: profiles.get(id),
     }
-    return [{ id, en: g.english(row.nameTextMapHash), entry }]
+    const hash = row.nameTextMapHash
+    return [{ id, en: g.english(hash), zh: g.chs(hash), entry }]
   })
 }
 
@@ -288,7 +309,7 @@ export async function manualCharacters(
     if (!name) throw new Error(`no name for ${key}`)
     if (constellations.length !== 6 || !talents) throw new Error(`${key} is incomplete`)
     out[key] = {
-      name,
+      name: g.manual(name),
       rarity,
       element,
       weapon,
@@ -319,19 +340,22 @@ export async function materials(g: Game): Promise<Row<GameMaterial>[]> {
   return rows
     .filter(row => !COLLECTED.test(String(row.materialType)))
     .map(row => {
-      const name = g.text(row.nameTextMapHash)
+      const unused = unusedItem.test(g.chs(row.nameTextMapHash))
       const type = row.typeDescTextMapHash
-      const enType = type === undefined ? "" : g.english(type)
+      const typeText = (text: Text) => (type === undefined ? "" : text(type))
+      const enType = typeText(g.english)
       const entry = {
-        name: unusedItem.test(name) ? "" : name,
+        name: unused ? "" : g.text(row.nameTextMapHash),
         rarity: Number(row.rankLevel ?? 0),
         icon: typeof row.icon === "string" ? row.icon : "",
-        typeName: type === undefined ? "" : g.text(type),
+        typeName: typeText(g.text),
+        zhType: typeText(g.chs),
         enType,
       }
       return {
         id: num(row, "id"),
         en: g.english(row.nameTextMapHash),
+        zh: unused ? "" : g.chs(row.nameTextMapHash),
         entry,
         quest: enType === "Quest Item",
       }

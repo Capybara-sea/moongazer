@@ -11,7 +11,7 @@ import { type Amount, type Recipe, type UpgradeRow, upgradeRows } from "@/domain
 import { cn } from "@/lib/cn"
 import { formatAmount } from "@/lib/format"
 import { navigate } from "@/lib/route"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { lineView, MaterialIcon } from "./MaterialCell"
 import { targetText } from "./upgradeText"
 

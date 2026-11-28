@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import type { Game } from "./agdItems.ts"
+import type { Text } from "./animeGameData.ts"
 import { download } from "./download.ts"
 import { goodKey, list, num, plain, type Raw, str } from "./tables.ts"
 
@@ -150,8 +151,8 @@ export async function buildFurnishings(
       const name = plain(g.text(row.nameTextMapHash))
       if (!name) throw new Error(`furnishing ${id} has no name`)
       const source = (Array.isArray(row.sourceTextList) ? row.sourceTextList : [])
+        .filter(hash => plain(g.chs(hash)) !== "")
         .map(hash => plain(g.text(hash)))
-        .filter(Boolean)
       const icon = row.itemIcon
       const recipe = recipeOf.get(id)
       furnishings[id] = {
@@ -197,17 +198,17 @@ function crystals(g: Game, items: Raw[], bgms: Raw[], groups: Raw[]) {
     const param = Array.isArray(use.useParam) ? Number(use.useParam[0]) : NaN
     const song = bgmById.get(param)
     if (!song) throw new Error(`spincrystal ${id} names song ${param}, not in the BGM table`)
-    const hint = plain(g.text(song[hintField]))
-    const label = plain(g.text(row.nameTextMapHash))
+    const hint = (text: Text) => plain(text(song[hintField]))
+    const label = (text: Text) => plain(text(row.nameTextMapHash))
     // The newest songs are named as their item until the game names them.
-    const title = plain(g.text(song.bgmNameTextMapHash))
+    const title = (text: Text) => plain(text(song.bgmNameTextMapHash))
     spincrystals.push({
       id,
       key: goodKey(g.english(row.nameTextMapHash)),
-      label,
-      ...(title && title !== label ? { song: title } : {}),
+      label: label(g.text),
+      ...(title(g.chs) && title(g.chs) !== label(g.chs) ? { song: title(g.text) } : {}),
       area: num(song, "cityId"),
-      ...(hint ? { hint } : {}),
+      ...(hint(g.chs) ? { hint: hint(g.text) } : {}),
     })
   }
   spincrystals.sort((a, b) => a.id - b.id)
@@ -230,7 +231,7 @@ function textField(g: Game, rows: Raw[], known: string[], what: string): string 
   const fields = new Set(rows.flatMap(row => Object.keys(row)))
   const found = [...fields].filter(field => {
     if (known.includes(field)) return false
-    const texts = rows.filter(row => typeof row[field] === "number" && g.text(row[field]) !== "")
+    const texts = rows.filter(row => typeof row[field] === "number" && g.chs(row[field]) !== "")
     return texts.length >= rows.length * 0.8
   })
   if (found.length !== 1) throw new Error(`no single field for the ${what}: ${found.join(", ")}`)

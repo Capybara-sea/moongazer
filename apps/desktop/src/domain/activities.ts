@@ -6,7 +6,7 @@
  * `cargo xtask gen-data` builds, and the group the to-do card files each under.
  */
 
-import data from "@/generated/activities.json"
+import { activities as data } from "@/domain/gameData"
 
 /** In the order the to-do card lists them. */
 export const ACTIVITY_GROUPS = ["limited", "gcg", "challenge", "quest", "trial", "banner"] as const

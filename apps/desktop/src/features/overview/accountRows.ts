@@ -3,7 +3,7 @@
 
 import type { Account } from "@/domain/account"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const shown = (n: number | undefined) => (n === undefined ? text.number.missing : formatNumber(n))
 

@@ -3,7 +3,7 @@
 
 import type { Exploration } from "@/domain/account"
 import { CITIES, type City, cityExploration } from "@/domain/overviewData"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 export type RegionTile = {
   id: number

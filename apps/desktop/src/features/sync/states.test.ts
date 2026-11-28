@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest"
 import type { CaptureStatus } from "@/lib/backend/sync"
 import { formatDuration, formatTime, formatWhen } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { leftOutText } from "./leftOut"
 import {
   actionsOf,

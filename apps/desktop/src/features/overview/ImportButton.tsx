@@ -7,7 +7,7 @@ import { useRef } from "react"
 import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /**
  * Imports the chosen Leyline files on the overview, where their results and

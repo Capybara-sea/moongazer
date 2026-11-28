@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { isHead, type Snapshot } from "@/lib/backend"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /**
  * The changes a delete takes with the snapshot, as storage deletes them: a

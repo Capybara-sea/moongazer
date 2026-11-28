@@ -91,6 +91,9 @@ const ANECDOTE = {
 const ANECDOTE_EXTRA = { npc: "npcId", name: "DPMAEGABPOM" } as const
 /** Counts as of 7.2; fewer means a field moved or the format changed. */
 const ANECDOTE_MINIMUM = { entries: 156, hidden: 32, areas: 8, characters: 69 }
+/** Between the NPC's name and the title: "character·title" in Chinese, "character: title" in
+ * English. */
+const TITLE_SEPARATORS = ["·", ": "]
 
 /** `characters` gives the GOOD key of each playable character's Chinese name. */
 export async function buildCollection(
@@ -236,9 +239,7 @@ async function anecdotes(
     g.table("AnecdoteAreaExcelConfigData.json"),
     g.table("AnecdoteConstExcelConfigData.json"),
   ])
-  const npcs = new Map(
-    extras.map(row => [num(row, ANECDOTE_EXTRA.npc), g.text(row[ANECDOTE_EXTRA.name])]),
-  )
+  const npcs = new Map(extras.map(row => [num(row, ANECDOTE_EXTRA.npc), row[ANECDOTE_EXTRA.name]]))
   const anecdoteVariants: Record<string, number> = {}
   const entries: Anecdote[] = []
   for (const row of rows) {
@@ -249,21 +250,24 @@ async function anecdotes(
       anecdoteVariants[id] = main
       continue
     }
-    const name = npcs.get(num(row, ANECDOTE.npc))
+    const npc = npcs.get(num(row, ANECDOTE.npc))
+    const name = npc === undefined ? "" : g.text(npc)
     if (!name) throw new Error(`no name for the NPC of anecdote ${id}`)
     const title = g.text(row[ANECDOTE.title])
-    const prefix = `${name}·`
-    if (!title.startsWith(prefix)) throw new Error(`anecdote ${id} is not titled "${prefix}…"`)
-    const hint = plain(g.text(row[ANECDOTE.hint]))
+    const prefix = TITLE_SEPARATORS.map(separator => `${name}${separator}`).find(prefix =>
+      title.startsWith(prefix),
+    )
+    if (!prefix) throw new Error(`anecdote ${id} is not titled "${name}·…"`)
+    const hint = row[ANECDOTE.hint]
     const after = row[ANECDOTE.after]
     const time = daytime(row[ANECDOTE.conditions], id)
     entries.push({
       id,
       area: num(row, ANECDOTE.area),
-      character: characters.get(name) ?? name,
+      character: characters.get(g.chs(npc)) ?? name,
       title: title.slice(prefix.length),
       summary: plain(g.text(row[ANECDOTE.summary])),
-      ...(hint ? { hint } : {}),
+      ...(plain(g.chs(hint)) ? { hint: plain(g.text(hint)) } : {}),
       ...(row[ANECDOTE.hidden] === true ? { hidden: true as const } : {}),
       ...(typeof after === "number" ? { after } : {}),
       ...(time ? { time } : {}),
@@ -293,7 +297,7 @@ async function anecdotes(
   for (const [id, guide] of Object.entries(anecdoteGuide)) {
     const entry = entries.find(e => e.id === Number(id))
     if (!entry) throw new Error(`the anecdote guide names ${id}, not an entry`)
-    const { after: requires, ...rest } = guide
+    const { after: requires, quest, owns, ...texts } = guide
     for (const other of requires ?? []) {
       if (!ids.has(other))
         throw new Error(`the guide's anecdote ${id} needs ${other}, not an entry`)
@@ -305,7 +309,13 @@ async function anecdotes(
       throw new Error(`the guide's anecdote ${id} needs ${guide.owns}, not a character`)
     }
     if (guide.trigger && !entry.hidden) throw new Error(`the guide gives anecdote ${id} a trigger`)
-    Object.assign(entry, rest, requires ? { requires } : {})
+    Object.assign(
+      entry,
+      Object.fromEntries(Object.entries(texts).map(([field, text]) => [field, g.manual(text)])),
+      quest ? { quest: { ...quest, name: g.manual(quest.name) } } : {},
+      owns ? { owns } : {},
+      requires ? { requires } : {},
+    )
   }
   const rules = anecdoteRules
   for (const id of [

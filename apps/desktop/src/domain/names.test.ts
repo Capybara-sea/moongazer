@@ -3,7 +3,7 @@
 
 import { afterEach, describe, expect, it } from "vitest"
 import names from "@/generated/names.json"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   characterData,
   characterProfile,

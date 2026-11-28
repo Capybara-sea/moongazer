@@ -9,8 +9,8 @@
  * milliseconds here.
  */
 
-import data from "@/generated/overview.json"
-import { text } from "@/text/zh"
+import { overview as data } from "@/domain/gameData"
+import { text } from "@/text"
 import { type Element, isElement } from "./elements"
 
 export type AbyssBlessing = { name: string; text: string }

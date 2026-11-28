@@ -88,6 +88,7 @@ export const resinPlan = {
   title: "体力规划",
   /** The header's note: the resin there is. */
   original: (value: number, cap: number) => `原粹树脂 ${value}/${cap}`,
+  originalNotRead: "原粹树脂 未读取到",
   item: (name: string, count: number) => `${name} ${count}`,
   training: {
     title: "砺行修远",

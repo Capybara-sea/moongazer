@@ -54,7 +54,7 @@ const licenseGroups: Record<string, string> = {
   data: "数据和密钥",
 }
 
-export const text = {
+export const zh = {
   appName: "望月",
   appNameLatin: "Moongazer",
   devBuild: "开发版",
@@ -574,6 +574,7 @@ export const text = {
     weaponSwapped: (name: string) => `更换武器：${name}`,
     equipped: (name: string) => `装备${name}`,
     unequipped: (name: string) => `卸下${name}`,
+    weaponRemoved: "卸下武器",
     upgraded: (slot: string, level: number) => `${slot}强化至 +${level}`,
     replaced: (slot: string) => `更换${slot}`,
     notFound: (key: string) => `此快照不含该角色（${key}）。`,
@@ -818,9 +819,11 @@ export const text = {
     snapshotsHint:
       "每次导入和自动同步都会保存快照。每个账号最近 100 份保留完整数据；更早的仅保留时间、数量、摩拉和原石，不会自动删除。",
     ui: "界面",
+    language: "语言",
     theme: "主题",
     numbers: "大数字写法",
     numberStyles: { kmb: "K · M · B", wan: "万 · 亿" },
+    numbersEnglish: "英文界面固定使用 K、M、B",
     glass: "玻璃效果",
     glassHint: "卡片、侧边栏和面板半透明，带背景模糊。关闭可优化性能。",
     motion: "动效",

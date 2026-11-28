@@ -4,7 +4,7 @@
 import { Fragment, type ReactNode } from "react"
 import { weaponData, weaponPassive } from "@/domain/names"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { HoverPreview } from "./HoverPreview"
 import { RarityChip } from "./RarityChip"
 

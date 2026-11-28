@@ -4,7 +4,7 @@
 import { isHead, type Snapshot } from "@/lib/backend"
 import type { CaptureStatus } from "@/lib/backend/sync"
 import { formatDateTime } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 export type AccountGroup = {
   /** Null only when no snapshot names a UID. */

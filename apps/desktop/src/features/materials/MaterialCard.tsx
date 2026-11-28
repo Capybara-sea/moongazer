@@ -23,7 +23,7 @@ export function MaterialCard({ row }: { row: MaterialRow }) {
         />
       </span>
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-[13px]">{name}</span>
+        <span className="line-clamp-2 text-[13px] leading-snug">{name}</span>
         {/* A long count pushes the change to a line of its own. */}
         <span className="tabular flex flex-wrap items-baseline gap-x-2 whitespace-nowrap">
           <span className="font-semibold text-[16px]">{formatNumber(count)}</span>

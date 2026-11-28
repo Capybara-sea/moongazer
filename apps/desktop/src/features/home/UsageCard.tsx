@@ -7,7 +7,7 @@ import { Tip } from "@/components/Tip"
 import { usage } from "@/domain/usage"
 import type { Snapshot } from "@/lib/backend"
 import { formatDate, formatDuration } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const h = text.home.usage
 const SPANS = ["today", "week", "month", "total"] as const

@@ -22,7 +22,7 @@ import {
   TALENTS,
   weaponCaps,
 } from "@/domain/planner"
-import { text } from "@/text/zh"
+import { lang, text } from "@/text"
 
 const t = text.planner
 
@@ -79,7 +79,7 @@ export function withExpBoost(goal: NewGoal, on: boolean): NewGoal {
 }
 
 const byRarityThenName = (a: Option, b: Option) =>
-  (b.rarity ?? 0) - (a.rarity ?? 0) || a.name.localeCompare(b.name, "zh")
+  (b.rarity ?? 0) - (a.rarity ?? 0) || a.name.localeCompare(b.name, lang)
 
 /** Owned ones first, the highest level first; then by rarity and name. */
 const byOwnedThenLevel = (a: Option, b: Option) =>
@@ -176,11 +176,11 @@ export function weaponOptions(account: Account, plan: Plan): Option[] {
 
 /** The options not planned yet that the search and the filters leave. */
 export function shownOptions(options: readonly Option[], query: string, filters: Filters) {
-  const words = query.trim()
+  const words = query.trim().toLowerCase()
   return options.filter(
     o =>
       !o.planned &&
-      (words === "" || o.name.includes(words)) &&
+      (words === "" || o.name.toLowerCase().includes(words)) &&
       (filters.element === null || o.element === filters.element) &&
       (filters.rarity === null || o.rarity === filters.rarity) &&
       (filters.weapon === null || o.weapon === filters.weapon),

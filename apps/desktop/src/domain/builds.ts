@@ -7,9 +7,8 @@
  * main stat values. Also the level caps and icon names derived from GOOD data.
  */
 
-import data from "@/generated/builds.json"
-import names from "@/generated/names.json"
-import { text } from "@/text/zh"
+import { builds as data, names } from "@/domain/gameData"
+import { text } from "@/text"
 import type { Character, SlotKey, Talents } from "./good"
 
 export type TalentKey = keyof Talents

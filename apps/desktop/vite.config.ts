@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
+/// <reference types="vitest/config" />
+
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { createLogger, defineConfig } from "vite"
@@ -41,4 +43,5 @@ export default defineConfig({
     // About page can fetch it; `cargo xtask notices` reads it too.
     license: { fileName: "licenses.json" },
   },
+  test: { setupFiles: ["src/testSetup.ts"] },
 })

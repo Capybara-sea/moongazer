@@ -3,7 +3,7 @@
 
 import type { Account } from "@/domain/account"
 import { MATERIAL_TABS, type MaterialData, type MaterialTab, materialData } from "@/domain/names"
-import { text } from "@/text/zh"
+import { lang, text } from "@/text"
 
 /** A material with what the name table says about it, as its card shows it. */
 export type MaterialRow = MaterialData & {
@@ -35,7 +35,7 @@ export function materialRows(now: Held, previous: Held | null): MaterialRow[] {
   return rows
 }
 
-const collator = new Intl.Collator("zh")
+const collator = new Intl.Collator(lang)
 /** Sorts materials without a type after every type. */
 const NO_TYPE = Number.MAX_SAFE_INTEGER
 
@@ -71,17 +71,20 @@ export type MaterialGroup = { title?: string; rows: MaterialRow[] }
  * in the same order.
  */
 export function tabGroups(rows: readonly MaterialRow[], tab: MaterialTab): MaterialGroup[] {
-  const byType = new Map<number, MaterialRow[]>()
+  // By name: two types can share one in English, and show as one block.
+  const byType = new Map<string | undefined, { order: number; rows: MaterialRow[] }>()
   for (const row of rows) {
     if (row.tab !== tab) continue
     const order = row.typeOrder ?? NO_TYPE
-    const group = byType.get(order)
-    if (group) group.push(row)
-    else byType.set(order, [row])
+    const group = byType.get(row.type)
+    if (group) {
+      group.rows.push(row)
+      group.order = Math.min(group.order, order)
+    } else byType.set(row.type, { order, rows: [row] })
   }
-  const groups = [...byType]
-    .sort(([a], [b]) => a - b)
-    .map(([, rows]) =>
+  const groups = [...byType.values()]
+    .sort((a, b) => a.order - b.order)
+    .map(({ rows }) =>
       rows.sort((a, b) => (b.rarity ?? 0) - (a.rarity ?? 0) || collator.compare(a.name, b.name)),
     )
   if (tab === "currency") return groups.length > 0 ? [{ rows: groups.flat() }] : []

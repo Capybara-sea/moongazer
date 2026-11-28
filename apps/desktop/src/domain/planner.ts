@@ -8,7 +8,7 @@
  * of a level, as exports do not say how far into it a character is.
  */
 
-import data from "@/generated/planner.json"
+import { planner as data } from "@/domain/gameData"
 
 export type Talent = "auto" | "skill" | "burst"
 export const TALENTS: readonly Talent[] = ["auto", "skill", "burst"]

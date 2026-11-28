@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import type { Level, UpgradeTarget } from "@/domain/today"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const p = text.planner
 const u = text.upgrade

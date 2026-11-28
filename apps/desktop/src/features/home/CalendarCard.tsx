@@ -11,7 +11,7 @@ import { serverMonthDay } from "@/domain/gameTime"
 import { formatCountdown } from "@/features/tasks/taskText"
 import { cn } from "@/lib/cn"
 import { formatDateTime } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const h = text.home.calendar
 const WEEK = 7 * 24 * 3_600_000

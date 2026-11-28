@@ -3,7 +3,7 @@
 
 import { AlertDialog, Button } from "@heroui/react"
 import { type ReactNode, useEffect, useState } from "react"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /** How long the delete button stays disabled, against a hasty click. */
 const DELETE_DELAY_S = 3

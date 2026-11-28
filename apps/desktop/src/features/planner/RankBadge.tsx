@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /**
  * A talent's place in the order of importance, from 0, as a small numbered

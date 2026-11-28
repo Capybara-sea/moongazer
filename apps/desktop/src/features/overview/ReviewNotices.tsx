@@ -9,7 +9,7 @@ import { Panel } from "@/components/Panel"
 import { type Snapshot, toBackendError } from "@/lib/backend"
 import { formatDateTime } from "@/lib/format"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { checkedAgainst, deleteTakes, reviewReasons } from "./review"
 
 /**

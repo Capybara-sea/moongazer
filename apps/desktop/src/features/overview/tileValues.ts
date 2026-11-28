@@ -11,7 +11,7 @@ import {
   signedDelta,
 } from "@/lib/format"
 import type { PageKey } from "@/lib/route"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /** The changes since the snapshot before, then a note on them; or a note alone. */
 type Change = { deltas: Signed[]; note: string }

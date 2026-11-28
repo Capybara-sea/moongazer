@@ -4,7 +4,7 @@
 import type { ReactNode } from "react"
 import { lookup, setEffects } from "@/domain/names"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { HoverPreview } from "./HoverPreview"
 
 type Props = {
@@ -43,9 +43,14 @@ function SetEffects({ setKey, equipped }: { setKey: string; equipped?: number })
         return (
           <span
             key={effect.need}
-            className={cn("grid grid-cols-[40px_minmax(0,1fr)] gap-2", !active && "text-muted")}
+            className={cn(
+              "grid grid-cols-[minmax(40px,max-content)_minmax(0,1fr)] gap-2",
+              !active && "text-muted",
+            )}
           >
-            <span className={cn("font-semibold", active && "text-(--accent-text)")}>
+            <span
+              className={cn("whitespace-nowrap font-semibold", active && "text-(--accent-text)")}
+            >
               {text.setEffects.pieces(effect.need)}
             </span>
             {/* One effect has a line break in the game's text. */}

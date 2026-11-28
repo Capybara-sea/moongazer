@@ -280,7 +280,7 @@ function talentBoosts(
     const ids = Array.isArray(depot?.skills) ? depot.skills : []
     const name = (id: unknown) => {
       const skill = skills.get(id)
-      return skill ? g.text(skill.nameTextMapHash) : ""
+      return skill ? g.chs(skill.nameTextMapHash) : ""
     }
     const named: [Talent, string][] = [
       ["auto", name(ids[0])],
@@ -290,7 +290,7 @@ function talentBoosts(
     const constellations = Array.isArray(depot?.talents) ? depot.talents : []
     const [third, fifth] = [3, 5].map(n => {
       const talent = talents.get(constellations[n - 1])
-      const text = talent ? plain(g.text(talent.descTextMapHash)) : ""
+      const text = talent ? plain(g.chs(talent.descTextMapHash)) : ""
       const found = named.filter(([, skill]) => skill !== "" && text.includes(skill))
       if (found.length > 1) throw new Error(`constellation ${n} of skill set ${depotId} is unclear`)
       return found[0]?.[0]

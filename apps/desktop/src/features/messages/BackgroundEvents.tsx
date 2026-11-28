@@ -4,7 +4,7 @@
 import { useEffect } from "react"
 import { onHiddenToTray, onOpenPage, showNotification } from "@/lib/backend"
 import { readStored, writeStored } from "@/lib/storage"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { openTarget } from "./target"
 
 const TOLD_KEY = "moongazer:messages:toldInTray"

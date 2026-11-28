@@ -6,7 +6,7 @@
  * and what an account has learned, holds in its bag and has collected of the companions' rewards.
  */
 
-import data from "@/generated/collection.json"
+import { collection as data } from "@/domain/gameData"
 import type { Account } from "./account"
 
 /** A gift set: one companions give primogems for, the only sets the page lists. */

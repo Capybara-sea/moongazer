@@ -9,7 +9,7 @@ import { useTip } from "@/components/Tip"
 import { ELEMENT_ICONS, ELEMENTS, WEAPON_TYPES } from "@/domain/elements"
 import { characterData, lookup } from "@/domain/names"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { type Filters, type Option, RARITIES } from "./addOptions"
 
 const t = text.planner

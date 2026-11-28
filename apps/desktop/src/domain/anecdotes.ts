@@ -7,7 +7,8 @@
  * than one seal, and what an account has of them.
  */
 
-import data from "@/generated/collection.json"
+import { collection as data } from "@/domain/gameData"
+import { text } from "@/text"
 import type { Account, AnecdoteEntry } from "./account"
 import { lookup } from "./names"
 
@@ -78,7 +79,7 @@ export function anecdoteInfo(id: number) {
 /** "Character·title", as the game writes it. */
 export function anecdoteName(id: number) {
   const info = byId.get(id)
-  return info ? `${characterName(info.character)}·${info.title}` : String(id)
+  return info ? text.anecdotePage.named(characterName(info.character), info.title) : String(id)
 }
 
 /** A character not playable has its name for a key. */

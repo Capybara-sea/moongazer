@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
 import { useNow } from "@/lib/useNow"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { cardView } from "./states"
 
 const t = text.sync
@@ -77,7 +77,7 @@ export function SyncSummary({ side }: { side: SyncSide }) {
           </span>
         )}
       </span>
-      <span className="truncate text-[11px] text-muted">{side.line}</span>
+      <span className="line-clamp-2 text-[11px] text-muted">{side.line}</span>
     </span>
   )
 }

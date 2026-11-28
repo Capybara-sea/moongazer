@@ -10,6 +10,7 @@
  * combines into them.
  */
 
+import { planner as data } from "@/domain/gameData"
 import {
   type Cost,
   type Need,
@@ -17,7 +18,6 @@ import {
   type Stage,
   type WeaponTerms,
 } from "@/domain/planner"
-import data from "@/generated/planner.json"
 import { isOneOf } from "@/lib/backend/shared"
 
 /** A custom weapon's material kinds, in the order the planner lists them. */

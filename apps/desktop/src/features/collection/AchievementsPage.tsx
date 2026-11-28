@@ -25,7 +25,7 @@ import { formatDateTime, formatNumber } from "@/lib/format"
 import { useBatches } from "@/lib/useBatches"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { useAchievementListStore } from "@/stores/achievementListStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { AccountNotices, BackLink } from "./parts"
 import { SeriesCard } from "./SeriesCard"
 
@@ -238,7 +238,9 @@ function Goals({ view, goal, hits }: GoalsProps) {
                   <Trophy size={16} />
                 </span>
               )}
-              <span className="min-w-0 flex-1 truncate text-[13px]">{row.name}</span>
+              <span className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-snug">
+                {row.name}
+              </span>
               <span className="text-[12px] text-muted tabular">
                 {formatNumber(row.done)} / {formatNumber(row.total)}
               </span>

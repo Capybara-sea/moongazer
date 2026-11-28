@@ -18,7 +18,7 @@ import { usePages } from "@/lib/usePages"
 import { useCurrentAccount } from "@/stores/accountStore"
 import { useArtifactListStore } from "@/stores/artifactListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text/zh"
+import { lang, text } from "@/text"
 import { ArtifactCard } from "./ArtifactCard"
 import {
   type ArtifactRow,
@@ -123,7 +123,7 @@ function Artifacts({ rows }: { rows: readonly ArtifactRow[] }) {
             value={set ?? ""}
             options={options}
             onChange={value => setSet(value || null)}
-            className="w-50"
+            className={lang === "en" ? "w-72" : "w-50"}
           />
           <CheckboxField checked={onlyFree} label={t.onlyFree} onChange={setOnlyFree} />
           <ShownCount shown={shown.length} total={rows.length} format={t.shown} />

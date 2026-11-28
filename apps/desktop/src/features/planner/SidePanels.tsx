@@ -9,6 +9,7 @@ import { Tip, useTip } from "@/components/Tip"
 import { isConvertCost } from "@/domain/convert"
 import { isUnknown, SLOTS, unknownSlot } from "@/domain/customCharacter"
 import { WEAPON_SLOTS } from "@/domain/customWeapon"
+import { materialTypeName } from "@/domain/names"
 import {
   knownLike,
   type MaterialTotal,
@@ -25,7 +26,7 @@ import { farmToday } from "@/domain/today"
 import { cn } from "@/lib/cn"
 import { useDragOrder } from "@/lib/useDragOrder"
 import { usePlannerStore } from "@/stores/plannerStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   amountTip,
   cellLabel,
@@ -64,7 +65,7 @@ const GROUP_NAMES: Record<string, string> = {
 }
 
 function groupName(id: string) {
-  return GROUP_NAMES[id] ?? id
+  return GROUP_NAMES[id] ?? materialTypeName(id)
 }
 
 /**

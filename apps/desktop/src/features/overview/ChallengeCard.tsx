@@ -27,7 +27,7 @@ import {
 import { cn } from "@/lib/cn"
 import { formatMonthDay, formatTime } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
-import { text } from "@/text/zh"
+import { lang, text } from "@/text"
 import {
   type ActState,
   allStars,
@@ -198,7 +198,14 @@ function Row({ name, left, start, end, facts, done, acts, blessing, cast, teams 
     <div className="flex flex-1 flex-col justify-center gap-2 border-(--separator) border-t py-2.5">
       {/* The names and the times left take one width each, so the three bars line up. */}
       <div className="flex items-center gap-3">
-        <span className="w-24 flex-none whitespace-nowrap font-semibold text-[14px]">{name}</span>
+        <span
+          className={cn(
+            "flex-none whitespace-nowrap font-semibold text-[14px]",
+            lang === "en" ? "w-40" : "w-24",
+          )}
+        >
+          {name}
+        </span>
         {share !== undefined && <Bar value={share} className="min-w-10 flex-1" />}
         {left && (
           <Tip

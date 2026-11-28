@@ -6,7 +6,7 @@ import type { Account } from "@/domain/account"
 import type { Artifact, Character, Weapon } from "@/domain/good"
 import { lookup } from "@/domain/names"
 import { type Labeled, movedTo } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { characterChanges } from "./changes"
 
 const t = text.characterDetail

@@ -15,7 +15,7 @@ import { navigate } from "@/lib/route"
 import { useAccountStore } from "@/stores/accountStore"
 import { useAppearanceStore } from "@/stores/appearanceStore"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   type Action,
   actionsOf,

@@ -480,18 +480,26 @@ pub fn open_travelers_tales() -> Result<(), SnapshotError> {
         .map_err(|err| SnapshotError::OpenLink(err.to_string()))
 }
 
-/// Bilibili's search: the page passes only what to look for, such as an
-/// achievement's name, so the address stays fixed here.
-const VIDEO_SEARCH: &str = "https://search.bilibili.com/all";
+/// Video search, with its query parameter: Bilibili's for the Chinese UI,
+/// YouTube's for the English one. The page passes only what to look for, such
+/// as an achievement's name, so the addresses stay fixed here.
+const BILIBILI_SEARCH: (&str, &str) = ("https://search.bilibili.com/all", "keyword");
+const YOUTUBE_SEARCH: (&str, &str) = ("https://www.youtube.com/results", "search_query");
 
 #[tauri::command]
 pub fn open_video_search(keyword: String) -> Result<(), SnapshotError> {
-    tauri_plugin_opener::open_url(video_search_url(&keyword)?.as_str(), None::<&str>)
+    let url = video_search_url(&keyword, crate::text::is_english())?;
+    tauri_plugin_opener::open_url(url.as_str(), None::<&str>)
         .map_err(|err| SnapshotError::OpenLink(err.to_string()))
 }
 
-fn video_search_url(keyword: &str) -> Result<reqwest::Url, SnapshotError> {
-    reqwest::Url::parse_with_params(VIDEO_SEARCH, [("keyword", keyword)])
+fn video_search_url(keyword: &str, english: bool) -> Result<reqwest::Url, SnapshotError> {
+    let (address, query) = if english {
+        YOUTUBE_SEARCH
+    } else {
+        BILIBILI_SEARCH
+    };
+    reqwest::Url::parse_with_params(address, [(query, keyword)])
         .map_err(|err| SnapshotError::OpenLink(err.to_string()))
 }
 
@@ -509,11 +517,20 @@ mod tests {
 
     #[test]
     fn a_search_keyword_stays_inside_the_query() {
-        let url = video_search_url("a&b=c #d").expect("a fixed address parses");
+        let url = video_search_url("a&b=c #d", false).expect("a fixed address parses");
         assert_eq!(url.host_str(), Some("search.bilibili.com"));
         assert_eq!(url.path(), "/all");
         let pairs: Vec<_> = url.query_pairs().into_owned().collect();
         assert_eq!(pairs, [("keyword".to_owned(), "a&b=c #d".to_owned())]);
         assert_eq!(url.fragment(), None);
+    }
+
+    #[test]
+    fn the_english_ui_searches_youtube() {
+        let url = video_search_url("a&b=c #d", true).expect("a fixed address parses");
+        assert_eq!(url.host_str(), Some("www.youtube.com"));
+        assert_eq!(url.path(), "/results");
+        let pairs: Vec<_> = url.query_pairs().into_owned().collect();
+        assert_eq!(pairs, [("search_query".to_owned(), "a&b=c #d".to_owned())]);
     }
 }

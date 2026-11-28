@@ -6,7 +6,7 @@ import { AlertDialog, Button } from "@heroui/react"
 import { Check, Copy, QrCode } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTip } from "@/components/Tip"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.about
 const COPIED_MS = 1500

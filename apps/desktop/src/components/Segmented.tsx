@@ -11,6 +11,7 @@ type Props<T extends string> = {
   options: readonly { value: T; label: ReactNode }[]
   /** `from` is the picked button's bounding box. */
   onPick: (value: T, from: DOMRect) => void
+  disabled?: boolean
   className?: string
 }
 
@@ -20,12 +21,17 @@ export function Segmented<T extends string>({
   value,
   options,
   onPick,
+  disabled,
   className,
 }: Props<T>) {
   return (
     <fieldset
       aria-label={label}
-      className={cn("flex flex-none gap-0.5 rounded-[9px] bg-surface-secondary p-0.5", className)}
+      disabled={disabled}
+      className={cn(
+        "flex flex-none gap-0.5 rounded-[9px] bg-surface-secondary p-0.5 disabled:opacity-50",
+        className,
+      )}
     >
       {options.map(option => (
         <button
@@ -34,10 +40,10 @@ export function Segmented<T extends string>({
           aria-pressed={option.value === value}
           onClick={e => onPick(option.value, e.currentTarget.getBoundingClientRect())}
           className={cn(
-            "h-8 cursor-pointer rounded-[7px] px-3 text-[13px] transition-colors motion-reduce:transition-none",
+            "h-8 cursor-pointer rounded-[7px] disabled:cursor-default px-3 text-[13px] transition-colors motion-reduce:transition-none",
             option.value === value
               ? "bg-surface font-semibold text-foreground shadow-sm"
-              : "text-muted hover:text-foreground",
+              : "text-muted enabled:hover:text-foreground",
           )}
         >
           {option.label}

@@ -5,6 +5,7 @@ import type { WeaponType } from "@/domain/elements"
 import type { Weapon } from "@/domain/good"
 import { lookup, weaponData } from "@/domain/names"
 import type { WeaponSort } from "@/stores/weaponListStore"
+import { lang } from "@/text"
 
 /** A weapon with what the name table says about it, as the table and cards show it. */
 export type WeaponRow = {
@@ -64,7 +65,7 @@ export function visibleWeapons(rows: readonly WeaponRow[], options: Options) {
     .sort(
       (a, b) =>
         sorts.reduce((order, sort) => order || VALUES[sort](b) - VALUES[sort](a), 0) ||
-        a.name.localeCompare(b.name, "zh") ||
+        a.name.localeCompare(b.name, lang) ||
         a.weapon.key.localeCompare(b.weapon.key),
     )
 }

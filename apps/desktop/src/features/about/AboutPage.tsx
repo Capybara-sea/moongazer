@@ -10,7 +10,7 @@ import { openGroupChat, openHomepage, openLogDir, toBackendError } from "@/lib/b
 import { useRoute } from "@/lib/route"
 import { useCaptureStore } from "@/stores/captureStore"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { ChangelogPage } from "./ChangelogPage"
 import { GroupChatHint, GroupQrButton } from "./GroupChat"
 import { LicensesPage } from "./LicensesPage"

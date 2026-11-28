@@ -1,19 +1,29 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-// Writes apps/desktop/src/generated/names.json, the Chinese names, rarities, icons, set effects,
+// Writes apps/desktop/src/generated/names.json, the names, rarities, icons, set effects,
 // material types, constellations and weapon passives of game items by GOOD key; overview.json, the
 // game data the overview page needs; builds.json, constellation talent boosts, artifact main stat
 // values and what character stats are computed from; collection.json, the achievements,
-// anecdotes, furnishing sets and spincrystals; planner.json, what raising characters and weapons costs; and activities.json, the
-// names and types of the game's events; from the commits pinned in sources.json. `--update` first
-// moves the pins to the latest commits.
+// anecdotes, furnishing sets and spincrystals; planner.json, what raising characters and weapons
+// costs; and activities.json, the names and types of the game's events; from the commits pinned
+// in sources.json. Those with text are written in English too, under en/, with the same entries.
+// `--update` first moves the pins to the latest commits.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises"
-import { join, relative } from "node:path"
+import { dirname, join, relative } from "node:path"
 import { buildActivities } from "./activities.ts"
-import { characters, game, manualCharacters, materials, sets, weapons } from "./agdItems.ts"
-import { buildProfiles, LANGUAGE, textMap } from "./animeGameData.ts"
+import {
+  characters,
+  type Game,
+  game,
+  inEnglish,
+  manualCharacters,
+  materials,
+  sets,
+  weapons,
+} from "./agdItems.ts"
+import { buildProfiles, textMap } from "./animeGameData.ts"
 import { type Builds, buildBuilds } from "./builds.ts"
 import { buildCollection } from "./collection.ts"
 import { latestCommit } from "./download.ts"
@@ -96,69 +106,105 @@ if (args[0] === "--update") {
 }
 
 const pin = sources.animeGameData
-const [text, english] = await Promise.all([textMap(pin, LANGUAGE), textMap(pin, "EN")])
-const profiles = await buildProfiles(pin, text, await visionNames(sources.snapMetadata))
-const agd = game(pin, text, english)
-const { tables, ids } = buildTables({
-  characters: await characters(agd, profiles),
-  weapons: await weapons(agd),
-  artifactSets: await sets(agd),
-  materials: await materials(agd),
-})
+const snap = sources.snapMetadata
+const [chs, english] = await Promise.all([textMap(pin, "CHS"), textMap(pin, "EN")])
+const zh = game(pin, chs, english)
+/** names.json's tables in `g`'s language, which Snap.Metadata calls `language`, and their ids. */
+const items = async (g: Game, language: string) => {
+  const profiles = await buildProfiles(g, await visionNames(snap, language))
+  const { tables, ids } = buildTables({
+    characters: await characters(g, profiles),
+    weapons: await weapons(g),
+    artifactSets: await sets(g),
+    materials: await materials(g),
+  })
+  return { profiles, tables, ids }
+}
+const zhItems = await items(zh, "CHS")
 const optimizer = sources.genshinOptimizer
-await crossCheck(optimizer.repo, optimizer.commit, tables)
-const collection = {
-  ...(await buildCollection(sources.snapMetadata, agd, characterKeys(tables))),
-  ...(await buildFurnishings(pin, agd, ids.characters, new Set(Object.keys(tables.materials)))),
-}
-for (const [key, entry] of Object.entries(await manualCharacters(agd, profiles, travelerNames))) {
-  if (key in tables.characters) throw new Error(`manual character ${key} is also in the game's`)
-  tables.characters[key] = entry
-}
-const overview = await buildOverview(sources.snapMetadata, agd, ids.characters)
-const builds = await buildBuilds(agd, ids)
-const planner = await buildPlanner(agd, ids, new Set(Object.keys(tables.materials)))
-const activities = await buildActivities(agd)
-// All are checked before any is written, so a failed run leaves no mismatched set.
-const namesCounts = count(tables, MINIMUM)
-const overviewCounts = count(overview, OVERVIEW_MINIMUM)
-const buildsCounts = count(builds, BUILDS_MINIMUM)
-const collectionCounts = count(collection, COLLECTION_MINIMUM)
-const plannerCounts = count(planner, PLANNER_MINIMUM)
-const activitiesCounts = count({ activities }, { activities: ACTIVITIES_MINIMUM })
+await crossCheck(optimizer.repo, optimizer.commit, zhItems.tables)
+const keys = characterKeys(zhItems.tables)
+const materialKeys = new Set(Object.keys(zhItems.tables.materials))
+// Neither has text, so one file serves every language.
+const builds = await buildBuilds(zh, zhItems.ids)
+const planner = await buildPlanner(zh, zhItems.ids, materialKeys)
 
-await mkdir(OUTPUT, { recursive: true })
-await write("names.json", namesCounts, {
-  sources: {
-    snapMetadata: sources.snapMetadata.commit,
-    genshinOptimizer: sources.genshinOptimizer.commit,
-    animeGameData: sources.animeGameData.commit,
-  },
-  ...tables,
-})
-await write("overview.json", overviewCounts, {
-  sources: { animeGameData: sources.animeGameData.commit },
-  ...overview,
-  cities,
-  offerings,
-  theaterLevels,
-})
-await write("builds.json", buildsCounts, builds)
-await write("collection.json", collectionCounts, {
-  sources: {
-    snapMetadata: sources.snapMetadata.commit,
-    animeGameData: sources.animeGameData.commit,
-  },
-  ...collection,
-})
-await write("planner.json", plannerCounts, {
-  sources: { animeGameData: sources.animeGameData.commit },
-  ...planner,
-})
-await write("activities.json", activitiesCounts, {
-  sources: { animeGameData: sources.animeGameData.commit },
-  activities,
-})
+/** Each file in `g`'s language by its path under `dir`, with the counts of its tables. */
+const localized = async (
+  g: Game,
+  { profiles, tables, ids }: typeof zhItems,
+  dir: string,
+): Promise<[string, string, object][]> => {
+  const collection = {
+    ...(await buildCollection(snap, g, keys)),
+    ...(await buildFurnishings(pin, g, ids.characters, materialKeys)),
+  }
+  for (const [key, entry] of Object.entries(await manualCharacters(g, profiles, travelerNames))) {
+    if (key in tables.characters) throw new Error(`manual character ${key} is also in the game's`)
+    tables.characters[key] = entry
+  }
+  const overview = await buildOverview(snap, g, ids.characters)
+  const activities = await buildActivities(g)
+  const manual = (texts: Record<string, string>) =>
+    Object.fromEntries(Object.entries(texts).map(([id, text]) => [id, g.manual(text)]))
+  return [
+    [
+      join(dir, "names.json"),
+      count(tables, MINIMUM),
+      {
+        sources: {
+          snapMetadata: sources.snapMetadata.commit,
+          genshinOptimizer: sources.genshinOptimizer.commit,
+          animeGameData: sources.animeGameData.commit,
+        },
+        ...tables,
+      },
+    ],
+    [
+      join(dir, "overview.json"),
+      count(overview, OVERVIEW_MINIMUM),
+      {
+        sources: { animeGameData: sources.animeGameData.commit },
+        ...overview,
+        cities: Object.fromEntries(
+          Object.entries(cities).map(([id, city]) => [id, { ...city, name: g.manual(city.name) }]),
+        ),
+        offerings: manual(offerings),
+        theaterLevels: manual(theaterLevels),
+      },
+    ],
+    [
+      join(dir, "collection.json"),
+      count(collection, COLLECTION_MINIMUM),
+      {
+        sources: {
+          snapMetadata: sources.snapMetadata.commit,
+          animeGameData: sources.animeGameData.commit,
+        },
+        ...collection,
+      },
+    ],
+    [
+      join(dir, "activities.json"),
+      count({ activities }, { activities: ACTIVITIES_MINIMUM }),
+      { sources: { animeGameData: sources.animeGameData.commit }, activities },
+    ],
+  ]
+}
+
+const en = inEnglish(zh)
+// All are checked before any is written, so a failed run leaves no mismatched set.
+const files: [string, string, object][] = [
+  ...(await localized(zh, zhItems, OUTPUT)),
+  ...(await localized(en, await items(en, "EN"), join(OUTPUT, "en"))),
+  [join(OUTPUT, "builds.json"), count(builds, BUILDS_MINIMUM), builds],
+  [
+    join(OUTPUT, "planner.json"),
+    count(planner, PLANNER_MINIMUM),
+    { sources: { animeGameData: sources.animeGameData.commit }, ...planner },
+  ],
+]
+for (const [file, counts, value] of files) await write(file, counts, value)
 
 /** GOOD keys by Chinese name, of the game's characters; a name two share is left out. */
 function characterKeys(tables: Tables): Map<string, string> {
@@ -183,8 +229,8 @@ function count(output: object, minimum: Record<string, number>): string {
     .join(", ")
 }
 
-async function write(name: string, counts: string, value: object): Promise<void> {
-  const file = join(OUTPUT, name)
+async function write(file: string, counts: string, value: object): Promise<void> {
+  await mkdir(dirname(file), { recursive: true })
   const json = `${JSON.stringify(value, (_key, item: unknown) =>
     typeof item === "object" && item !== null && !Array.isArray(item)
       ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => (a < b ? -1 : 1)))

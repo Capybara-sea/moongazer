@@ -16,7 +16,7 @@ import {
 import { Choice } from "@/features/planner/Choice"
 import { formatTime } from "@/lib/format"
 import { useTasksStore } from "@/stores/tasksStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { dayInput, parseDayInput } from "./taskText"
 
 const t = text.tasks.dialog

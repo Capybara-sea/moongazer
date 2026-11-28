@@ -21,7 +21,7 @@ import {
   WORLD_BOSS_GROUP,
 } from "@/domain/plan"
 import { allocate, type Line, plannerBag } from "@/domain/planner"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { CustomFields } from "./CustomFields"
 import { GoalCard, moraNote } from "./GoalCard"
 import { lineView, MaterialCell } from "./MaterialCell"

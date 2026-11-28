@@ -12,7 +12,7 @@ import { setGoalOff } from "@/domain/planEdits"
 import { cn } from "@/lib/cn"
 import type { DragHandleProps, DragItemProps } from "@/lib/useDragOrder"
 import { usePlannerStore } from "@/stores/plannerStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.planner
 
@@ -84,6 +84,7 @@ export function GoalHeader({ card, drag, onReplace }: Props) {
             label={t.wielder(
               wielder === "Traveler" ? lookup("characters", "Traveler").name : holder.name,
             )}
+            placeholder={Array.from(holder.name)[0]}
             className="size-6 flex-none rounded-full bg-surface-secondary text-[11px]"
           />
         )}

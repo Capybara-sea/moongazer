@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { syncOn, useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /** The pages' line before the first snapshot, by whether auto sync exists and is on. */
 export function useEmptyBody() {

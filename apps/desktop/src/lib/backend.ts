@@ -17,6 +17,7 @@ import {
   isStrings,
   protocolError,
 } from "@/lib/backend/shared"
+import { lang } from "@/text"
 
 export { BackendError, toBackendError } from "@/lib/backend/shared"
 
@@ -119,9 +120,18 @@ export function parseUpdate(value: unknown): UpdateInfo | null {
     typeof value.version === "string" &&
     (value.notes === null || typeof value.notes === "string")
   ) {
-    return { version: value.version, notes: value.notes }
+    return { version: value.version, notes: value.notes && notesIn(value.notes) }
   }
   throw protocolError("update info")
+}
+
+/**
+ * The notes in the UI's language: they carry the Chinese, a rule, then the
+ * English, whose items wrap onto indented lines that are joined here.
+ */
+function notesIn(notes: string) {
+  const [zh, en] = notes.split("\n\n---\n\n")
+  return ((lang === "en" ? en : zh) ?? notes).replace(/\n[ \t]+/g, " ")
 }
 
 export function parseProgress(value: unknown): UpdateProgress | null {
@@ -364,7 +374,7 @@ export async function openGroupChat() {
   await call("open_group_chat")
 }
 
-/** Bilibili's video search for `keyword`; the address is fixed on the Rust side. */
+/** A video search for `keyword`, Bilibili's or in English YouTube's; fixed on the Rust side. */
 export async function openVideoSearch(keyword: string) {
   await call("open_video_search", { keyword })
 }
@@ -411,6 +421,11 @@ export async function setWindowTitle(title: string) {
   } catch {
     // The ASCII title from tauri.conf.json stays.
   }
+}
+
+/** Tells the Rust side the page's language, for the tray and its own dialogs. */
+export async function setLanguage(english: boolean) {
+  await call("set_language", { english })
 }
 
 /**

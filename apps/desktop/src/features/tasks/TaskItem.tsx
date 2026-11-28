@@ -7,7 +7,7 @@ import { Tip } from "@/components/Tip"
 import type { TaskRow } from "@/domain/tasks"
 import { cn } from "@/lib/cn"
 import { formatDateTime } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { formatCountdown, rowCountdown, rowDetail, rowName } from "./taskText"
 
 const t = text.tasks

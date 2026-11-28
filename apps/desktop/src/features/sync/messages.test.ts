@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest"
 import type { Snapshot } from "@/lib/backend"
 import type { CaptureStatus } from "@/lib/backend/sync"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { reviewMessage, statusMessages } from "./messages"
 
 const m = text.messages

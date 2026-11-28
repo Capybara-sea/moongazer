@@ -7,7 +7,7 @@ import { type ReactNode, useEffect, useRef } from "react"
 import { cn } from "@/lib/cn"
 import { useMessageStore } from "@/stores/messageStore"
 import { useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 type Action = { label: string; primary?: boolean; onPress?: () => void }
 

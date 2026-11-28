@@ -3,6 +3,7 @@
 
 import { type Artifact, SLOTS, type SlotKey } from "@/domain/good"
 import { lookup } from "@/domain/names"
+import { lang } from "@/text"
 
 /** An artifact with its set's and wielder's names, as a card shows it. */
 export type ArtifactRow = {
@@ -14,7 +15,7 @@ export type ArtifactRow = {
   wielder?: string
 }
 
-const byName = new Intl.Collator("zh").compare
+const byName = new Intl.Collator(lang).compare
 
 /**
  * The rows in the page's order: level, then rarity, both highest first, then

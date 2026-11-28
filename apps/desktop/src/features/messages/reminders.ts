@@ -7,7 +7,7 @@ import { lastDailyReset } from "@/domain/gameTime"
 import { theaterEnd } from "@/domain/overviewData"
 import { formatMonthDay, formatNumber, formatTime } from "@/lib/format"
 import type { NewMessage } from "@/stores/messageStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR

@@ -13,7 +13,7 @@ import { cn } from "@/lib/cn"
 import { formatDateTime, formatTime, formatWhen, type Labeled, signedDelta } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
 import { useVisible } from "@/lib/useVisible"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { historyItems, type SessionItem } from "./sessions"
 
 const t = text.overview

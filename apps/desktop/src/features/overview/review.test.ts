@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import type { Snapshot } from "@/lib/backend"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { checkedAgainst, deleteTakes, reviewReasons } from "./review"
 
 const snapshot = (

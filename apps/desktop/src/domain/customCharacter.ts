@@ -10,8 +10,8 @@
  */
 
 import { WEAPON_SLOTS, type WeaponSlot } from "@/domain/customWeapon"
+import { planner as data } from "@/domain/gameData"
 import { type CharacterState, type Cost, type Need, raiseNeed } from "@/domain/planner"
-import data from "@/generated/planner.json"
 import { isOneOf } from "@/lib/backend/shared"
 
 /** A custom character's material kinds, in the order the planner lists them. */

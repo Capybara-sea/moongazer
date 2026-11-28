@@ -9,7 +9,7 @@ import { type TalentKey, talentLevels } from "@/domain/builds"
 import type { Character } from "@/domain/good"
 import { characterData, characterProfile, characterTalents, constellations } from "@/domain/names"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { ELEMENT_TEXT, ELEMENT_TINT } from "./elementStyles"
 
 const CARD = "gap-3 px-4.5 py-4"

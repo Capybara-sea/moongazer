@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import type { Snapshot } from "@/lib/backend"
 import type { CaptureStatus } from "@/lib/backend/sync"
 import { formatDateTime } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { groupAccounts, isNewest, latestKept, liveUid, newestAccount, timeLabel } from "./accounts"
 
 /** Made-up UIDs. */

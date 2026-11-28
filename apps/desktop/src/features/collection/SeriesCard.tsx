@@ -10,7 +10,7 @@ import { lookup } from "@/domain/names"
 import { openVideoSearch, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatNumber } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.achievementPage
 const PRIMOGEM = lookup("materials", "Primogem")
@@ -118,7 +118,7 @@ function Tier({ row, lead, quest, goalName, version }: TierProps) {
   )
 }
 
-/** Opens Bilibili's video search for the achievement in the browser. */
+/** Opens a video search for the achievement in the browser. */
 function SearchButton({ title }: { title: string }) {
   const label = t.searchVideo(title)
   const tip = useTip<HTMLButtonElement>(label)

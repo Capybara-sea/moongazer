@@ -4,7 +4,7 @@
 import { LabeledText } from "@/components/Delta"
 import { Panel } from "@/components/Panel"
 import type { Labeled } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.characterDetail
 

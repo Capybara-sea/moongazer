@@ -5,6 +5,9 @@
 //! tray icon brings it back or quits, a second launch shows the running app,
 //! and system notifications open the page they are about.
 
+#[cfg(feature = "capture")]
+use std::sync::{Mutex, PoisonError};
+
 use serde::Serialize;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -34,33 +37,32 @@ pub fn show_main(app: &AppHandle) {
 
 /// The app's name in the tray's tooltip, marked in a test build.
 fn tray_name(app: &AppHandle) -> String {
+    let text = text::text();
     if crate::update::is_test_build(&app.config().identifier) {
-        format!("{} {}", text::APP_NAME, text::TEST_BUILD)
+        format!("{} {}", text.app_name, text.test_build)
     } else {
-        text::APP_NAME.to_owned()
+        text.app_name.to_owned()
     }
 }
 
 /// The tray icon: a left click shows the window; the menu opens it or quits.
 pub fn tray(app: &AppHandle) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, OPEN, text::TRAY_OPEN, true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, QUIT, text::TRAY_QUIT, true, None::<&str>)?;
+    let text = text::text();
+    let open = MenuItem::with_id(app, OPEN, text.tray_open, true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, QUIT, text.tray_quit, true, None::<&str>)?;
     #[cfg(feature = "capture")]
-    let menu = {
-        let line = MenuItem::with_id(app, SYNC, text::sync::OFF, false, None::<&str>)?;
-        let menu = Menu::with_items(
-            app,
-            &[
-                &line,
-                &PredefinedMenuItem::separator(app)?,
-                &open,
-                &PredefinedMenuItem::separator(app)?,
-                &quit,
-            ],
-        )?;
-        app.manage(SyncLine(line));
-        menu
-    };
+    let sync = MenuItem::with_id(app, SYNC, text.sync.off, false, None::<&str>)?;
+    #[cfg(feature = "capture")]
+    let menu = Menu::with_items(
+        app,
+        &[
+            &sync,
+            &PredefinedMenuItem::separator(app)?,
+            &open,
+            &PredefinedMenuItem::separator(app)?,
+            &quit,
+        ],
+    )?;
     #[cfg(not(feature = "capture"))]
     let menu = Menu::with_items(app, &[&open, &PredefinedMenuItem::separator(app)?, &quit])?;
     let mut builder = TrayIconBuilder::with_id("main")
@@ -86,40 +88,52 @@ pub fn tray(app: &AppHandle) -> tauri::Result<()> {
         builder = builder.icon(icon.clone());
     }
     builder.build(app)?;
+    app.manage(TrayItems {
+        open,
+        quit,
+        #[cfg(feature = "capture")]
+        sync,
+        #[cfg(feature = "capture")]
+        phase: Mutex::default(),
+    });
     Ok(())
 }
 
-/// The tray menu's line saying how auto sync is doing; not clickable.
-#[cfg(feature = "capture")]
-struct SyncLine(MenuItem<tauri::Wry>);
+/// The tray menu's items, to rewrite in another language, and auto sync's
+/// state the not clickable `sync` line shows.
+struct TrayItems {
+    open: MenuItem<tauri::Wry>,
+    quit: MenuItem<tauri::Wry>,
+    #[cfg(feature = "capture")]
+    sync: MenuItem<tauri::Wry>,
+    #[cfg(feature = "capture")]
+    phase: Mutex<crate::capture::service::Phase>,
+}
 
 /// Shows auto sync's state in the tray menu and the tray icon's tooltip.
-/// Queued for the main thread rather than waited for: the supervisor calls
-/// this, and the main thread may be waiting for the supervisor.
 #[cfg(feature = "capture")]
 pub fn sync_status(app: &AppHandle, status: &crate::capture::service::Status) {
-    use crate::capture::service::Phase;
-    let line = match status.phase {
-        Phase::Off => text::sync::OFF,
-        Phase::Starting => text::sync::STARTING,
-        Phase::WaitingGame => text::sync::WAITING_GAME,
-        Phase::WaitingLogin => text::sync::WAITING_LOGIN,
-        Phase::Connected => text::sync::CONNECTED,
-        Phase::Interrupted => text::sync::INTERRUPTED,
-    };
-    let name = tray_name(app);
-    let tooltip = match status.phase {
-        Phase::Connected => format!("{name} · {}", text::sync::CONNECTED_SHORT),
-        Phase::Interrupted => format!("{name} · {}", text::sync::INTERRUPTED_SHORT),
-        _ => name,
-    };
+    if let Some(items) = app.try_state::<TrayItems>() {
+        *items.phase.lock().unwrap_or_else(PoisonError::into_inner) = status.phase;
+    }
+    refresh_tray(app);
+}
+
+/// Writes the tray's menu and tooltip in the language in use. Queued for the
+/// main thread rather than waited for: the supervisor calls this, and the main
+/// thread may be waiting for the supervisor.
+fn refresh_tray(app: &AppHandle) {
     let handle = app.clone();
     let queued = app.run_on_main_thread(move || {
-        if let Some(item) = handle.try_state::<SyncLine>()
-            && let Err(err) = item.0.set_text(line)
-        {
-            tracing::warn!(%err, "could not update the tray menu");
-        }
+        let Some(items) = handle.try_state::<TrayItems>() else {
+            return;
+        };
+        let text = text::text();
+        set_label(&items.open, text.tray_open);
+        set_label(&items.quit, text.tray_quit);
+        let tooltip = tray_name(&handle);
+        #[cfg(feature = "capture")]
+        let tooltip = sync_line(&items, &tooltip).unwrap_or(tooltip);
         if let Some(tray) = handle.tray_by_id("main")
             && let Err(err) = tray.set_tooltip(Some(tooltip))
         {
@@ -128,6 +142,45 @@ pub fn sync_status(app: &AppHandle, status: &crate::capture::service::Status) {
     });
     if let Err(err) = queued {
         tracing::warn!(%err, "could not update the tray");
+    }
+}
+
+fn set_label(item: &MenuItem<tauri::Wry>, label: &str) {
+    if let Err(err) = item.set_text(label) {
+        tracing::warn!(%err, "could not update the tray menu");
+    }
+}
+
+/// Writes auto sync's line; the tooltip with its state when that is worth one.
+#[cfg(feature = "capture")]
+fn sync_line(items: &TrayItems, name: &str) -> Option<String> {
+    use crate::capture::service::Phase;
+    let text = &text::text().sync;
+    let phase = *items.phase.lock().unwrap_or_else(PoisonError::into_inner);
+    set_label(
+        &items.sync,
+        match phase {
+            Phase::Off => text.off,
+            Phase::Starting => text.starting,
+            Phase::WaitingGame => text.waiting_game,
+            Phase::WaitingLogin => text.waiting_login,
+            Phase::Connected => text.connected,
+            Phase::Interrupted => text.interrupted,
+        },
+    );
+    match phase {
+        Phase::Connected => Some(format!("{name} · {}", text.connected_short)),
+        Phase::Interrupted => Some(format!("{name} · {}", text.interrupted_short)),
+        _ => None,
+    }
+}
+
+/// The page's language, for what the Rust side shows: the tray now, dialogs
+/// later.
+#[tauri::command]
+pub fn set_language(app: AppHandle, english: bool) {
+    if text::set_english(english) {
+        refresh_tray(&app);
     }
 }
 

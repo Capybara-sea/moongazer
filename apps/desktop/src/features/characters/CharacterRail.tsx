@@ -8,7 +8,7 @@ import { characterData } from "@/domain/names"
 import { cn } from "@/lib/cn"
 import { motionAllowed } from "@/lib/motion"
 import { navigate } from "@/lib/route"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { CharacterAvatar } from "./CharacterAvatar"
 
 /**

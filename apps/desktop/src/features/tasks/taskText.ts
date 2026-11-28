@@ -5,7 +5,7 @@ import { gameDate, gameDayOf, gameDayStart } from "@/domain/gameTime"
 import { lookup } from "@/domain/names"
 import type { StandingDetail } from "@/domain/standingTasks"
 import type { CustomTask, TaskRow } from "@/domain/tasks"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.tasks
 const MINUTE = 60_000

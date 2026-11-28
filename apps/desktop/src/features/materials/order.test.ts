@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest"
 import { MATERIAL_TABS, type MaterialTab, materialData } from "@/domain/names"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   type MaterialRow,
   materialRows,
@@ -115,6 +115,16 @@ describe("tabCounts", () => {
 describe("tabGroups", () => {
   const held = (...keys: string[]) =>
     materialRows(stock(Object.fromEntries(keys.map(key => [key, 1]))), null)
+
+  it("shows two types of one name as one block, where the first of them goes", () => {
+    const rows = held("HerosWit", "MysticEnhancementOre").map((row, i) => ({
+      ...row,
+      type: "Same",
+      typeOrder: i === 0 ? 5 : 3,
+    }))
+    const groups = tabGroups(rows, rows[0]?.tab ?? "develop")
+    expect(groups.map(group => [group.title, group.rows.length])).toEqual([["Same", 2]])
+  })
   const groupKeys = (rows: readonly MaterialRow[], tab: MaterialTab) =>
     tabGroups(rows, tab).map(group => group.rows.map(row => row.key))
 

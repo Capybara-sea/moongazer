@@ -5,7 +5,7 @@ import type { Account } from "@/domain/account"
 import { type TalentKey, type TalentLevel, talentLevels, wielderKey } from "@/domain/builds"
 import type { Artifact, Weapon } from "@/domain/good"
 import { type CharacterData, lookup, weaponData } from "@/domain/names"
-import { text } from "@/text/zh"
+import { lang, text } from "@/text"
 
 const TALENTS: readonly TalentKey[] = ["auto", "skill", "burst"]
 
@@ -83,5 +83,5 @@ function equippedSets(pieces: Artifact[] | undefined) {
   }
   return [...sets.values()]
     .filter(set => set.count >= 2)
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, lang))
 }

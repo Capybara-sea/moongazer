@@ -28,7 +28,7 @@ import {
   waitsToLevel,
 } from "@/domain/planner"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { type CardDrag, dimmed, GoalHeader, goalTitleId } from "./GoalHeader"
 import { MaterialCell } from "./MaterialCell"
 import { RankBadge } from "./RankBadge"

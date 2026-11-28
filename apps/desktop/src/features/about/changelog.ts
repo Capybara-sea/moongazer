@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Capybara_sea
 
-import changelogText from "@repo/CHANGELOG.md?raw"
+import changelogEn from "@repo/CHANGELOG.en.md?raw"
+import changelogZh from "@repo/CHANGELOG.md?raw"
+import { lang } from "@/text"
 
 export type ChangelogSection = { title: string; items: string[] }
 export type ChangelogVersion = { version: string; date: string; sections: ChangelogSection[] }
@@ -39,8 +41,8 @@ export function parseChangelog(markdown: string): ChangelogVersion[] {
   return versions
 }
 
-/** The app's released versions, from the Chinese changelog as the interface is Chinese. */
-export const APP_CHANGELOG = parseChangelog(changelogText)
+/** The app's released versions, from the changelog in the UI's language. */
+export const APP_CHANGELOG = parseChangelog(lang === "en" ? changelogEn : changelogZh)
 
 /** Compares two x.y.z versions: negative when a is older. */
 export function compareVersions(a: string, b: string) {

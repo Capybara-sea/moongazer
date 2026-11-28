@@ -446,22 +446,25 @@ fn read_signature(path: &Path) -> Result<String> {
     Ok(signature.trim().to_owned())
 }
 
-/// The version's section of the Chinese changelog, which the app shows next to
-/// its Chinese UI; test builds of an unreleased version fall back to Unreleased.
+/// The version's notes as on the release page, Chinese then English; the app
+/// shows the half in its UI's language. Test builds of an unreleased version
+/// fall back to Unreleased.
 fn release_notes(root: &Path, version: &str) -> Result<String> {
-    let text = fs::read_to_string(root.join(changelog::FILE_ZH))?;
+    let read = |file: &str| fs::read_to_string(root.join(file));
+    let (zh, en) = (read(changelog::FILE_ZH)?, read(changelog::FILE_EN)?);
     let parsed =
         util::parse_version(version).with_context(|| format!("`{version}` is not X.Y.Z"))?;
     let wanted = Heading::Release {
         version: parsed,
         date: String::new(),
     };
-    changelog::section(&text, &wanted)
-        .or_else(|| changelog::section(&text, &Heading::Unreleased))
+    changelog::release_notes(&zh, &en, &wanted)
+        .or_else(|| changelog::release_notes(&zh, &en, &Heading::Unreleased))
         .with_context(|| {
             format!(
-                "{} has neither this version nor Unreleased",
-                changelog::FILE_ZH
+                "{} and {} have neither this version nor Unreleased",
+                changelog::FILE_ZH,
+                changelog::FILE_EN
             )
         })
 }

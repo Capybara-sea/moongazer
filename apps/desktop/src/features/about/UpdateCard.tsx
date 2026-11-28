@@ -8,7 +8,7 @@ import { StatusDot, type Tone } from "@/components/StatusDot"
 import { Switch } from "@/components/Switch"
 import { cn } from "@/lib/cn"
 import { type UpdateStatus, useUpdateStore } from "@/stores/updateStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { SUBPAGES, SubpageLink } from "./subpages"
 
 const TONE: Record<UpdateStatus, Tone> = {

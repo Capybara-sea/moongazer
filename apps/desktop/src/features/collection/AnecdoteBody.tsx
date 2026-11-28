@@ -25,7 +25,7 @@ import { lookup } from "@/domain/names"
 import { openTravelersTales, openVideoSearch, toBackendError } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { useAnecdoteListStore } from "@/stores/anecdoteListStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.anecdotePage
 const AREA_NAMES = new Map(ANECDOTE_AREAS.map(a => [a.id, a.name]))
@@ -285,7 +285,7 @@ export function AnecdoteItem({ row }: { row: AnecdoteRow }) {
   )
 }
 
-/** Opens Bilibili's video search for the guide author's video on the anecdote. */
+/** Opens a video search for the anecdote: the guide author's videos on Bilibili in Chinese. */
 function VideoGuide({ title }: { title: string }) {
   const label = t.videoLabel(title)
   const tip = useTip<HTMLButtonElement>(label)

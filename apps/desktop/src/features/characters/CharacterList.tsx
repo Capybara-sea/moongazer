@@ -23,7 +23,7 @@ import {
   useCharacterListStore,
 } from "@/stores/characterListStore"
 import { useSnapshotStore } from "@/stores/snapshotStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { CharacterCard } from "./CharacterCard"
 import { CharacterTable } from "./CharacterTable"
 import { cardInfos } from "./cardInfo"

@@ -17,7 +17,7 @@ import { cn } from "@/lib/cn"
 import { formatDateTime, formatWhen } from "@/lib/format"
 import { navigate } from "@/lib/route"
 import { useCaptureStore } from "@/stores/captureStore"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.home
 

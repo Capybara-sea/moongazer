@@ -62,6 +62,13 @@ describe("backend responses", () => {
     expect(() => parseUpdate({ version: 2 })).toThrow(BackendError)
   })
 
+  it("keeps the notes in the UI's language, and notes in one language whole", () => {
+    const zh = "### Zh\n\n- First."
+    const notes = `${zh}\n\n---\n\n### Added\n\n- A long item\n  wrapped.`
+    expect(parseUpdate({ version: "0.4.0", notes })?.notes).toBe(zh)
+    expect(parseUpdate({ version: "0.4.0", notes: zh })?.notes).toBe(zh)
+  })
+
   it("drops malformed progress events instead of throwing", () => {
     expect(parseProgress({ downloaded: 10, total: null })).toEqual({ downloaded: 10, total: null })
     expect(parseProgress({ downloaded: "10" })).toBeNull()

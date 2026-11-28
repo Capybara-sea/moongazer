@@ -8,7 +8,7 @@ import { type AccountGroup, groupAccounts, latestKept, newestAccount } from "@/d
 import { setTraveler } from "@/domain/names"
 import { getSnapshotExport, type Snapshot, toBackendError } from "@/lib/backend"
 import { readStored, writeStored } from "@/lib/storage"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { useSnapshotStore } from "./snapshotStore"
 
 export type AccountEntry =

@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Capybara_sea
 
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 /** Five stars in gold, four in purple, three in blue, lower ones plain. */
 export const RARITY_TONES: Record<number, string> = {

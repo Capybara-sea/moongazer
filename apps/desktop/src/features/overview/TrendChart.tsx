@@ -9,7 +9,7 @@ import type { Snapshot } from "@/lib/backend"
 import { cn } from "@/lib/cn"
 import { formatAmount, formatAmounts, formatDelta, formatNumber, signedDelta } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   type Bucket,
   bucketLabel,

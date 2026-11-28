@@ -136,6 +136,8 @@ export const achievementPage = {
 
 export const anecdotePage = {
   title: "游逸旅闻",
+  /** An anecdote named where the character is not shown beside it. */
+  named: (character: string, title: string) => `${character}·${title}`,
   summary: (total: number, hidden: number) => `共 ${n(total)} 条（含 ${n(hidden)} 条隐藏）`,
   hasLauma: "已拥有菈乌玛",
   noLauma: "未拥有菈乌玛",

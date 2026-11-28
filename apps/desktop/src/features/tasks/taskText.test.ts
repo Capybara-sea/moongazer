@@ -6,7 +6,7 @@ import { gameDayOf, gameDayStart } from "@/domain/gameTime"
 import { lookup } from "@/domain/names"
 import type { Auto, StandingDetail, StandingTask } from "@/domain/standingTasks"
 import type { CustomRow, CustomTask, EventRow, StandingRow } from "@/domain/tasks"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   dayInput,
   formatCountdown,

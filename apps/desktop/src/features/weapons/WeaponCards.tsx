@@ -10,7 +10,7 @@ import { Tip } from "@/components/Tip"
 import { WeaponTooltip } from "@/components/WeaponTooltip"
 import { levelCap } from "@/domain/builds"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import type { WeaponRow } from "./order"
 
 const t = text.weapons
@@ -51,7 +51,7 @@ function WeaponCard({ row }: { row: WeaponRow }) {
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
           <div className="flex min-w-0 items-center gap-2">
-            <h2 className="truncate font-semibold text-[15px] leading-[1.3]">{row.name}</h2>
+            <h2 className="line-clamp-2 font-semibold text-[15px] leading-[1.3]">{row.name}</h2>
             {rarity !== undefined && <RarityChip rarity={rarity} />}
           </div>
           <span className="text-[12px] text-muted">

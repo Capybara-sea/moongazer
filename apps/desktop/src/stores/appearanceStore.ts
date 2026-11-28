@@ -5,13 +5,15 @@ import { create } from "zustand"
 import { type NumberStyle, setNumberStyle } from "@/lib/format"
 import { revealFrom } from "@/lib/motion"
 import { readStored, writeStored } from "@/lib/storage"
+import { LANG_KEY, type Lang, lang } from "@/text"
 
 /**
  * Theme, glass and motion, applied to <html>. public/theme.js applies the
  * same saved values before the first paint, so the two must read the same
- * keys the same way. Whether UIDs start masked and how large numbers are
- * written are kept here too; they change nothing on <html>. The theme keeps HeroUI's "heroui-theme" key so earlier
- * choices carry over; one store instead of HeroUI's useTheme lets the side
+ * keys the same way. Whether UIDs start masked, how large numbers are
+ * written and the language are kept here too; they change nothing on
+ * <html>. The theme keeps HeroUI's "heroui-theme" key so earlier choices
+ * carry over; one store instead of HeroUI's useTheme lets the side
  * menu and the settings page share it.
  */
 
@@ -28,6 +30,7 @@ type AppearanceState = {
   glass: boolean
   motion: boolean
   maskUid: boolean
+  /** Always K, M and B in English; the saved choice applies in Chinese. */
   numbers: NumberStyle
   /** A new look spreads from `from`, a control's bounding box, when given. */
   setTheme: (theme: ThemeMode, from?: DOMRect) => void
@@ -35,6 +38,8 @@ type AppearanceState = {
   setMotion: (on: boolean) => void
   setMaskUid: (on: boolean) => void
   setNumbers: (style: NumberStyle) => void
+  /** Saves the language and reloads the page in it. */
+  setLanguage: (lang: Lang) => void
 }
 
 function readTheme(): ThemeMode {
@@ -74,8 +79,8 @@ export const useAppearanceStore = create<AppearanceState>((set, get) => ({
   motion: readStored(MOTION_KEY) !== "off",
   // Shown unless set to masked.
   maskUid: readStored(MASK_UID_KEY) === "on",
-  // The Chinese units unless set to K, M and B.
-  numbers: readStored(NUMBERS_KEY) === "kmb" ? "kmb" : "wan",
+  // K, M and B in English or when set; the Chinese units otherwise.
+  numbers: lang === "en" || readStored(NUMBERS_KEY) === "kmb" ? "kmb" : "wan",
 
   setTheme(theme, from) {
     writeStored(THEME_KEY, theme)
@@ -109,6 +114,12 @@ export const useAppearanceStore = create<AppearanceState>((set, get) => ({
     writeStored(NUMBERS_KEY, style)
     setNumberStyle(style)
     set({ numbers: style })
+  },
+
+  setLanguage(picked) {
+    if (picked === lang) return
+    writeStored(LANG_KEY, picked)
+    location.reload()
   },
 }))
 

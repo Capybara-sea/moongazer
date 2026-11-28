@@ -6,13 +6,13 @@
 
 # Moongazer
 
-The sea of stars is boundless, and we are not alone.
+The sea of stars is vast and boundless, and we are not alone.
 
 View your Genshin Impact characters, weapons, artifacts, inventory and achievements on your PC, and work out the materials you need to level them up.
 
 ### [Download the latest version](https://github.com/Capybara-sea/moongazer/releases/latest)
 
-Windows 10/11 (64-bit) · Free · Simplified Chinese interface · Early development
+Windows 10/11 (64-bit) · Free · English and Simplified Chinese interface · Early development
 
 </div>
 
@@ -28,7 +28,7 @@ Windows 10/11 (64-bit) · Free · Simplified Chinese interface · Early developm
 - **Planner** (规划): set goals for characters and weapons, and see the missing materials and what to craft first.
 - **Reminders**: Original Resin full, expeditions complete, commission rewards unclaimed, Spiral Abyss about to reset and more; also sent as Windows notifications while Moongazer runs in the background.
 - **Multiple accounts**, switched automatically when you log in to the game.
-- Planned: artifact optimizer, Serenitea Pot set reward checklist, more languages.
+- Planned: artifact optimizer, Serenitea Pot set reward checklist.
 
 ## Before you start
 
@@ -61,13 +61,13 @@ Windows 10/11 (64-bit) · Free · Simplified Chinese interface · Early developm
 
 ## First use
 
-The interface is in Chinese; the labels in brackets are the ones shown on screen.
+Moongazer starts in English, or in Chinese when Windows is set to Chinese; change it under Settings › Interface › Language. The labels in brackets are the Chinese ones.
 
 1. Open Moongazer and click **Start sync** (开始同步) on the home page (首页).
 2. Windows asks "Do you want to allow this app from an unknown publisher to make changes to your device?"; click **Yes**. Reading network data requires administrator rights, which only the separate sync helper (同步助手) started by Moongazer uses. The prompt is yellow, again because there is no digital signature. It appears every time sync starts.
 3. Start Genshin Impact and enter Teyvat. Moongazer reads the account data automatically and records changes during play as they happen.\
    If you were already in the game when sync started, return to the title screen and enter again.
-4. Before each later session, open Moongazer and start sync: click **Auto sync off** (自动同步未开启) at the bottom left, then **Turn on auto sync** (开启自动同步). After sync is first started, Moongazer asks whether to start it whenever Moongazer opens; choose **Start automatically** (自动开启) to skip this step. This can be changed later in Settings (设置).
+4. Before each later session, open Moongazer and start sync: click **Auto sync is off** (自动同步未开启) at the bottom left, then **Start auto sync** (开启自动同步). After sync is first started, Moongazer asks whether to start it whenever Moongazer opens; choose **Turn on** (自动开启) to skip this step. This can be changed later in Settings (设置).
 
 Closing the window does not quit Moongazer: it stays in the tray at the bottom right of the taskbar (click the ^ arrow there if the icon is not shown), as reminders and sync need it running. To quit, right-click the tray icon and choose **Quit Moongazer** (退出望月). Moongazer does not start with Windows.
 

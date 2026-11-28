@@ -6,7 +6,7 @@ import { statName } from "@/domain/builds"
 import type { Artifact, Character, Weapon } from "@/domain/good"
 import { characterData } from "@/domain/names"
 import { characterStats } from "@/domain/stats"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { statRows } from "./detail"
 
 const t = text.characterDetail
@@ -30,7 +30,7 @@ export function StatsCard({ character, weapon, artifacts }: Props) {
               key={row.key}
               className="flex items-baseline gap-2 border-(--separator) border-b py-1.75 text-[13px]"
             >
-              <span className="min-w-0 flex-1 truncate text-muted">{statName(row.key)}</span>
+              <span className="min-w-0 flex-1 text-muted">{statName(row.key)}</span>
               <span className="tabular font-semibold">{row.total}</span>
               <span className="tabular min-w-23 text-right text-[12px] text-muted">
                 {row.base}

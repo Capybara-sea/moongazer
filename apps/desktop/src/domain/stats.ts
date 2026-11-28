@@ -10,7 +10,7 @@
  * ending in _) and unrounded; formatStat rounds them as the game does.
  */
 
-import data from "@/generated/builds.json"
+import { builds as data } from "@/domain/gameData"
 import { mainStatValue } from "./builds"
 import type { Artifact, Character, Weapon } from "./good"
 

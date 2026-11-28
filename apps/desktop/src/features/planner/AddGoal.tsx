@@ -7,7 +7,7 @@ import { CheckboxField } from "@/components/CheckboxField"
 import { SearchBox } from "@/components/SearchBox"
 import type { Account } from "@/domain/account"
 import type { Plan } from "@/domain/plan"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import {
   characterOptions,
   customGoal,

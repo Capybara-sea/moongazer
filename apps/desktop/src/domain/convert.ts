@@ -9,8 +9,8 @@
  * converted, so converting never leaves another card short.
  */
 
+import { planner as data } from "@/domain/gameData"
 import { type Line, type Need, tierOf } from "@/domain/planner"
-import data from "@/generated/planner.json"
 
 export const CONVERT_KINDS = ["gem", "weekly"] as const
 export type ConvertKind = (typeof CONVERT_KINDS)[number]

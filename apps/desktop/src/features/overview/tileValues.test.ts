@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest"
 import type { Snapshot, Summary } from "@/lib/backend"
 import type { Signed, Way } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { countTiles } from "./tileValues"
 
 const snapshot = (id: number, summary: Partial<Summary>): Snapshot => ({

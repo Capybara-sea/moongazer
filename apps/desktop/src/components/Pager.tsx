@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { ReactNode } from "react"
 import { cn } from "@/lib/cn"
 import { pageItems } from "@/lib/usePages"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { Tip } from "./Tip"
 
 const t = text.pager

@@ -11,7 +11,7 @@ import type { Character } from "@/domain/good"
 import { characterData } from "@/domain/names"
 import { cn } from "@/lib/cn"
 import { navigate } from "@/lib/route"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import { CharacterAvatar } from "./CharacterAvatar"
 import { type CardInfo, type CardSet, traits } from "./cardInfo"
 

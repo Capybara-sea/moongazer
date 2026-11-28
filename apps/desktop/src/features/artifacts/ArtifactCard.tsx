@@ -9,7 +9,7 @@ import { Tip } from "@/components/Tip"
 import { artifactIcon, formatStat, mainStatValue, statName } from "@/domain/builds"
 import type { Substat } from "@/domain/good"
 import { cn } from "@/lib/cn"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 import type { ArtifactRow } from "./order"
 
 const t = text.artifacts

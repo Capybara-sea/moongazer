@@ -5,7 +5,7 @@ import { CardHeader } from "@/components/CardHeader"
 import { Panel } from "@/components/Panel"
 import type { Account } from "@/domain/account"
 import { formatNumber } from "@/lib/format"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const count = (n: number | undefined) => (n === undefined ? undefined : formatNumber(n))
 

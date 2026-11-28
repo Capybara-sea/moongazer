@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- English interface: switch between Simplified Chinese and English in Settings (the first run
+  follows the system language). Game content such as characters, items, achievements and
+  anecdotes uses the official English names, and the tray menu and update notes follow too.
 - The account list in the side panel can delete an account, with its snapshots, sync
   timelines, planner and tasks; the one auto sync is reading cannot be deleted.
 

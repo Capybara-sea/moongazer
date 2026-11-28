@@ -27,7 +27,7 @@ import { lookup } from "@/domain/names"
 import { cn } from "@/lib/cn"
 import { formatDateTime, formatMonthDay, formatNumber, formatTime } from "@/lib/format"
 import { useNow } from "@/lib/useNow"
-import { text } from "@/text/zh"
+import { text } from "@/text"
 
 const t = text.daily
 
@@ -55,8 +55,9 @@ export function DailyCard({ account, takenAt }: { account: Account; takenAt: num
       <CardHeader title={t.title}>
         <span className="tabular text-[12px] text-muted">{t.asOf(monthDayTime(takenAt))}</span>
       </CardHeader>
-      {/* One grid for all rows, so the values take one width and the bars end together. */}
-      <div className="grid grid-cols-[76px_minmax(0,1fr)_auto] gap-x-3.5">
+      {/* One grid for all rows, so the values take one width and the bars end together; English
+      labels run past 76 px. */}
+      <div className="grid grid-cols-[minmax(76px,max-content)_minmax(0,1fr)_auto] gap-x-3.5">
         <Resin resin={tasks?.resin} now={now} />
         <Commissions commissions={tasks?.commissions} takenAt={takenAt} now={now} />
         <Realm realm={tasks?.realm} takenAt={takenAt} now={now} />
